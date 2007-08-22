@@ -4,21 +4,16 @@
 /*
  * ##########################################################################
  * #  Dies ist konto_check, ein Programm zum Testen der Prüfziffern         #
- * #  von deutschen Bankkonten. Es ist in erster Linie für die Benutzung    #
- * #  mit dem dtaus-Paket von Martin Schulze <joey@infodrom.org> und dem    #
- * #  lx2l Präprozessor gedacht; es kann jedoch auch als eigenständiges     #
- * #  Programm oder als Library zur Verwendung in anderen Programmen        #
- * #  benutzt werden.                                                       #
+ * #  von deutschen Bankkonten. Es kann als eigenständiges Programm         #
+ * #  (z.B. mit der beigelegten main() Routine) oder als Library zur        #
+ * #  Verwendung in anderen Programmen bzw. Programmiersprachen benutzt     #
+ * #  werden.                                                               #
  * #                                                                        #
- * #  Versionen: siehe Datei 0_history.txt                                  #
+ * #  Die einleitenden Beschreibungen zu den einzelnen Methoden wurden      #
+ * #  wurden aus der aktuellen BLZ-Datei der Deutschen Bundesbank           #
+ * #  übernommen.                                                           #
  * #                                                                        #
- * #  Die einleitenden Beschreibungen zu den einzelnen Methoden wurden mit  #
- * #  freundlicher Genehmigung von Andeas Butzko aus dem Perl-Modul         #
- * #  Business::konto.pm kopiert (teilweise wurden die Methoden geändert;   #
- * #  in diesem Fall wurden die Beschreibungen aus der aktuellen BLZ-       #
- * #  Tabelle übernommen).                                                  #
- * #                                                                        #
- * #  Copyright (C) 2002-2005 Michael Plugge <m.plugge@hs-mannheim.de>      #
+ * #  Copyright (C) 2002-2007 Michael Plugge <m.plugge@hs-mannheim.de>      #
  * #                                                                        #
  * #  Dieses Programm ist freie Software; Sie dürfen es unter den           #
  * #  Bedingungen der GNU Lesser General Public License, wie von der Free   #
@@ -54,8 +49,8 @@
 /* Definitionen und Includes  */
 #define BLZ_BIG_JUMP 0  /* noch optimalen Wert suchen */
 
-#define VERSION "2.1"
-#define VERSION_DATE "2007-05-26"
+#define VERSION "2.2"
+#define VERSION_DATE "2007-08-21"
 
 #ifndef INCLUDE_KONTO_CHECK_DE
 #define INCLUDE_KONTO_CHECK_DE 1
@@ -323,7 +318,7 @@ static void init_atoi_table_t(KTO_CHK_CTX *ctx);
 static char lut_info[1024];
 INT4 cnt_blz;
 static UINT4 *blz_array,*pz_array,*blz_hash_low,*blz_hash_high,*invalid;
-static UINT4 b1[256],b2[256],b3[256],b4[256],b5[256],b6[256],b7[256],b8[256];
+static UINT4 b1[256],b2[256],b3[256],b4[256],b5[256],b6[256],b7[256],b8[256],bx1[256],by1[256],bx2[256],by4[256];
 #endif
 
 
@@ -461,9 +456,9 @@ static UINT4 adler32(UINT4 adler,const char *buf,unsigned int len)
  * # schneller einlesen als die große Bundesbank-Datei.                      #
  * #                                                                         #
  * # Bugs: es wird für eine BLZ nur eine Prüfziffermethode unterstützt.      #
- * #      (die Sparkasse Radevormwald-Hückeswagen (BLZ 34051350) benutzt die #
- * #      Prüfziffermethoden 0 und 10; hier ist natürlich die Frage, wo der  #
- * #      bug zu suchen ist - bei der Bank oder hier in der library :-))) )  #
+ * #      (nach Bankfusionen finden sich für eine Bank manchmal zwei         #
+ * #      Prüfziffermethoden; das Problem wird mit dem neuen Dateiformat     #
+ * #      noch einmal angegangen.                                            #
  * #                                                                         #
  * # Copyright (C) 2002-2005 Michael Plugge <m.plugge@hs-mannheim.de>        #
  * ###########################################################################
@@ -481,8 +476,7 @@ DLL_EXPORT int generate_lut_t(char *inputname,char *outputname,char *user_info,i
 DLL_EXPORT int generate_lut(char *inputname,char *outputname,char *user_info,int lut_version)
 #endif
 {
-   unsigned char *outbuffer,*uptr,*methoden_array,*valid_array,*sptr,*dptr,*nptr,
-      *nptr1,*namen_buffer,*namen_array,buffer[256],zeile[256];
+   unsigned char *outbuffer,*uptr,*methoden_array,*valid_array,*sptr,*dptr,buffer[256],zeile[256];
    int i,j,blz,prev_blz,diff,last_index,cnt,m,valid,*array,blz_file_format,line;
    UINT4 adler;
    time_t t;
@@ -492,25 +486,11 @@ DLL_EXPORT int generate_lut(char *inputname,char *outputname,char *user_info,int
    struct{int pos; int len;}
       old_bankleitzahl={1,8},
       old_pruefziffer={182,2},
-      old_geloeschte_blz={10,8},
-      old_name={28,58};
-//      old_loesch_datum={19,4},
-//      old_nachfolge_institut={23,5},
-//      old_plz={106,5},
-//      old_ort={111,29},
-//      old_lfd_nr={184,5};
+      old_geloeschte_blz={10,8};
 
    struct{int pos; int len;}
       bankleitzahl={1,8},
-      pruefziffer={151,2},
-//      nachfolge_institut={161,8},
-//      aenderungszeichen={159,1},
-      name={10,58};
-//      bic={140,11},
-//      plz={68,5},
-//      ort={73,35},
-//      name_kurz={108,27},
-//      lfd_nr={153,6};
+      pruefziffer={151,2};
 
    if(!(in=fopen(inputname,"r"))){
 #if THREAD_SAFE
@@ -526,11 +506,9 @@ DLL_EXPORT int generate_lut(char *inputname,char *outputname,char *user_info,int
    blz_array=calloc(MAX_BLZ_CNT,sizeof(int));   /* Bankleitzahlen */
    methoden_array=calloc(MAX_BLZ_CNT,1);        /* Prüfziffermethoden */
    valid_array=calloc(MAX_BLZ_CNT,1);           /* BLZ gültig oder nicht */
-   namen_array=calloc(MAX_BLZ_CNT,58);          /* Banknamen, ***nicht*** getrennt (58 Byte/Eintrag) */
-   namen_buffer=calloc(MAX_BLZ_CNT,59);         /* Banknamen für die Ausgabedatei */
    outbuffer=calloc(2*MAX_BLZ_CNT,sizeof(int)); /* Ausgabepuffer (nicht zu knapp bemessen) */
 
-   for(prev_blz=0,i= -1,nptr=namen_array,line=1;!feof(in);line++){
+   for(prev_blz=0,i= -1,line=1;!feof(in);line++){
       if(!fgets((char *)zeile,512,in) || !ISDIGIT(*zeile))continue;
 
          /* Zeilenenden entfernen, um eine eindeutige Zeilenlänge zu bekommen
@@ -569,17 +547,13 @@ DLL_EXPORT int generate_lut(char *inputname,char *outputname,char *user_info,int
          if(diff){
             i++;
             prev_blz=blz;
-
-               /* Banknamen holen */
-            EXTRACT(old_name);
-            strcpy(SCP nptr,SCP buffer);
-            nptr+=58;
          }
 
-            /* Oft sind bei einer Löschung noch gültige Bankleitzahlen desselben
-             * Instituts vorhanden; daher wird hier nur eine OR-Verknüpfung mit
-             * dem valid-Wert gemacht, und beim Speichern dann überprüft, ob
-             * valid==2 ist (nur dann gibt es kein Institut mit der BLZ mehr).
+            /* Manchmal sind bei einer Löschung noch gültige Bankleitzahlen
+             * desselben Instituts vorhanden; daher wird hier nur eine
+             * OR-Verknüpfung mit dem valid-Wert gemacht, und beim Speichern
+             * dann überprüft, ob valid==2 ist (nur dann gibt es kein Institut
+             * mit der BLZ mehr).
              */
          valid_array[i]|=valid;
 
@@ -594,11 +568,6 @@ DLL_EXPORT int generate_lut(char *inputname,char *outputname,char *user_info,int
          if(diff){
             i++;
             prev_blz=blz;
-
-               /* Banknamen holen */
-            EXTRACT(name);
-            strcpy(SCP nptr,SCP buffer);
-            nptr+=58;
          }
          valid_array[i]=1;
 
@@ -645,7 +614,7 @@ DLL_EXPORT int generate_lut(char *inputname,char *outputname,char *user_info,int
        *       - ein Byte mit der zugehörigen Methode.
        */
 
-   for(i=cnt=prev_blz=0,array=blz_array,uptr=outbuffer,nptr1=namen_buffer;i<=last_index && i<MAX_BLZ_CNT;i++){
+   for(i=cnt=prev_blz=0,array=blz_array,uptr=outbuffer;i<=last_index && i<MAX_BLZ_CNT;i++){
       blz=array[i];
       diff=blz-prev_blz;
       m=methoden_array[i];
@@ -685,12 +654,6 @@ DLL_EXPORT int generate_lut(char *inputname,char *outputname,char *user_info,int
 
       if(valid_array[i]==2)*uptr++=0xff;   /* invalid flag schreiben */
       *uptr++=methoden_array[i];              /* Methode */
-
-         /* Banknamen ins (eigene) Ausgabearray */
-      for(nptr=namen_array+i*58,j=0;(*nptr1= *nptr++) && j<58;j++,nptr1++);
-      if(*nptr1)nptr1++;
-
-      *nptr1++='\n';
       cnt++;
    }
    if(!(out=fopen(outputname,"wb"))){
@@ -710,11 +673,6 @@ DLL_EXPORT int generate_lut(char *inputname,char *outputname,char *user_info,int
       case 2:
          fprintf(out,"BLZ Lookup Table/Format 1.1\n");
          break;
-#if 0
-      case 3:     /* noch nicht implementiert */
-         fprintf(out,"BLZ Lookup Table/Format 2.0\n");
-         break;
-#endif
       default:
 #if DEBUG
          fprintf(stderr,"Das Dateiformat %d ist nicht definiert; benutze Version 2\n",lut_version);
@@ -744,14 +702,10 @@ DLL_EXPORT int generate_lut(char *inputname,char *outputname,char *user_info,int
       WRITE_LONG(adler);
       fwrite((char *)outbuffer,1,uptr-outbuffer,out);       /* BLZ-Liste */
    }
-   /* fixme: Banknamen fehlen noch */
-//   fwrite((char *)namen_buffer,1,nptr1-namen_buffer,out); /* Banknamen */
    fclose(out);
 
    free(blz_array);
    free(methoden_array);
-   free(namen_array);
-   free(namen_buffer);
    free(outbuffer);
    cnt_blz=0;
 #if THREAD_SAFE
@@ -789,13 +743,7 @@ static int read_lut(char *filename)
    int i,j,prev,cnt,prev_pz,lut_version;
    UINT4 adler1,adler2;
    struct stat s_buf;
-   /* fixme: komplett auf LowLevel umstellen */
-#define LOW_LEVEL 1
-#if LOW_LEVEL
    int in;
-#else
-   FILE *in;
-#endif
 
 #if THREAD_SAFE
    if(!b1['1'])init_atoi_table_t(ctx);
@@ -831,7 +779,6 @@ static int read_lut(char *filename)
       default: hash_base= 300; hash_size= 2800; break;
    }
 #endif
-#if LOW_LEVEL
    if((in=open(filename,O_RDONLY|O_BINARY))<0){
       perror(filename);
 #if THREAD_SAFE
@@ -852,28 +799,6 @@ static int read_lut(char *filename)
       return FATAL_ERROR;
    }
    close(in);
-#else
-   if(!(in=fopen(filename,"rb"))){
-      perror(filename);
-#if THREAD_SAFE
-      set_msg_t(NO_LUT_FILE,ctx);
-#else
-      set_msg(NO_LUT_FILE);
-#endif
-      return NO_LUT_FILE;
-   }
-   if(!(cnt=fread(inbuffer,1,s_buf.st_size,in))){
-      fprintf(stderr,"Problem beim Lesen der LUT-Datei (fread); Abbruch\n%s\n",
-         strerror(errno));
-#if THREAD_SAFE
-      set_msg_t(FATAL_ERROR,ctx);
-#else
-      set_msg(FATAL_ERROR);
-#endif
-      return FATAL_ERROR;
-   }
-   fclose(in);
-#endif
    lut_version= -1;
    if(!strncmp((char *)inbuffer,"BLZ Lookup Table/Format 1.0\n",28))
       lut_version=1;
@@ -991,7 +916,6 @@ static int read_lut(char *filename)
    return cnt;
 }
 
-
 /* Funktion init_atoi_table() +§§§1 */
 /* ###########################################################################
  * # Die Funktion init_atoi_table initialisiert die Arrays b1 bis b8, die    #
@@ -1018,174 +942,35 @@ static void init_atoi_table(void)
 {
    int i,ziffer;
 
-   for(i=0;i<256;i++)     /* ungültige Ziffern */
-      b1[i]=b2[i]=b3[i]=b4[i]=b5[i]=b6[i]=b7[i]=b8[i]=0xfffffff;
-
-      /* Blanks und Tabs können/sollten als 0 angesehen werden */
-   i=' ';  b1[i]=b2[i]=b3[i]=b4[i]=b5[i]=b6[i]=b7[i]=b8[i]=0;
-   i='\t'; b1[i]=b2[i]=b3[i]=b4[i]=b5[i]=b6[i]=b7[i]=b8[i]=0;
+   /* ungültige Ziffern (Blanks und Tabs werden ebenfalls als ungültig
+    * angesehen(!), da die Stellenzuordnung sonst nicht mehr stimmt)
+    */
+   for(i=0;i<256;i++)b1[i]=b2[i]=b3[i]=b4[i]=b5[i]=b6[i]=b7[i]=b8[i]=bx1[i]=by1[i]=bx2[i]=by4[i]=0xfffffff;
 
       /* eigentliche Ziffern belegen */
    for(i='0';i<='9';i++){
       ziffer=i-'0';
-      b1[i]=ziffer; ziffer*=10;
-      b2[i]=ziffer; ziffer*=10;
+      bx1[i]=by1[i]=b1[i]=ziffer; ziffer*=10;
+      bx2[i]=b2[i]=ziffer; ziffer*=10;
       b3[i]=ziffer; ziffer*=10;
-      b4[i]=ziffer; ziffer*=10;
+      by4[i]=b4[i]=ziffer; ziffer*=10;
       b5[i]=ziffer; ziffer*=10;
       b6[i]=ziffer; ziffer*=10;
       b7[i]=ziffer; ziffer*=10;
       b8[i]=ziffer;
    }
-}
-
-/* Funktion copy_lut() +§§§1 */
-/* ###########################################################################
- * # copy_lut(): einen oder mehrere Blocks einer LUT-Datei kopieren.         #
- * #                                                                         #
- * # Mit dieser Funktion können mehrere (oder alle) Blocks einer LUT-Datei   #
- * # in eine neue Datei kopiert werden. Für die neue Datei kann die Anzahl   #
- * # der Verzeichniseinträge neu gesetzt werden (Die Funktion wird normaler- #
- * # weise benötigt, falls das Verzeichnis einer LUT-Datei voll ist).        #
- * #                                                                         #
- * # Parameter:                                                              #
- * #    src:         Name der Eingabedatei                                   #
- * #    dst:         Name der Zieldatei                                      #
- * #    types:       (int-) Array der zu kopierenden Blocks.                 #
- * #                 Die Liste muß durch einen Eintrag mit 0 abgeschlossen   #
- * #                 werden.                                                 #
- * #    dir_entries: Anzahl der Verzeichniseinträge der neuen Datei. Die     #
- * #                 Anzahl kann größer oder kleiner sein als die der alten  #
- * #                 Datei; sie muß nur groß genug sein, um alle kopierten   #
- * #                 Blocks aufzunehmen.                                     #
- * #                                                                         #
- * # Copyright (C) 2002-2005 Michael Plugge <m.plugge@hs-mannheim.de>        #
- * ###########################################################################
- */
-
-DLL_EXPORT int copy_lut(char *src,char *dst,int *types[],int dir_entries)
-{
-   return NOT_IMPLEMENTED;
-}
-
-/* Funktion append_lut() +§§§1 */
-/* ###########################################################################
- * # append_lut(): einen Block an eine LUT-Datei anhängen.                   #
- * #                                                                         #
- * # Mit dieser Funktion wird ein Block an die LUT-Datei angehängt. Falls    #
- * # in der Datei schon ein Block dieses Typs existiert, wird er durch den   #
- * # neuen Block ersetzt; der Speicherplatz des alten Blocks wird jedoch     #
- * # nicht freigegeben (dies kann durch copy_lut() geschehen).               #
- * #                                                                         #
- * # Parameter:                                                              #
- * #    lut_name: Name der Eingabedatei                                      #
- * #    block:    neu einzufügender Block. Falls der Blocktyp eine ungerade  #
- * #              Zahl ist, wird der Datenblock vor dem Einfügen in die      #
- * #              LUT-Datei komprimiert, bei einem geraden Blocktyp wird er  #
- * #              direkt eingefügt. Typ und Größen (komprimiert bzw.         #
- * #              unkomprimiert) des Datenblocks werden ebenfalls in die     #
- * #              LUT-Datei geschrieben.                                     #
- * #                                                                         #
- * #                                                                         #
- * # Copyright (C) 2002-2005 Michael Plugge <m.plugge@hs-mannheim.de>        #
- * ###########################################################################
- */
-
-DLL_EXPORT int append_lut(char *lut_name, LUT_BLOCK *LUT_BLOCK)
-{
-   return NOT_IMPLEMENTED;
-}
-
-/* Funktion get_block() +§§§1 */
-/* ###########################################################################
- * # get_block(): einen Block aus einer LUT-Datei extrahieren.               #
- * #                                                                         #
- * # Diese Funktion extrahiert einen Block aus der LUT-Datei. In der Struktur#
- * # block sollte der Typ des zu extrahierenden Blocks angegeben werden;     #
- * # falls in der LUT-Datei ein Block dieses Typs gefunden wird (komprimiert #
- * # oder unkomprimiert), wird er (bei Bedarf) dekomprimiert und in die      #
- * # Struktur geschrieben. Die Rückgabedaten sind immer unkomprimiert.       #
- * #                                                                         #
- * # Parameter:                                                              #
- * #    lut_name: Name der LUT-Datei                                         #
- * #    block:    Pointer auf eine Block-Struktur.                           #
- * #              Beim Aufruf sollte der Typ des zu extrahierenden Block     #
- * #              gesetzt sein; die Funktion allokiert für die Blockdaten    #
- * #              den benötigten Speicher und gibt in der Struktur einen     #
- * #              Pointer auf diese Daten zurück. Falls der Block in der     #
- * #              LUT-Datei komprimiert war, wird er vor der Rückgabe        #
- * #              dekomprimiert. Falls ein komprimierter Block angefordert   #
- * #              wurde, und in der Struktur ein unkomprimierter Block       #
- * #              desselben Typs gefunden wird, wird dieser zurückgegeben,   #
- * #              bzw. genauso umgekehrt. Die zurückgegebenen Daten sind     #
- * #              jedoch immer unkomprimiert.                                #
- * #                                                                         #
- * # Copyright (C) 2002-2005 Michael Plugge <m.plugge@hs-mannheim.de>        #
- * ###########################################################################
- */
-
-DLL_EXPORT int get_block(char *lut_name, LUT_BLOCK *block)
-{
-   return NOT_IMPLEMENTED;
-}
-
-/* Funktion get_ident() +§§§1 */
-/*
- * ###########################################################################
- * # get_ident(): ident-String aus der LUT-Datei holen                       #
- * #                                                                         #
- * # Die Funktion holt den ident-String aus der LUT-Datei und gibt in        #
- * # der Variablen ident einen Pointer auf diesen String zurück. Der         #
- * # ident-String kann mittels der Funktion set_ident() gesetzt werden.      #
- * #                                                                         #
- * #                                                                         #
- * # Parameter:                                                              #
- * #    ident:                                                               #
- * #    lut_name: Name der LUT-Datei                                         #
- * #                                                                         #
- * # Rückgabewerte: wie in read_lut():                                       #
- * #    ERROR_MALLOC       kann keinen Speicher allokieren                   #
- * #    NO_LUT_FILE        LUT-Datei nicht gefunden (Pfad falsch?)           #
- * #    FATAL_ERROR        kann die LUT-Datei nicht lesen                    #
- * #    INVALID_LUT_FILE   Fehler in der LUT-Datei (Format, CRC...)          #
- * #    NO_IDENT_BLOCK     die LUT-Datei enthält keinen IDENT Block          #
- * #    OK                 Erfolg                                            #
- * #                                                                         #
- * ###########################################################################
- */
-
-DLL_EXPORT int get_ident(char **ident,char *lut_name)
-{
-   return NOT_IMPLEMENTED;
-}
-
-/* Funktion set_ident() +§§§1 */
-/*
- * ###########################################################################
- * # set_ident(): ident-String aus der LUT-Datei holen                       #
- * #                                                                         #
- * # Die Funktion setzt den ident-String in der LUT-Datei auf den            #
- * # angegebenen Wert.                                                       #
- * #                                                                         #
- * #                                                                         #
- * # Parameter:                                                              #
- * #    ident:                                                               #
- * #    lut_name: Name der LUT-Datei                                         #
- * #                                                                         #
- * # Rückgabewerte: wie in read_lut():                                       #
- * #    ERROR_MALLOC       kann keinen Speicher allokieren                   #
- * #    NO_LUT_FILE        LUT-Datei nicht gefunden (Pfad falsch?)           #
- * #    FATAL_ERROR        kann die LUT-Datei nicht lesen                    #
- * #    INVALID_LUT_FILE   Fehler in der LUT-Datei (Format, CRC...)          #
- * #    NO_IDENT_BLOCK     die LUT-Datei enthält keinen IDENT Block          #
- * #    OK                 Erfolg                                            #
- * #                                                                         #
- * ###########################################################################
- */
-
-DLL_EXPORT int set_ident(char *ident,char *lut_name)
-{
-   return NOT_IMPLEMENTED;
+   for(i='a';i<'z';i++){ /* Sonderfall für bx1, bx2 und by4: Buchstaben a-z => 10...36 (Prüfziffermethoden) */
+      bx1[i]=(i-'a'+10);
+      by1[i]=(i-'a'+1);
+      bx2[i]=bx1[i]*10;
+      by4[i]=(i-'a'+1)*1000;
+   }
+   for(i='A';i<'Z';i++){ /* Sonderfall für bx1, bx2 und by4: Buchstaben A-Z => 10...36 (Untermethoden) */
+      bx1[i]=(i-'A'+10);
+      by1[i]=(i-'A'+1);
+      bx2[i]=bx1[i]*10;
+      by4[i]=(i-'A'+1)*1000;
+   }
 }
 
 /* Funktion kto_check_int() +§§§1
@@ -1227,34 +1012,22 @@ static int kto_check_int(char *pz_or_blz,char *kto,char *lut_name)
    kto_len=strlen(kto);
    if(kto_len>10 || kto_len==0)return INVALID_KTO_LENGTH;
    if(!*pz_or_blz)return INVALID_BLZ;
+#if THREAD_SAFE
+   if(!b1['1'])init_atoi_table_t(ctx);
+#else
+   if(!b1['1'])init_atoi_table();
+#endif
 
 #if DEBUG
          /* zwei Ziffern: Prüfziffermethode angegeben */
    untermethode=0;
-   if(!*(pz_or_blz+2)){
-      if(ISDIGIT(tmp= *pz_or_blz))
-         pz_methode=(tmp-'0')*10;
-      else if(tmp>='A' && tmp<='Z')
-         pz_methode=(tmp-'A'+10)*10;
-      else if(tmp>='a' && tmp<='z')
-         pz_methode=(tmp-'a'+10)*10;
-      else
-         pz_methode=0;
-      if(ISDIGIT(tmp= *(pz_or_blz+1)))pz_methode+=tmp-'0';
-   }
+   if(!*(pz_or_blz+2))
+      pz_methode=bx2[(int)*pz_or_blz]+bx1[(int)*(pz_or_blz+1)];
 
       /* drei Ziffern: Prüfziffermethode + Untermethode (3. Stelle) */
    else if(!*(pz_or_blz+3)){
-      if(ISDIGIT(tmp= *pz_or_blz))
-         pz_methode=(tmp-'0')*10;
-      else if(tmp>='A' && tmp<='Z')
-         pz_methode=(tmp-'A'+10)*10;
-      else if(tmp>='a' && tmp<='z')
-         pz_methode=(tmp-'a'+10)*10;
-      else
-         pz_methode=0;
-      if(ISDIGIT(tmp= *(pz_or_blz+1)))pz_methode+=tmp-'0';
-      if(ISDIGIT(tmp= *(pz_or_blz+2)))pz_methode+=(untermethode=tmp-'0')*1000;
+      pz_methode=bx2[(int)*pz_or_blz]+bx1[(int)*(pz_or_blz+1)]+by4[(int)*(pz_or_blz+2)];
+      untermethode=by1[(int)*(pz_or_blz+2)];
    }
    else{
 #endif
@@ -1288,7 +1061,7 @@ static int kto_check_int(char *pz_or_blz,char *kto,char *lut_name)
           + b6[(unsigned int)pz_or_blz[2]]
           + b7[(unsigned int)pz_or_blz[1]]
           + b8[(unsigned int)pz_or_blz[0]];
-      if(tmp>=0xfffffff)return INVALID_BLZ_LENGTH;
+      if(tmp>=0xfffffff || pz_or_blz[8])return INVALID_BLZ_LENGTH;
       h=(tmp>>hash_shift)-hash_base; /* Hashwert für schnelle Suche im BLZ-Array */
       if(h<0)
          h=0;
@@ -1326,11 +1099,6 @@ static int kto_check_int(char *pz_or_blz,char *kto,char *lut_name)
  * ######################################################################
  */
 
-   /* das folgende Label wird bei DEBUG benutzt, falls eine Untermethode nicht gefunden
-    * wird (das ist einfacher und schneller als eine while-Konstruktion o.ä.).
-    */
-
-test_init:
    switch(pz_methode){
 
 /* Berechnungsmethoden 00 bis 09 +§§§3
@@ -7897,7 +7665,7 @@ test_init:
 
 
 
-/* Berechnungsmethoden C0 bis C4 +§§§3
+/* Berechnungsmethoden C0 bis C6 +§§§3
    Berechnung nach der Methode C0 +§§§4 */
 /*
  * ######################################################################
@@ -8306,8 +8074,217 @@ test_init:
             CHECK_PZ10;
          }
 
+/* Berechnung nach der Methode C5 +§§§4 */
+/*
+ * ######################################################################
+ * #              Berechnung nach der Methode C5                        #
+ * ######################################################################
+ * #                                                                    #
+ * # Die Kontonummern sind einschließlich der Prüfziffer 6- oder 8-     #
+ * # bis 10-stellig, ggf. ist die Kontonummer für die Prüfziffer-       #
+ * # berechnung durch linksbündige Auffüllung mit Nullen 10-stellig     #
+ * # darzustellen.                                                      #
+ * #                                                                    #
+ * # Die Berechnung der Prüfziffer und die möglichen Ergebnisse         #
+ * # richten sich nach dem jeweils bei der entsprechenden Variante      #
+ * # angegebenen Kontonummernkreis. Entspricht eine Kontonummer         #
+ * # keinem der vorgegebenen Kontonummernkreise oder führt die          #
+ * # Berechnung der Prüfziffer nach der vorgegebenen Variante zu        #
+ * # einem Prüfzifferfehler, so ist die Kontonummer ungültig.           #
+ * #                                                                    #
+ * # Variante 1:                                                        #
+ * # Modulus 10, Gewichtung 2, 1, 2, 1, 2                               #
+ * # Die Berechnung und mögliche Ergebnisse entsprechen der             #
+ * # Methode 75.                                                        #
+ * #                                                                    #
+ * # 6-stellige Kontonummern; 5. Stelle = 1-8                           #
+ * # Kontonummernkreis 0000100000 bis 0000899999                        #
+ * #                                                                    #
+ * # 9-stellige Kontonummern; 2. Stelle = 1-8                           #
+ * # Kontonummernkreis 0100000000 bis 0899999999                        #
+ * #                                                                    #
+ * # Variante 2:                                                        #
+ * # Modulus 10, iterierte Transformation                               #
+ * # Die Berechnung und mögliche Ergebnisse entsprechen der             #
+ * # Methode 29.                                                        #
+ * #                                                                    #
+ * # 10-stellige Kontonummern, 1. Stelle = 1, 4, 5, 6 oder 9            #
+ * # Kontonummernkreis 1000000000 bis 1999999999                        #
+ * # Kontonummernkreis 4000000000 bis 6999999999                        #
+ * # Kontonummernkreis 9000000000 bis 9999999999                        #
+ * #                                                                    #
+ * # Variante 3:                                                        #
+ * # Modulus 10, Gewichtung 2, 1, 2, 1, 2, 1, 2, 1, 2                   #
+ * # Die Berechnung und mögliche Ergebnisse entsprechen der             #
+ * # Methode 00.                                                        #
+ * # 10-stellige Kontonummern, 1. Stelle = 3                            #
+ * # Kontonummernkreis 3000000000 bis 3999999999                        #
+ * #                                                                    #
+ * # Variante 4:                                                        #
+ * # Für die folgenden Kontonummernkreise gilt die Methode 09           #
+ * # (keine Prüfzifferberechnung).                                      #
+ * #                                                                    #
+ * # 8-stellige Kontonummern; 3. Stelle = 3, 4 oder 5                   #
+ * # Kontonummernkreis 0030000000 bis 0059999999                        #
+ * #                                                                    #
+ * # 10-stellige Kontonummern; 1.+ 2. Stelle = 70 oder 85               #
+ * # Kontonummernkreis 7000000000 bis 7099999999                        #
+ * # Kontonummernkreis 8500000000 bis 8599999999                        #
+ * ######################################################################
+ */
 
-/* nicht abgedeckte Fälle +§§§4 */
+      CASE1(125)
+
+      CASE_U1(125,1)
+
+            /* Variante 1a:
+             *  6-stellige Kontonummern; 5. Stelle = 1-8, Prüfziffer an Stelle 10
+             */
+         if(kto[0]=='0' && kto[1]=='0' && kto[2]=='0' && kto[3]=='0' && kto[4]>='1' && kto[4]<='8'){
+#ifdef __ALPHA
+            pz = ((kto[4]<'5') ? (kto[4]-'0')*2 : (kto[4]-'0')*2-9)
+               +  (kto[5]-'0')
+               + ((kto[6]<'5') ? (kto[6]-'0')*2 : (kto[6]-'0')*2-9)
+               +  (kto[7]-'0')
+               + ((kto[8]<'5') ? (kto[8]-'0')*2 : (kto[8]-'0')*2-9);
+#else
+            pz=(kto[5]-'0')+(kto[7]-'0');
+            if(kto[4]<'5')pz+=(kto[4]-'0')*2; else pz+=(kto[4]-'0')*2-9;
+            if(kto[6]<'5')pz+=(kto[6]-'0')*2; else pz+=(kto[6]-'0')*2-9;
+            if(kto[8]<'5')pz+=(kto[8]-'0')*2; else pz+=(kto[8]-'0')*2-9;
+#endif
+         MOD_10_80;   /* pz%=10 */
+            if(pz)pz=10-pz;
+            CHECK_PZ10;
+         }
+
+            /* Variante 1b:
+             *    9-stellige Kontonummern; 2. Stelle = 1-8, Prüfziffer an Stelle 7
+             */
+         else if(kto[0]=='0' && kto[1]>='1' && kto[1]<='8'){
+#ifdef __ALPHA
+            pz = ((kto[1]<'5') ? (kto[1]-'0')*2 : (kto[1]-'0')*2-9)
+               +  (kto[2]-'0')
+               + ((kto[3]<'5') ? (kto[3]-'0')*2 : (kto[3]-'0')*2-9)
+               +  (kto[4]-'0')
+               + ((kto[5]<'5') ? (kto[5]-'0')*2 : (kto[5]-'0')*2-9);
+#else
+            pz=(kto[2]-'0')+(kto[4]-'0');
+            if(kto[1]<'5')pz+=(kto[1]-'0')*2; else pz+=(kto[1]-'0')*2-9;
+            if(kto[3]<'5')pz+=(kto[3]-'0')*2; else pz+=(kto[3]-'0')*2-9;
+            if(kto[5]<'5')pz+=(kto[5]-'0')*2; else pz+=(kto[5]-'0')*2-9;
+#endif
+         MOD_10_40;   /* pz%=10 */
+            if(pz)pz=10-pz;
+            CHECK_PZ7;
+         }
+
+            /* Variante 2: 10-stellige Kontonummern, 1. Stelle = 1, 4, 5, 6 oder 9 */
+         else if(kto[0]=='1' || kto[0]>='4' && kto[0]<='6' || kto[0]=='9'){
+      CASE_U1(125,2)
+            pz = m10h_digits[0][(unsigned int)(kto[0]-'0')]
+               + m10h_digits[3][(unsigned int)(kto[1]-'0')]
+               + m10h_digits[2][(unsigned int)(kto[2]-'0')]
+               + m10h_digits[1][(unsigned int)(kto[3]-'0')]
+               + m10h_digits[0][(unsigned int)(kto[4]-'0')]
+               + m10h_digits[3][(unsigned int)(kto[5]-'0')]
+               + m10h_digits[2][(unsigned int)(kto[6]-'0')]
+               + m10h_digits[1][(unsigned int)(kto[7]-'0')]
+               + m10h_digits[0][(unsigned int)(kto[8]-'0')];
+            MOD_10_80;   /* pz%=10 */
+            if(pz)pz=10-pz;
+            CHECK_PZ10;
+         }
+
+            /* Variante 3: 10-stellige Kontonummern, 1. Stelle = 3 */
+         else if(kto[0]=='3'){
+      CASE_U1(125,3)
+#ifdef __ALPHA
+            pz = ((kto[0]<'5') ? (kto[0]-'0')*2 : (kto[0]-'0')*2-9)
+               +  (kto[1]-'0')
+               + ((kto[2]<'5') ? (kto[2]-'0')*2 : (kto[2]-'0')*2-9)
+               +  (kto[3]-'0')
+               + ((kto[4]<'5') ? (kto[4]-'0')*2 : (kto[4]-'0')*2-9)
+               +  (kto[5]-'0')
+               + ((kto[6]<'5') ? (kto[6]-'0')*2 : (kto[6]-'0')*2-9)
+               +  (kto[7]-'0')
+               + ((kto[8]<'5') ? (kto[8]-'0')*2 : (kto[8]-'0')*2-9);
+#else
+            pz=(kto[1]-'0')+(kto[3]-'0')+(kto[5]-'0')+(kto[7]-'0');
+            if(kto[0]<'5')pz+=(kto[0]-'0')*2; else pz+=(kto[0]-'0')*2-9;
+            if(kto[2]<'5')pz+=(kto[2]-'0')*2; else pz+=(kto[2]-'0')*2-9;
+            if(kto[4]<'5')pz+=(kto[4]-'0')*2; else pz+=(kto[4]-'0')*2-9;
+            if(kto[6]<'5')pz+=(kto[6]-'0')*2; else pz+=(kto[6]-'0')*2-9;
+            if(kto[8]<'5')pz+=(kto[8]-'0')*2; else pz+=(kto[8]-'0')*2-9;
+#endif
+            MOD_10_80;   /* pz%=10 */
+            if(pz)pz=10-pz;
+            CHECK_PZ10;
+         }
+
+            /* Variante 4:
+             *    8-stellige KOntonummern mit 3. Stelle = 3,4, oder 5
+             *    10-stellige Kontonummern, 1. und 2. Stelle = 70 oder 85:
+             */
+         else if( kto[0]=='0' && kto[1]=='0' && kto[2]>='3' && kto[2]<='5'
+               || kto[0]=='7' && kto[1]=='0'
+               || kto[0]=='8' && kto[1]=='5'){
+      CASE_U1(125,4)
+         return OK_NO_CHK;
+      }
+      else  /* Kontonummer entspricht keinem vorgegebenen Kontenkreis */
+         return INVALID_KTO;
+
+/* Berechnung nach der Methode C6 +§§§4 */
+/*
+ * ######################################################################
+ * #              Berechnung nach der Methode C6                        #
+ * ######################################################################
+ * # Modulus 10, Gewichtung 1, 2, 1, 2, 1, 2, 1, 2                      #
+ * # Die Kontonummer ist 10-stellig, ggf. ist die Kontonummer für die   #
+ * # Prüfzifferberechnung durch linksbündige Auffüllung mit Nullen      #
+ * # 10-stellig darzustellen. Die 10. Stelle der Kontonummer ist die    #
+ * # Prüfziffer.                                                        #
+ * #                                                                    #
+ * # Für die Berechnung der Prüfziffer werden die Stellen 2 bis 9 der   #
+ * # Kontonummer verwendet. Diese Stellen sind links um die Zahl        #
+ * # (Konstante) 5499570 zu ergänzen.                                   #
+ * #                                                                    #
+ * # Die Berechnung und mögliche Ergebnisse entsprechen der Methode 00. #
+ * ######################################################################
+ * #                                                                    #
+ * # Anmerkung zur Berechnung (MP): Da die Konstante immer nur einen    #
+ * # festen Wert zur Berechnung beiträgt (31), wird diese Berechnung    #
+ * # nicht gemacht, sondern gleich der Wert als Initialwert für die     #
+ * # Quersumme verwendet und die Berechnung erst mit der zweiten Stelle #
+ * # der Kontonummer begonnen.                                          #
+ * #                                                                    #
+ * ######################################################################
+ */
+
+      CASE1(126)
+#ifdef __ALPHA
+         pz = 31  /* Quersumme der Berechnung für die Konstante */
+            + (kto[1]-'0')
+            + ((kto[2]<'5') ? (kto[2]-'0')*2 : (kto[2]-'0')*2-9)
+            +  (kto[3]-'0')
+            + ((kto[4]<'5') ? (kto[4]-'0')*2 : (kto[4]-'0')*2-9)
+            +  (kto[5]-'0')
+            + ((kto[6]<'5') ? (kto[6]-'0')*2 : (kto[6]-'0')*2-9)
+            +  (kto[7]-'0')
+            + ((kto[8]<'5') ? (kto[8]-'0')*2 : (kto[8]-'0')*2-9);
+#else
+         pz=31+(kto[1]-'0')+(kto[3]-'0')+(kto[5]-'0')+(kto[7]-'0');
+         if(kto[2]<'5')pz+=(kto[2]-'0')*2; else pz+=(kto[2]-'0')*2-9;
+         if(kto[4]<'5')pz+=(kto[4]-'0')*2; else pz+=(kto[4]-'0')*2-9;
+         if(kto[6]<'5')pz+=(kto[6]-'0')*2; else pz+=(kto[6]-'0')*2-9;
+         if(kto[8]<'5')pz+=(kto[8]-'0')*2; else pz+=(kto[8]-'0')*2-9;
+#endif
+         MOD_10_160;   /* pz%=10 */
+         if(pz)pz=10-pz;
+         CHECK_PZ10;
+
+/* nicht abgedeckte Fälle +§§§3 */
 /*
  * ######################################################################
  * #               nicht abgedeckte Fälle                               #
@@ -8315,22 +8292,11 @@ test_init:
  */
       default:
 #if DEBUG
-         if(untermethode){
-
-               /* nichts für Puristen, aber dies ist der einfachste und
-                * schnellste Weg, die falsche Untermethode loszuwerden:  ;-)))
-                */
-
-            pz_methode%=1000; /* Untermethode aus pz_methode löschen */
-            untermethode=0;
-            fprintf(stderr,"Die Untermethode %s ist nicht definiert\n",pz_or_blz);
-            goto test_init;
-         }
+         if(untermethode)return UNDEFINED_SUBMETHOD; 
 #endif
          return NOT_IMPLEMENTED;
    }
 }
-
 
 /*
  * ######################################################################
@@ -8339,7 +8305,6 @@ test_init:
  */
 
 
-/* nicht abgedeckte Fälle +§§§5 */
 /* Funktion set_msg() +§§§1 */
 /* ###########################################################################
  * # Die Funktion set_retval() setzt die globale Variable kto_check_msg auf  #
@@ -8360,6 +8325,18 @@ static void set_msg(int retval)
 #endif
 {
    switch(retval){
+      case UNDEFINED_SUBMETHOD:
+         kto_check_msg="##### Die Untermethode ist nicht definiert #####";
+         break;
+
+      case INVALID_LUT_VERSION:
+#if HTML_OUTPUT
+         kto_check_msg="##### Die Versionsnummer f&uuml;r die LUT-Datei ist ung&uuml;ltig #####";
+#else
+         kto_check_msg="##### Die Versionsnummer für die LUT-Datei ist ungültig #####";
+#endif
+         break;
+
       case INVALID_BLZ_FILE:
 #if HTML_OUTPUT
          kto_check_msg="##### Fehler in der blz.txt Datei (falsche Zeilenl&auml;nge) #####";
@@ -8522,6 +8499,7 @@ DLL_EXPORT char *kto_check_str(char *pz_or_blz,char *kto,char *lut_name)
    set_msg(retval);
 #endif
    switch(retval){
+      case UNDEFINED_SUBMETHOD: return "UNDEFINED_SUBMETHOD";
       case INVALID_LUT_VERSION: return "INVALID_LUT_VERSION";
       case FALSE_GELOESCHT: return "FALSE_GELOESCHT";
       case OK_NO_CHK_GELOESCHT: return "OK_NO_CHK_GELOESCHT";
@@ -8685,6 +8663,7 @@ DLL_EXPORT char *kto_check_str_t(char *pz_or_blz,char *kto,char *lut_name,KTO_CH
    set_msg_t(retval,ctx);
    set_globals(ctx);
    switch(retval){
+      case UNDEFINED_SUBMETHOD: return "UNDEFINED_SUBMETHOD";
       case INVALID_LUT_VERSION: return "INVALID_LUT_VERSION";
       case FALSE_GELOESCHT: return "FALSE_GELOESCHT";
       case OK_NO_CHK_GELOESCHT: return "OK_NO_CHK_GELOESCHT";
@@ -8739,6 +8718,7 @@ DLL_EXPORT void kto_check_test_vars(char *txt,int i)
    fprintf(stderr,"Test von Variablen:\nTextvariable: %s\nIntegervariable: %d (Hexwert: 0x%08X)\n",txt,i,i);
 }
 #else /* !INCLUDE_KONTO_CHECK_DE */
+/* Leerdefinitionen für !INCLUDE_KONTO_CHECK_DE +§§§1 */
 #include "konto_check.h"
 DLL_EXPORT int kto_check(char *pz_or_blz,char *kto,char *lut_name){return EXCLUDED_AT_COMPILETIME;};
 DLL_EXPORT int kto_check_t(char *pz_or_blz,char *kto,char *lut_name,KTO_CHK_CTX *ctx){return EXCLUDED_AT_COMPILETIME;};

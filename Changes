@@ -7,3 +7,7 @@ version starts with 2.1; all previous versions are C only libraries.
 	- original version; created by h2xs 1.23 with options
 		-A -n Business::KontoCheck -v 2.1 -g
 
+2.2 Wed August 22 23:55:13 2007
+   minor release: 
+      - newly defined check methods C5 and C6 implemented
+      - cleanup of old (unused) code and prototypes

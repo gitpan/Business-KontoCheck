@@ -15,8 +15,6 @@ konto_check-at.h
 inpar.dat
 blz.lut
 blz-at.lut
-t.pl
-testkonten.txt
-testkonten-at.txt
+test.pl
 lgpl.txt
 META.yml                                 Module meta-data (added by MakeMaker)

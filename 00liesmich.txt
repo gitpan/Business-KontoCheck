@@ -6,8 +6,8 @@ vim:set tw=70; set ft=text; set ai
 ########################################################################
 #                                                                      #
 # Autor             : Michael Plugge <m.plugge@hs-mannheim.de>         #
-# Version           : 2.1 (stabil)                                     #
-# Datum             : 10.06.2007                                       #
+# Version           : 2.2 (stabil)                                     #
+# Datum             : 22.08.2007                                       #
 #                                                                      #
 ########################################################################
 
@@ -43,7 +43,7 @@ konto_check-at.h            : C Header-Datei für die österreichische Version
 konto_check.c               : C Quellcode für die deutsche Version
 konto_check-at.c            : C Quellcode für die österreichische Version
 inpar.dat                   : Testdatei für das INPAR Datenformat (s.u.)
-t.pl                        : kleine Beispielsdatei
+test.pl                     : kleine Beispielsdatei
 KontoCheck.xs               : XSUB-Datei mit C/Perl glue code
 lib/Business/KontoCheck.pm  : Perl Interface und Dokumentation
 t/Business-KontoCheck.t     : Testdatei für make test

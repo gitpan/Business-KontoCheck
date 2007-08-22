@@ -229,6 +229,19 @@ Versionen der deutschen Bibliothek:
                  - einige Anpassungen für Perl, Perl Dokumentation
 
 
+   22.08.07 Version 2.2
+                    Diese Version ist nur ein Zwischenrelease, um die
+                    neu definierten Prüfmethoden C5 und C6, die ab
+                    September gültig werden, in die Library einzufügen.
+                    Ansonsten wurden in der kleinere Details geändert.
+                    Die Threadfestigkeit wurde zwar angegangen, ist bis
+                    jetzt allerdings nur in der Entwicklerversion
+                    implementiert (braucht noch einige Tests).
+
+                  - Methoden C5 und C6 implementiert
+                  - einige Aufräumarbeiten, unbenutzte Prototypen für
+                    das LUT2 Datei-Format entfernt. Die Funktionen
+                    werden in der nächsten größeren Version eingeführt.
 
 ##############################################################################
 #          PRÜFZIFFERBERECHNUNG VON ÖSTERREICHISCHEN KONTONUMMERN            #
