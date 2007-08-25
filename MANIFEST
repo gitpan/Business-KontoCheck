@@ -16,5 +16,7 @@ inpar.dat
 blz.lut
 blz-at.lut
 test.pl
+testkonten.txt
+testkonten-at.txt
 lgpl.txt
 META.yml                                 Module meta-data (added by MakeMaker)

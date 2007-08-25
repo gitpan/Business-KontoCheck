@@ -16,7 +16,7 @@ our @EXPORT_OK = qw( kto_check kto_check_str generate_lut
 our @EXPORT = qw( kto_check kto_check_str kto_check_at
       kto_check_at_str %kto_retval );
 
-our $VERSION = '2.2';
+our $VERSION = '2.3';
 
 require XSLoader;
 XSLoader::load('Business::KontoCheck', $VERSION);
@@ -56,6 +56,7 @@ XSLoader::load('Business::KontoCheck', $VERSION);
    0  =>  'falsch',
    1  =>  'ok',
    2  =>  'ok, ohne Prüfung',
+   3  =>  'ok; als BLZ wurde die Test-BLZ benutzt',
 
  'UNDEFINED_SUBMETHOD'           =>  'Die Untermethode ist nicht definiert',
  'EXCLUDED_AT_COMPILETIME'       =>  'Die Funktion wurde beim Kompilieren ausgeschlossen',
@@ -88,6 +89,7 @@ XSLoader::load('Business::KontoCheck', $VERSION);
  'FALSE'                         =>  'falsch',
  'OK'                            =>  'ok',
  'OK_NO_CHK'                     =>  'ok, ohne Prüfung',
+ 'OK_TEST_BLZ_USED'              =>  'ok; als BLZ wurde die Test-BLZ benutzt',
 );
 
 1;
@@ -171,6 +173,7 @@ language is german too.
           FALSE                        0
           OK                           1
           OK_NO_CHK                    2
+          OK_TEST_BLZ_USED             3
 
      Mittels des assoziativen Arrays %kto_retval lassen sich die numerischen
      und kurzen Rückgabewerte in einen etwas ausführlicheren Rückgabetext

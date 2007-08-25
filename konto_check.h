@@ -1,11 +1,10 @@
 /*
  * ##########################################################################
  * #  Dies ist konto_check, ein Programm zum Testen der Prüfziffern         #
- * #  von deutschen Bankkonten. Es ist in erster Linie für die Benutzung    #
- * #  mit dem dtaus-Paket von Martin Schulze <joey@infodrom.org> und dem    #
- * #  lx2l Präprozessor gedacht; es kann jedoch auch als eigenständiges     #
- * #  Programm oder als Library zur Verwendung in anderen Programmen        #
- * #  benutzt werden.                                                       #
+ * #  von deutschen Bankkonten. Es kann als eigenständiges Programm         #
+ * #  (z.B. mit der beigelegten main() Routine) oder als Library zur        #
+ * #  Verwendung in anderen Programmen bzw. Programmiersprachen benutzt     #
+ * #  werden.                                                               #
  * #                                                                        #
  * #  Copyright (C) 2002-2007 Michael Plugge <m.plugge@hs-mannheim.de>      #
  * #                                                                        #
@@ -138,6 +137,7 @@
 #define FALSE                        0
 #define OK                           1
 #define OK_NO_CHK                    2
+#define OK_TEST_BLZ_USED             3
 
 #define DEFAULT_LUT_NAME  "blz.lut"
 #define MAX_BLZ_CNT 30000  /* maximale Anzahl BLZ's in generate_lut() */
@@ -309,8 +309,10 @@ DLL_EXPORT void kto_check_test_vars(char *txt,int i);
  */
 
 #ifndef KONTO_CHECK_VARS
-DLL_EXPORT_V extern char *kto_check_msg;   /* globaler char-ptr mit Klartext-Ergebnis des Tests */
-DLL_EXPORT_V extern char pz_str[];         /* benutzte Prüfziffer-Methode und -Untermethode (als String) */
+DLL_EXPORT_V extern const char *kto_check_msg;   /* globaler char-ptr mit Klartext-Ergebnis des Tests */
+DLL_EXPORT_V extern const char pz_str[];         /* benutzte Prüfziffer-Methode und -Untermethode (als String) */
+DLL_EXPORT_V extern const char *konto_check_retvaltxt[];
+#define KONTO_CHECK_RETVALTXT(retval) konto_check_retvaltxt[40+retval]
 
   /* pz_methode: benutzte Prüfziffer-Methode (numerisch). Falls im Debug-Modus
    * Untermethoden benutzt werden, wird die Untermethode mit 1000 multipliziert
@@ -322,5 +324,4 @@ DLL_EXPORT_V extern int pz_methode;
 #if DEBUG
 DLL_EXPORT_V extern int pz;                /* Prüfziffer (bei DEBUG als globale Variable für Testzwecke) */
 #endif   /* DEBUG */
-
 #endif   /* KONTO_CHECK_VARS */

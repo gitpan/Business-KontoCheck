@@ -243,6 +243,18 @@ Versionen der deutschen Bibliothek:
                     das LUT2 Datei-Format entfernt. Die Funktionen
                     werden in der nächsten größeren Version eingeführt.
 
+   25.08.07 Version 2.3
+                    Bugfix-Release für den Perl-Port von Version 2.2. 
+
+                  - In Version 2.2 (Perl) fehlten die beiden Dateien
+                    testkonten.txt und testkonten-at.txt. Bei make test ein
+                    Fehler zurückgeliefert (eigentlich unkritisch, aber nicht
+                    sehr schön).
+
+                  - neuer Rückgabewert OK_TEST_BLZ_USED für die Methoden 52,
+                    53, B6 und C0 (keine Warnung mehr nach stderr, falls die
+                    Prüfziffermethode direkt angegeben wird, ohne BLZ).
+
 ##############################################################################
 #          PRÜFZIFFERBERECHNUNG VON ÖSTERREICHISCHEN KONTONUMMERN            #
 #                           C-/Perl-Bibliothek                               #

@@ -49,8 +49,8 @@
 /* Definitionen und Includes  */
 #define BLZ_BIG_JUMP 0  /* noch optimalen Wert suchen */
 
-#define VERSION "2.2"
-#define VERSION_DATE "2007-08-21"
+#define VERSION "2.3"
+#define VERSION_DATE "2007-08-25"
 
 #ifndef INCLUDE_KONTO_CHECK_DE
 #define INCLUDE_KONTO_CHECK_DE 1
@@ -1002,7 +1002,7 @@ static int kto_check_int(char *pz_or_blz,char *kto,char *lut_name)
 #endif
 {
    char *ptr,*dptr,kto_alt[32],xkto[32];
-   int i,p1,h,ret_val,tmp,kto_len,pz1;
+   int i,p1,h,ret_val,tmp,kto_len,pz1,test_blz_used;
 #if DEBUG
 	int untermethode;
 #endif
@@ -3091,9 +3091,11 @@ static int kto_check_int(char *pz_or_blz,char *kto,char *lut_name)
                /* nur Prüfziffer angegeben; Test-BLZ einsetzen */
       CASE_U(52,2)
          if(strlen(pz_or_blz)!=8){
-            fprintf(stderr,"Warnung: für Methode 52 wird die BLZ benötigt!!; benutze zum Test 13051172\n");
+            test_blz_used=1;
             pz_or_blz="13051172";
          }
+         else
+            test_blz_used=0;
 
             /* Generieren der Konto-Nr. des ESER-Altsystems */
          for(ptr=kto;*ptr=='0';ptr++);
@@ -3123,8 +3125,12 @@ static int kto_check_int(char *pz_or_blz,char *kto,char *lut_name)
          }
          pz=i;
          if(i==10)return INVALID_KTO;
-         if(*(kto_alt+5)-'0'==pz)
-            return OK;
+         if(*(kto_alt+5)-'0'==pz){
+            if(test_blz_used)
+               return OK_TEST_BLZ_USED;
+            else
+               return OK;
+         }
          else
             return FALSE;
 
@@ -3174,9 +3180,11 @@ static int kto_check_int(char *pz_or_blz,char *kto,char *lut_name)
                /* nur Prüfziffer angegeben; Test-BLZ einsetzen */
       CASE_U(53,2)
          if(strlen(pz_or_blz)!=8){
-            fprintf(stderr,"Warnung: für Methode 53 wird die BLZ benötigt!!; benutze zum Test 16052072\n");
+            test_blz_used=1;
             pz_or_blz="16052072";
          }
+         else
+            test_blz_used=0;
 
             /* Generieren der Konto-Nr. des ESER-Altsystems */
          for(ptr=kto;*ptr=='0';ptr++);
@@ -3212,7 +3220,12 @@ static int kto_check_int(char *pz_or_blz,char *kto,char *lut_name)
          }
          pz=i;
          if(i==10)return INVALID_KTO;
-         CHECK_PZ6;
+         if(*(kto+5)-'0'==pz){
+            if(test_blz_used)
+               return OK_TEST_BLZ_USED;
+            else
+               return OK;
+         }
 
 /*  Berechnung nach der Methode 54 +§§§4 */
 /*
@@ -7412,9 +7425,11 @@ static int kto_check_int(char *pz_or_blz,char *kto,char *lut_name)
          else{
       CASE_U1(116,2)
             if(strlen(pz_or_blz)!=8){
-               fprintf(stderr,"Warnung: für Methode B6b wird die BLZ benötigt!!; benutze zum Test 80053762\n");
+               test_blz_used=1;
                pz_or_blz="80053762";
             }
+            else
+               test_blz_used=0;
 
                /* Generieren der Konto-Nr. des ESER-Altsystems */
             for(ptr=kto;*ptr=='0';ptr++);
@@ -7448,7 +7463,12 @@ static int kto_check_int(char *pz_or_blz,char *kto,char *lut_name)
             }
             pz=i;
             if(i==10)return INVALID_KTO;
-            CHECK_PZ6;
+            if(*(kto+5)-'0'==pz){
+               if(test_blz_used)
+                  return OK_TEST_BLZ_USED;
+               else
+                  return OK;
+            }
          }
 
 /*  Berechnung nach der Methode B7 +§§§4 */
@@ -7699,9 +7719,11 @@ static int kto_check_int(char *pz_or_blz,char *kto,char *lut_name)
          if(*kto=='0' && kto[1]=='0'){
       CASE_U1(120,1)
             if(strlen(pz_or_blz)!=8){
-               fprintf(stderr,"Warnung: für Methode C0a wird die BLZ benötigt!!; benutze zum Test 13051172\n");
+               test_blz_used=1;
                pz_or_blz="13051172";
             }
+            else
+               test_blz_used=0;
 
                /* Generieren der Konto-Nr. des ESER-Altsystems */
             for(ptr=kto;*ptr=='0';ptr++);
@@ -7731,7 +7753,12 @@ static int kto_check_int(char *pz_or_blz,char *kto,char *lut_name)
             }
             pz=i;
             if(i==10)return INVALID_KTO;
-            if(*(kto_alt+5)-'0'==pz)return OK;
+            if(*(kto_alt+5)-'0'==pz){
+               if(test_blz_used)
+                  return OK_TEST_BLZ_USED;
+               else
+                  return OK;
+            }
 #if DEBUG
             if(untermethode)return FALSE;
 #endif
@@ -8433,6 +8460,10 @@ static void set_msg(int retval)
 #endif
          break;
 
+      case OK_TEST_BLZ_USED:
+         kto_check_msg="ok; als BLZ wurde die Test-BLZ benutzt";
+         break;
+
       default:
 #if HTML_OUTPUT
          kto_check_msg="ung&uuml;ltiger R&uuml;ckgabewert";
@@ -8523,6 +8554,7 @@ DLL_EXPORT char *kto_check_str(char *pz_or_blz,char *kto,char *lut_name)
       case FALSE: return "FALSE";
       case OK: return "OK";
       case OK_NO_CHK: return "OK_NO_CHK";
+      case OK_TEST_BLZ_USED: return "OK_TEST_BLZ_USED";
       default: return "???";
    }
 }
@@ -8687,6 +8719,7 @@ DLL_EXPORT char *kto_check_str_t(char *pz_or_blz,char *kto,char *lut_name,KTO_CH
       case FALSE: return "FALSE";
       case OK: return "OK";
       case OK_NO_CHK: return "OK_NO_CHK";
+      case OK_TEST_BLZ_USED: return "OK_TEST_BLZ_USED";
       default: return "???";
    }
 }

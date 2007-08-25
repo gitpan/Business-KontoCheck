@@ -1,8 +1,17 @@
-# Dies ist eine kleine Beispielsanwendung für Business::KontoCheck. Das Programm
-# list eine Reihe Bankleitzahlen und Kontonummern (durch mindestens ein nicht-alphanumerisches
-# Zeichen getrennt) sowie noch evl. nachfolgenden Kommentar ein, testet das Konto auf
-# Gültigkeit und gibt die Zeile (ergänzt durch den Rückgabewert) wieder aus. Leerzeilen sowie
-# Zeilen ohne Bankleitzahl oder Kontonummer werden unverändert ausgegeben.
+# This is a small example for Business::KontoCheck. The program reads
+# bank code numbers and account numbers from a file (delimited by at least one
+# non-alphanumeric character), optionally followed by user comment. Then the
+# account number is tested for validity and the line is written to the output.
+# The test result is appended to the line. Empty lines or lines without bank
+# code numbers or account number are copied to the output whithout
+# modificaation.
+
+# Dies ist eine kleine Beispielsanwendung für Business::KontoCheck. Das
+# Programm list eine Reihe Bankleitzahlen und Kontonummern (durch mindestens
+# ein nicht-alphanumerisches Zeichen getrennt) sowie noch evl. nachfolgenden
+# Kommentar ein, testet das Konto auf Gültigkeit und gibt die Zeile (ergänzt
+# durch den Rückgabewert) wieder aus. Leerzeilen sowie Zeilen ohne Bankleitzahl
+# oder Kontonummer werden unverändert ausgegeben.
 #
 # Geschrieben 9.6.07, Michael Plugge
 
