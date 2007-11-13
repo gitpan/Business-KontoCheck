@@ -49,8 +49,8 @@
 /* Definitionen und Includes  */
 #define BLZ_BIG_JUMP 0  /* noch optimalen Wert suchen */
 
-#define VERSION "2.3"
-#define VERSION_DATE "2007-08-25"
+#define VERSION "2.4"
+#define VERSION_DATE "2007-11-13"
 
 #ifndef INCLUDE_KONTO_CHECK_DE
 #define INCLUDE_KONTO_CHECK_DE 1
@@ -282,7 +282,7 @@ DLL_EXPORT_V char *kto_check_msg,pz_str[4];
 DLL_EXPORT_V int pz_methode;
 
 #if DEBUG
-DLL_EXPORT
+DLL_EXPORT_V
 #else
 static
 #endif
@@ -7624,7 +7624,7 @@ static int kto_check_int(char *pz_or_blz,char *kto,char *lut_name)
       CASE1(119)
          if(*kto!='0' || kto[1]!='0')return INVALID_KTO;
          if(*kto=='0' && kto[1]=='0' && kto[2]=='0' && kto[3]=='0')return INVALID_KTO;
-         if(kto[3]!='0'){
+         if(kto[2]!='0'){
       CASE_U1(119,1)
             pz  = (kto[2]-'0') * 1 + 1;   /* Maximum von pz1 ist 9*1+1=10 -> kann direkt genommen werden */
 
@@ -7685,7 +7685,7 @@ static int kto_check_int(char *pz_or_blz,char *kto,char *lut_name)
 
 
 
-/* Berechnungsmethoden C0 bis C6 +§§§3
+/* Berechnungsmethoden C0 bis C7 +§§§3
    Berechnung nach der Methode C0 +§§§4 */
 /*
  * ######################################################################
@@ -8311,6 +8311,86 @@ static int kto_check_int(char *pz_or_blz,char *kto,char *lut_name)
          if(pz)pz=10-pz;
          CHECK_PZ10;
 
+/* Berechnung nach der Methode C7 +§§§4 */
+/*
+ * ######################################################################
+ * #              Berechnung nach der Methode C7                        #
+ * ######################################################################
+ * # Die Kontonummer ist einschließlich der Prüfziffer 10-stellig,      #
+ * # ggf. ist die Kontonummer für die Prüfzifferberechnung durch        #
+ * # linksbündige Auffüllung mit Nullen 10-stellig darzustellen.        #
+ * #                                                                    #
+ * # Variante 1                                                         #
+ * # Modulus 10, Gewichtung 2, 1, 2, 1, 2, 1                            #
+ * # Die Berechnung und mögliche Ergebnisse entsprechen der             #
+ * # Methode 63. Führt die Berechnung nach Variante 1 zu einem          #
+ * # Prüfzifferfehler, so ist nach Variante 2 zu prüfen.                #
+ * #                                                                    #
+ * # Variante 2:                                                        #
+ * # Modulus 11, Gewichtung 2, 3, 4, 5, 6, 7 (modifiziert)              #
+ * # Die Berechnung und mögliche Ergebnisse entsprechen der Methode 06  #
+ * ######################################################################
+ */
+
+      CASE1(127)
+         if(*kto=='0'){ /* bei Methode 63 sind 10-stellige Kontonummern falsch */
+      CASE_U1(127,1)
+            if(*(kto+1)=='0' && *(kto+2)=='0'){
+#ifdef __ALPHA
+               pz =   (kto[3]-'0')
+                  +  ((kto[4]<'5') ? (kto[4]-'0')*2 : (kto[4]-'0')*2-9)
+                  +   (kto[5]-'0')
+                  +  ((kto[6]<'5') ? (kto[6]-'0')*2 : (kto[6]-'0')*2-9)
+                  +   (kto[7]-'0')
+                  +  ((kto[8]<'5') ? (kto[8]-'0')*2 : (kto[8]-'0')*2-9);
+#else
+               pz=(kto[3]-'0')+(kto[5]-'0')+(kto[7]-'0');
+               if(kto[4]<'5')pz+=(kto[4]-'0')*2; else pz+=(kto[4]-'0')*2-9;
+               if(kto[6]<'5')pz+=(kto[6]-'0')*2; else pz+=(kto[6]-'0')*2-9;
+               if(kto[8]<'5')pz+=(kto[8]-'0')*2; else pz+=(kto[8]-'0')*2-9;
+#endif
+               MOD_10_80;   /* pz%=10 */
+               if(pz)pz=10-pz;
+               CHECK_PZX10;
+            }
+            else{
+#ifdef __ALPHA
+               pz =   (kto[1]-'0')
+                  +  ((kto[2]<'5') ? (kto[2]-'0')*2 : (kto[2]-'0')*2-9)
+                  +   (kto[3]-'0')
+                  +  ((kto[4]<'5') ? (kto[4]-'0')*2 : (kto[4]-'0')*2-9)
+                  +   (kto[5]-'0')
+                  +  ((kto[6]<'5') ? (kto[6]-'0')*2 : (kto[6]-'0')*2-9);
+#else
+               pz=(kto[1]-'0')+(kto[3]-'0')+(kto[5]-'0');
+               if(kto[2]<'5')pz+=(kto[2]-'0')*2; else pz+=(kto[2]-'0')*2-9;
+               if(kto[4]<'5')pz+=(kto[4]-'0')*2; else pz+=(kto[4]-'0')*2-9;
+               if(kto[6]<'5')pz+=(kto[6]-'0')*2; else pz+=(kto[6]-'0')*2-9;
+#endif
+               MOD_10_80;   /* pz%=10 */
+               if(pz)pz=10-pz;
+               CHECK_PZX8;
+            }
+         }
+
+      CASE_U1(127,2)
+         pz = (kto[0]-'0') * 4
+            + (kto[1]-'0') * 3
+            + (kto[2]-'0') * 2
+            + (kto[3]-'0') * 7
+            + (kto[4]-'0') * 6
+            + (kto[5]-'0') * 5
+            + (kto[6]-'0') * 4
+            + (kto[7]-'0') * 3
+            + (kto[8]-'0') * 2;
+
+         MOD_11_176;   /* pz%=11 */
+         if(pz<=1)
+            pz=0;
+         else
+            pz=11-pz;
+         CHECK_PZ10;
+
 /* nicht abgedeckte Fälle +§§§3 */
 /*
  * ######################################################################
@@ -8746,10 +8826,15 @@ DLL_EXPORT char *kto_check_str_t(char *pz_or_blz,char *kto,char *lut_name,KTO_CH
  * ###########################################################################
  */
 
-DLL_EXPORT void kto_check_test_vars(char *txt,int i)
+DLL_EXPORT char *kto_check_test_vars(char *txt,int i)
 {
+   static char test_buffer[1024];
+
    fprintf(stderr,"Test von Variablen:\nTextvariable: %s\nIntegervariable: %d (Hexwert: 0x%08X)\n",txt,i,i);
+   snprintf(test_buffer,1024,"Textvariable: %s, Integervariable: %d (Hexwert: 0x%08X)",txt,i,i);
+   return test_buffer;
 }
+
 #else /* !INCLUDE_KONTO_CHECK_DE */
 /* Leerdefinitionen für !INCLUDE_KONTO_CHECK_DE +§§§1 */
 #include "konto_check.h"
@@ -8763,4 +8848,5 @@ DLL_EXPORT int generate_lut(char *inputname,char *outputname,char *user_info,int
 DLL_EXPORT int get_lut_info(char **info,char *lut_name){return EXCLUDED_AT_COMPILETIME;};
 DLL_EXPORT int get_lut_info_t(char **info,char *lut_name,KTO_CHK_CTX *ctx){return EXCLUDED_AT_COMPILETIME;};
 DLL_EXPORT char *get_kto_check_version(void){return "EXCLUDED_AT_COMPILETIME";};
+DLL_EXPORT char *kto_check_test_vars(char *txt,int i){return "EXCLUDED_AT_COMPILETIME";};
 #endif

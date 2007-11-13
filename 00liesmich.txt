@@ -6,8 +6,8 @@ vim:set tw=70; set ft=text; set ai
 ########################################################################
 #                                                                      #
 # Autor             : Michael Plugge <m.plugge@hs-mannheim.de>         #
-# Version           : 2.2 (stabil)                                     #
-# Datum             : 22.08.2007                                       #
+# Version           : 2.4 (stabil)                                     #
+# Datum             : 13.11.2007                                       #
 #                                                                      #
 ########################################################################
 
@@ -146,6 +146,22 @@ wurde die Funktion nicht exportiert. Momentan scheint der beste Weg zu sein,
 den entsprechenden Server neu zu starten :-( - nicht schön, aber sauber.
 
 
+Die Arbeit an der neuen Version (3.0) ist schon ziemlig weit; da aber zum
+Dezember eine neue Prüfmethode Gültigkeit bekommt, wurde noch eine Version der
+2.x Reihe herausgegeben. Die Version 3.0.Beta-1 dürfte bis Ende November/Anfang
+Dezember fertig werden. In der Version sind die LUT2 Routinen integriert,
+etliche Altlasten beseitigt, und alle globalen R/W Variablen entfernt;
+die Prüfziffertabelle kann durch eine neue Version ersetzt werden; außerdem
+lassen sich zu einer gegebenen Bankleitzahl alle Felder der Bundesbankdatei
+bestimmen. Die Daten werden komprimiert gespeichert; die vollständige Datei ist
+256KB groß, eine Datei mit Bankleitzahl, Bankname, PLZ, Ort und Prüfziffer der
+Hauptstellen benötigt 53KB.
+
+Es ist außerdem geplant, daß man auch zwei Versionen der Bankleitzahlendatei
+in derselben LUT-Datei unterbringen kann; das vereinfacht die Umstellung der
+LUT-Datei am Aktualisierungsdatum (kann automatisch erfolgen). 
+
+
 7. Technische Informationen 
 ============================
 
@@ -164,7 +180,7 @@ die von der Deutschen Bundesbank zur Verfügung gestellt werden.
 Feld 1	-> Bankleitzahl oder Prüfziffer
 Feld 2	-> Kontonummer.
 
-Die Bibliothek wurde mit allen Testkontonummern aus der Dokumentation der
+Die Bibliothek wurde mit allen Testkontonummern  der Dokumentation der
 Prüfziffernberechnungmethoden der Deutschen Bundesbank (Stand Mai 2007)
 erfolgreich getestet. Außerdem wurden etliche Millionen Testkontonummern (für
 jede Methode bzw. Teilmethode ca. 50000...100000) mit dem Modul konto122.pl

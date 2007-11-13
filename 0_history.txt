@@ -6,8 +6,8 @@ vim:set tw=70; set ft=text; set ai
 ########################################################################
 #                                                                      #
 # Autor             : Michael Plugge <m.plugge@fh-mannheim.de>         #
-# Version           : 2.1                                              #
-# Datum             : 11.06.2007                                       #
+# Version           : 2.4                                              #
+# Datum             : 13.11.2007                                       #
 ########################################################################
 
 Versionen der deutschen Bibliothek:
@@ -244,7 +244,7 @@ Versionen der deutschen Bibliothek:
                     werden in der nächsten größeren Version eingeführt.
 
    25.08.07 Version 2.3
-                    Bugfix-Release für den Perl-Port von Version 2.2. 
+                    Bugfix-Release für den Perl-Port von Version 2.2.
 
                   - In Version 2.2 (Perl) fehlten die beiden Dateien
                     testkonten.txt und testkonten-at.txt. Bei make test ein
@@ -254,6 +254,19 @@ Versionen der deutschen Bibliothek:
                   - neuer Rückgabewert OK_TEST_BLZ_USED für die Methoden 52,
                     53, B6 und C0 (keine Warnung mehr nach stderr, falls die
                     Prüfziffermethode direkt angegeben wird, ohne BLZ).
+
+   13.11.07 Version 2.4
+                    Diese Version ist wieder ein Zwischenrelease, um die
+                    neu definierte Prüfmethode C7 (gültig ab Dezember)
+                    in die Library einzufügen; außerdem wurde ein Fehler
+                    in der Methode B9 beseitigt.
+
+                  - Methoden C7 implementiert
+
+                  - In Methode B9 war für den Test auf 3 führende Nullen
+                    irrtümlich if(kto[3]!='0') (statt if(kto[2]!='0') )
+                    geschrieben; korrigiert.
+
 
 ##############################################################################
 #          PRÜFZIFFERBERECHNUNG VON ÖSTERREICHISCHEN KONTONUMMERN            #

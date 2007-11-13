@@ -300,7 +300,7 @@ DLL_EXPORT char *get_kto_check_version(void);
  * ###########################################################################
  */
 
-DLL_EXPORT void kto_check_test_vars(char *txt,int i);
+DLL_EXPORT char *kto_check_test_vars(char *txt,int i);
 
 /*
  * ######################################################################

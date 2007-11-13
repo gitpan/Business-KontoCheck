@@ -1,7 +1,7 @@
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl Business-KontoCheck.t'
 
-use Test::More tests => 1021;
+use Test::More tests => 1041;
 BEGIN { use_ok('Business::KontoCheck') };
 
 # Insert your test code below, the Test::More module is use()ed here so read
@@ -15,10 +15,10 @@ while(<DATA>){
    chomp;
    ($typ,$ret,$blz,$kto)=split(/ /);
    if($typ==1){   # deutsche Kontonummern
-      ok(kto_check($blz,$kto,"") eq $ret,"BLZ/KTO $blz $kto");
+      ok(($rv=kto_check($blz,$kto,"")) eq $ret,"BLZ/KTO $blz $kto: expected: $ret, got: $rv");
    }
    if($typ==2){   # österreichische Kontonummern
-      ok(kto_check_at($blz,$kto,"") eq $ret,"AT BLZ/KTO $blz $kto");
+      ok(($rv=kto_check_at($blz,$kto,"")) eq $ret,"AT BLZ/KTO $blz $kto: expected: $ret, got: $rv");
    }
 }
 
@@ -998,6 +998,26 @@ __DATA__
 1 0 c6 7006003027
 1 0 c6 7003306026
 1 0 c6 7001501029
+1 1 c7 3500022
+1 1 c7 38150900
+1 1 c7 600103660
+1 1 c7 39101181
+1 1 c7 94012341
+1 1 c7 5073321010
+1 1 c71 3500022
+1 1 c71 38150900
+1 1 c71 600103660
+1 1 c71 39101181
+1 1 c72 94012341
+1 1 c72 5073321010
+1 1 C7 94012341
+1 1 C7 5073321010
+1 0 C7 1234517892
+1 0 C7 987614325
+1 0 C71 94012341
+1 0 C71 5073321010
+1 0 C72 1234517892
+1 0 C72 987614325
 2 2 10000 00243551900
 2 2 10000 10412006400
 2 1 14000 00115303384

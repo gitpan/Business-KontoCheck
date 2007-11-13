@@ -3,11 +3,22 @@ Revision history for Perl extension Business::KontoCheck.
 The complete history can be found in 0_history.txt (in german). The perl
 version starts with 2.1; all previous versions are C only libraries.
 
-2.1  Sat May 26 12:02:02 2007
-	- original version; created by h2xs 1.23 with options
-		-A -n Business::KontoCheck -v 2.1 -g
+2.4 Tue November 13,2007
+   minor release; the next major release (3.0) will come soon (most work is
+   already done):
+      - newly defined check methods C7 implemented
+      - fixed a bug in check method B9
 
-2.2 Wed August 22 23:55:13 2007
+2.3 Sat August 25, 2007
+   bugfix release: 
+      - added two missing files which caused 'make test' to fail
+      - added new return value OK_TEST_BLZ_USED
+
+2.2 Wed August 22, 2007
    minor release: 
       - newly defined check methods C5 and C6 implemented
       - cleanup of old (unused) code and prototypes
+
+2.1  Sat May 26, 2007
+	- original version; created by h2xs 1.23 with options
+		-A -n Business::KontoCheck -v 2.1 -g
