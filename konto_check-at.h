@@ -40,14 +40,14 @@
  */
 
 #define VERSION_AT "1.3"
-#define VERSION_DATE_AT "4.6.2007"
+#define VERSION_DATE_AT "16.1.2008"
 #define VERSION_AT_MAJOR 1
 #define VERSION_AT_MINOR 1
 #define VERSION_AT_RELEASE 3
 
 #define DEFAULT_LUT_NAME_AT "blz-at.lut"  /* Name der binären Bankleitzahlen-Datei */
-#define MAX_BLZ_CNT_AT 30000              /* maximale Anzahl Banken in blz-at.lut */
-#define MAX_TABLE_CNT_AT 500              /* maximale Anzahl Prüftabellen in blz-at.lut */
+#define MAX_BLZ_CNT_AT 20000              /* maximale Anzahl Banken in blz-at.lut; aktuell: gut 7000 */
+#define MAX_TABLE_CNT_AT 200              /* maximale Anzahl Prüftabellen in blz-at.lut; aktuell: knapp 40 */
 
 #ifndef INT4_DEFINED
 #define INT4_DEFINED
@@ -148,11 +148,6 @@ typedef unsigned long UINT4;
 #define OK                           1 
 #define OK_NO_CHK                    2 
 
-#line 369 "konto_check-at.lxx"
-#if !VAR
-extern
-#endif
-int pruefziffer_g,methode_g;
 /*
  * ###########################################################################
  * # kto_check_at(): Test eines Kontos                                       #
@@ -218,7 +213,7 @@ DLL_EXPORT const char *get_loesch_datum(char *blz);
  * #    %f   Kennzeichen fiktive Bankleitzahl                                #
  * #    %h   Kennzeichen Hauptstelle/Zweigstelle                             #
  * #    %i   Identnummer der Österreichischen Nationalbank                   #
- * #    %I   Identnummer der Österreichischen Nationalbank (7-stellig)       #
+ * #    %I   Identnummer der Österreichischen Nationalbank 8-stellig)        #
  * #    %l   Löschdatum (DD.MM.YYYY falls vorhanden, sonst nichts)           #
  * #    %L   Löschdatum (DD.MM.YYYY falls vorhanden, sonst 10 Blanks)        #
  * #    %n1  Erster Teil des Banknamens                                      #
@@ -264,11 +259,11 @@ DLL_EXPORT int generate_lut_at(char *inputname,char *outputname,char *plainname,
 
 
 /* ###########################################################################
- * # dump_lutfile: Inhalt einer .lut-Datei als Klartextdatei ausgeben        #
+ * # dump_lutfile_at: Inhalt einer .lut-Datei als Klartextdatei ausgeben     #
  * ###########################################################################
  */
 
-DLL_EXPORT int dump_lutfile(char *inputname, char *outputname);
+DLL_EXPORT int dump_lutfile_at(char *inputname, char *outputname);
 
 /* ###########################################################################
  * # konto_check_at_version_major:   (DLL) ABI Versionsnummer                #

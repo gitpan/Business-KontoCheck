@@ -47,7 +47,6 @@
  */
 
 /* Include-Dateien +§§§2 */
-#define VAR 1
 #ifndef INCLUDE_KONTO_CHECK_AT
 #define INCLUDE_KONTO_CHECK_AT 1
 #endif
@@ -69,6 +68,11 @@
  * # unsigned char-Pointern sowie zur Umwandlung von Bytestreams in INT #
  * # Werte. Die Anordnung in der Ausgabedatei ist big endian, damit die #
  * # erzeugten Binärdateien sich (bei Bedarf ;-) ) besser lesen lassen. #
+ * # Dies ist anders als bei der deutschen Version (!). Dort war im     #
+ * # Anfang keine Notwendigkeit, die Binärdatei anzusehen, und später   #
+ * # (als es interessant gewesen wäre) war es dann zu spät zum Wechsel. #
+ * # Die LUT2-Routinen arbeiten allerdings komplett mit little endian,  #
+ * # da sie auf dem alten deutschen Format aufbauen.                    #
  * ######################################################################
  */
 
@@ -200,7 +204,7 @@ static int cmp_blz(const void *ap,const void *bp);
 static int search_blz(int such_blz);
 static UINT4 adler32(UINT4 adler,const char *buf,unsigned int len);
 
-static char tabelle[MAX_TABLE_CNT_AT][65],loesch_datum[MAX_BLZ_CNT_AT][12],hauptstelle[MAX_BLZ_CNT_AT],
+static char tabelle[MAX_TABLE_CNT_AT][80],loesch_datum[MAX_BLZ_CNT_AT][12],hauptstelle[MAX_BLZ_CNT_AT],
             blz_tabelle[100000],geloeschte_blz[100000];
 static int blz[MAX_BLZ_CNT_AT],blz2[MAX_BLZ_CNT_AT],blz_idx[MAX_BLZ_CNT_AT],pruef_tabelle[MAX_BLZ_CNT_AT],
            ident[MAX_BLZ_CNT_AT],tabelle_name[MAX_BLZ_CNT_AT],blz_anzahl,loesch_datum_num[MAX_BLZ_CNT_AT];
@@ -350,7 +354,8 @@ static UINT4 adler32(UINT4 adler,const char *buf,unsigned int len)
  * # der letzten Löschung in die blz-at.lut Datei aufgenommen (es gibt zu jeder #
  * # BLZ nur einen Eintrag).                                                    #
  * #                                                                            #
- * # Die Funktion ist *nicht* threadfest, da global_ctx benutzt wird.           #
+ * # Die Funktion ist *nicht* threadfest, da globale Variablen benutzt werden   #
+ * # (müssen).                                                                  #
  * #                                                                            #
  * # Copyright (C) 2006 Michael Plugge <m.plugge@hs-mannheim.de>                #
  * ##############################################################################
@@ -499,31 +504,41 @@ static int search_blz_idx(int such_blz)
  * # benutzt (aus konto_check_at.h, mit "@B%I %B %t %N"). Die Datei ist      #
  * # (anders als die INPAR-Datei) nach Bankleitzahlen sortiert.              #
  * #                                                                         #
- * # Copyright (C) 2006 Michael Plugge <m.plugge@hs-mannheim.de>             #
+ * # Copyright (C) 2006-2008 Michael Plugge <m.plugge@hs-mannheim.de>        #
  * ###########################################################################
  */
 
 /* Vorspann  +§§§2 */
 DLL_EXPORT int generate_lut_at(char *inputname,char *outputname,char *plain_name,char *plain_format)
 {
-   int i,j,k,idx,t_idx,ident1,ident2,last_blz,last_table,ld,show_all,sort_mode;
-   int table_idx[MAX_TABLE_CNT_AT];
+   int i,j,k,cnt,idx,t_idx,ident1,ident2,last_blz,last_table,ld,show_all,sort_mode,file_version;
+   int *table_idx;
    UINT4 adler;
    long adler_pos;
    unsigned char *uptr,*eptr;
    FILE *in,*out,*plain;
 
-      /* die folgenden Variablen werden als static allokiert, da sie (bei
+      /* (hier noch der alte Kommentar, nun allerdings obsolet)
+       * die folgenden Variablen werden als static allokiert, da sie (bei
        * MAX_BLZ_CNT_AT=30000) etwa 3,5 MB benötigen; unter Windows tritt dann
        * ein Stacküberlauf, das Programm verabschiedet sich einfach mit einer
        * Schreibschutzverletzung (bei Linux gibt es kein Problem). Windog$ will
        * dann einen Problembericht nach Redmond senden, auf daß die nach dem
        * Rechten sehen; die haben sich allerdings auch früher noch nie bei mir
        * gemeldet und etwas Konstruktives beigetragen ;-))) . 
+       *
+       * Die alte Unterscheidung zwischen den Namensbestandteilen wird
+       * fallengelassen, da bei der neuen Dateiversion nur noch ein Namensteil
+       * vorkommt. Die Variablen bankname1, bankname2 und bankname3 werden auf
+       * Leerstrings gesetzt, der komplette Name kommt nach bankname. Da die
+       * Variablen nur in dieser Funktion benutzt werden, ist das kein großer
+       * Verlust; bei der Ausgabe wird nur noch der komplette Name unterstützt
+       * (bei %n, %n1 oder %N). Die Allokierung erfolgt jetzt dynamisch,
+       * allerdings noch mit festen Arraygrößen (kann in konto_check-at.h
+       * bei Bedarf geändert werden).
        */
-   static char *ptr,*dptr,*pptr,buffer[8292],buffer2[64],kopf_parameter[64],fiktiv[MAX_BLZ_CNT_AT],
-        bankname1[MAX_BLZ_CNT_AT][41],bankname2[MAX_BLZ_CNT_AT][41],bankname3[MAX_BLZ_CNT_AT][41],
-        name_buffer[256];
+   char *ptr,*dptr,*pptr,*buffer,buffer2[64],kopf_parameter[64],fiktiv[MAX_BLZ_CNT_AT],
+        *bankname[MAX_BLZ_CNT_AT],*namebuffer,*nameptr;
 
    if(!inputname || !*inputname)inputname="inporwo.txt";
    if(!outputname || !*outputname)outputname=DEFAULT_LUT_NAME_AT;
@@ -534,6 +549,9 @@ DLL_EXPORT int generate_lut_at(char *inputname,char *outputname,char *plain_name
    }
    else
       plain=NULL;
+   if(!(nameptr=namebuffer=malloc(MAX_BLZ_CNT_AT*256))
+         || !(table_idx=calloc(99999,sizeof(int)))
+         || !(buffer=malloc(65737)))return ERROR_MALLOC;
    if(!plain_format || !strlen(plain_format))plain_format=DEFAULT_PLAIN_FORMAT;
    if(*plain_format=='@'){
       switch(*(plain_format+1)){
@@ -568,32 +586,68 @@ DLL_EXPORT int generate_lut_at(char *inputname,char *outputname,char *plain_name
       /* Eingabedatei lesen +§§§2 */
    strcpy(tabelle[0],"0000000");
    for(i=0;i<MAX_TABLE_CNT_AT;i++)table_idx[i]=0;
-   for(idx=t_idx=0;idx<MAX_BLZ_CNT_AT;){
-      fgets(buffer,1024,in);
-      if(feof(in))break;
+   for(file_version=idx=t_idx=0;idx<MAX_BLZ_CNT_AT;){
+      if(!fgets(buffer,4096,in) || feof(in))break;
       if(*buffer=='0')switch(*(buffer+1)){
          case '0':   /* Kopfsatz */
-            if(strncmp(buffer,"00INPAR100",10)){   /* Signatur und Version prüfen */
+            if(!strncmp(buffer,"00INPAR100",10))file_version=1; /* altes Dateiformat */
+            if(!strncmp(buffer,"00INPAR200",10))file_version=2; /* neues Dateiformat (ab Februar 2008) */
+            if(!file_version){   /* unbekannte/ungültige INPAR-Datei */
                fprintf(stderr,"keine gültige INPAR-Datei; Abbruch\n");
+               free(namebuffer);
+               free(table_idx);
+               free(buffer);
                return INVALID_BLZ_FILE;
             }
             if(*(buffer+18)!='G'){   /* Dateityp (Gesamt-/Änderungsbestand prüfen */
-               fprintf(stderr,"momentan werden nur Dateien mit dem Gesamtbestand unterstützt; Abbruch\n");
+               fprintf(stderr,"es werden nur Dateien mit dem Gesamtbestand unterstützt; Abbruch\n");
+               free(namebuffer);
+               free(table_idx);
+               free(buffer);
                return INVALID_BLZ_FILE;
             }
             for(i=0,ptr=buffer+10;i<9;i++)kopf_parameter[i]=*ptr++;
             kopf_parameter[9]=0;
             break;
          case '1':   /* Stammsatz Teil 1 */
-            EXTRACT_NUM(ident1,3,7);  /* Identnummer merken für Konsistenztest */
-            ident[idx]=ident1;
-            EXTRACT_NUM(blz[idx],11,5);
-            EXTRACT(bankname1[idx],16,40);
-            EXTRACT(bankname2[idx],56,40);
-            EXTRACT_1(hauptstelle[idx],110);
+            if(file_version==1){ /* altes Dateiformat */
+               EXTRACT_NUM(ident1,3,7);  /* Identnummer merken für Konsistenztest */
+               ident[idx]=ident1;
+               EXTRACT_NUM(blz[idx],11,5);
+               EXTRACT(bankname[idx]=nameptr,16,40);
+               for(dptr--;*dptr==' ';dptr--);   /* trailing blanks entfernen */
+               if(*dptr!='-')*++dptr=' ';      /* Sonderfall, kein Blank als Trenner zwischen Namensteilen */
+               nameptr=++dptr;
+               EXTRACT(nameptr,56,40);
+               for(dptr--;*dptr==' ';dptr--);   /* nochmal dasselbe Spiel wie oben für den zweiten Teil des Namens */
+               if(*dptr!='-')*++dptr=' ';
+               nameptr=++dptr;
+               EXTRACT_1(hauptstelle[idx],110);
+            }
+            else if(file_version==2){  /* neues Dateiformat; die Stammdaten sind komplett in einer Zeile mit Kennung 01 */
+               EXTRACT_NUM(ident[idx],3,8);
+               EXTRACT_NUM(blz[idx],11,5);
+               EXTRACT(bankname[idx]=nameptr,16,255);
+               for(dptr--;*dptr==' ';dptr--);   /* trailing blanks entfernen */
+               *++dptr=0;
+               nameptr=++dptr;
+               EXTRACT_NUM(loesch_datum_num[idx],2355,8);
+               EXTRACT_1(hauptstelle[idx],2377);
+               EXTRACT_1(fiktiv[idx],2407);
+               EXTRACT_NUM(pruef_tabelle[idx],2408,5);
+               if(fiktiv[idx]=='A' || fiktiv[idx]=='F'){
+                  EXTRACT_NUM(blz2[idx],2402,5);
+               }
+               else
+                  blz2[idx]=0;
+               idx++;
+
+            }
             break;
          case '2':
-            EXTRACT(bankname3[idx],10,40);
+            EXTRACT(nameptr,10,40);
+            for(dptr--;*dptr==' ';dptr--);   /* und noch einmal für den dritten Teil */
+            *++dptr=0;
             break;
          case '3':
             break;   /* Stammsatz 3: momentan nicht benutzt */
@@ -602,8 +656,8 @@ DLL_EXPORT int generate_lut_at(char *inputname,char *outputname,char *plain_name
          case '5':   /* Stammsatz Teil 5 */
             EXTRACT_NUM(ident2,3,7);  /* neue Identnummer holen und mit indent1 vergleichen */
             if(ident2!=ident1){
-               fprintf(stderr,"Verschiedene Idents in Feld 1 und 5: %dd/%d\n   (BLZ %d, Bankname1 %s)\n",
-                     ident1,ident2,blz[idx],bankname1[idx]);
+               fprintf(stderr,"Verschiedene Idents in Feld 1 und 5: %dd/%d\n   (BLZ %d, Bankname %s)\n",
+                     ident1,ident2,blz[idx],bankname[idx]);
                continue;
             }
             EXTRACT_NUM(loesch_datum_num[idx],18,8);
@@ -620,11 +674,20 @@ DLL_EXPORT int generate_lut_at(char *inputname,char *outputname,char *plain_name
             break;
       }
       else if(*buffer=='1' && *(buffer+1)=='0'){   /* Prüftabelle */
-         t_idx++;
-         EXTRACT_NUM(tabelle_name[t_idx],3,5);
-         table_idx[tabelle_name[t_idx]]=t_idx;
-         EXTRACT(tabelle[t_idx],9,64);
-         for(ptr=tabelle[t_idx]+63;*ptr==' ';ptr--)*ptr=0;
+         if(file_version==1){ /* altes Dateiformat */
+            t_idx++;
+            EXTRACT_NUM(tabelle_name[t_idx],3,5);
+            table_idx[tabelle_name[t_idx]]=t_idx;
+            EXTRACT(tabelle[t_idx],9,64);
+            for(ptr=tabelle[t_idx]+63;*ptr==' ';ptr--)*ptr=0;
+         }
+         else if(file_version==2){ /* neues Dateiformat */
+            t_idx++;
+            EXTRACT_NUM(tabelle_name[t_idx],3,5);
+            table_idx[tabelle_name[t_idx]]=t_idx;
+            EXTRACT(tabelle[t_idx],9,70); /* es sind bis zu 10 Prüfverfahren möglich */
+            for(ptr=tabelle[t_idx]+69;*ptr==' ';ptr--)*ptr=0;
+         }
       }
    }
    for(i=0;i<idx;i++)blz_idx[i]=i;
@@ -639,8 +702,8 @@ DLL_EXPORT int generate_lut_at(char *inputname,char *outputname,char *plain_name
    *dptr++=0;
    i=atoi(buffer2);  /* Bestandsdatum aus den Kopfdaten holen */
    sprintf(buffer,"BLZ Lookup Table/Format 1.0 AT\nLUT-Datei generiert aus %sbestand vom %02d.%02d.%d\n"
-         "Anzahl Kontoprüfparameter-Tabellen: %d\nCRC: 0x%08x\n\n",
-      *(kopf_parameter+8)=='G'?"Gesamt":"Änderungs",i%100,(i/100)%100,i/10000,t_idx,0);
+         "Anzahl Kontoprüfparameter-Tabellen: %d\nCRC: 0x00000000\n\n",
+      *(kopf_parameter+8)=='G'?"Gesamt":"Änderungs",i%100,(i/100)%100,i/10000,t_idx);
    ADLER_FPRINTF;
    adler_pos=ftell(out)-10;   /* Position von CRC-Feld merken für späteres Schreiben */
    for(i=1;i<=t_idx;i++){
@@ -667,7 +730,7 @@ DLL_EXPORT int generate_lut_at(char *inputname,char *outputname,char *plain_name
    }
 
       /* Ausgabedatei schreiben: Bankdaten (Binärdatei) +§§§2 */
-   eptr=UCP buffer+8192;
+   eptr=UCP buffer+65536;
    uptr=UCP buffer;
    for(i=0,last_blz=last_table=-1;i<idx;i++){
       j=blz_idx[i];
@@ -700,7 +763,7 @@ DLL_EXPORT int generate_lut_at(char *inputname,char *outputname,char *plain_name
             UM2C(blz2[j]);    /* zugeordnete BLZ eintragen */
             k=search_blz_idx(blz2[j]);
             if(k>=0)
-                 /* zugeordnete Prüftabelle (Muß die für den Test benutzt werden???) */
+                 /* zugeordnete Prüftabelle (muß die für den Test benutzt werden???) */
                *uptr++=UC table_idx[pruef_tabelle[k]];
             else
                *uptr++=0;
@@ -710,13 +773,13 @@ DLL_EXPORT int generate_lut_at(char *inputname,char *outputname,char *plain_name
          last_blz=blz[j];
          last_table=pruef_tabelle[j];
          if(uptr>eptr){
-            fwrite(buffer,1,(uptr-(unsigned char *)buffer)+1,out);
+            cnt=fwrite(buffer,1,(uptr-(unsigned char *)buffer)+1,out);
             adler=adler32(adler,buffer,(uptr-(unsigned char *)buffer)+1);
             uptr=UCP buffer;
          }
       }
    }
-   fwrite(buffer,1,(uptr-(unsigned char *)buffer)+1,out);
+   cnt=fwrite(buffer,1,(uptr-(unsigned char *)buffer)+1,out);
    adler=adler32(adler,buffer,(uptr-(unsigned char *)buffer)+1);
    fseek(out,adler_pos,SEEK_SET);
    fprintf(out,"%08lx\n",(unsigned long)adler);
@@ -758,8 +821,8 @@ DLL_EXPORT int generate_lut_at(char *inputname,char *outputname,char *plain_name
                      case 'i':   /* ident */
                         fprintf(plain,"%d",ident[j]);
                         break;
-                     case 'I':   /* ident (7-stellig) */
-                        fprintf(plain,"%7d",ident[j]);
+                     case 'I':   /* ident (8-stellig) */
+                        fprintf(plain,"%8d",ident[j]);
                         break;
                      case 'l':   /* Löschdatum */
                         ld=loesch_datum_num[j];
@@ -774,59 +837,24 @@ DLL_EXPORT int generate_lut_at(char *inputname,char *outputname,char *plain_name
                         break;
                      case 'n':   /* Bankname Teil 1...3 (einzeln) */
                         switch(*++pptr){
-                           case '1':
-                              for(ptr=bankname1[j],dptr=name_buffer;*dptr=*ptr++;dptr++); /* kopieren */
-                              dptr--;
-                              while(*dptr==' ' && dptr>=name_buffer)dptr--;   /* trailing blanks löschen */
-                              if(*++dptr==' ')*dptr=0;
-                              fprintf(plain,"%s",name_buffer);
+                           case '1':   /* war vorher erster Teil des Banknamens, jetzt für kompletten Namen */
+                              fprintf(plain,"%s",bankname[j]);
                               break;
                            case '2':
-                              for(ptr=bankname2[j],dptr=name_buffer;*dptr=*ptr++;dptr++);
-                              dptr--;
-                              while(*dptr==' ' && dptr>=name_buffer)dptr--;
-                              if(*++dptr==' ')*dptr=0;
-                              fprintf(plain,"%s",name_buffer);
+                                 /* war vorher zweiter Teil des Namens; ignorieren */
                               break;
                            case '3':
-                              for(ptr=bankname3[j],dptr=name_buffer;*dptr=*ptr++;dptr++);
-                              dptr--;
-                              while(*dptr==' ' && dptr>=name_buffer)dptr--;
-                              if(*++dptr==' ')*dptr=0;
-                              fprintf(plain,"%s",name_buffer);
+                                 /* war vorher dritter Teil des Namens; ebenfalls ignorieren */
                               break;
                            default:
-                              fputc('%',plain);
-                              fputc('n',plain);
-                              fputc(*pptr,plain);
+                              fprintf(plain,"%s",bankname[j]); /* wurde vorher direkt übernommen; jetzt auch Bankname */
+                              fputc(*pptr,plain);  /* das nächste Zeichen ausgeben */
                               break;
                         }
                         break;
 
-                     case 'N':   /* Bankname (komplett, Teil 1-3 zusammen) */
-                        for(ptr=bankname1[j],dptr=name_buffer;*dptr= *ptr++;dptr++);
-                        dptr--;
-                        while(*dptr==' ' && dptr>=name_buffer)dptr--;
-                        if(*dptr=='-' && *(dptr-1)!=' ')
-                           dptr++;
-                        else{
-                           dptr++;
-                           *dptr++=' ';
-                        }
-                        for(ptr=bankname2[j];*dptr= *ptr++;dptr++);
-                        dptr--;
-                        while(*dptr==' ' && dptr>=name_buffer)dptr--;
-                        if(*dptr=='-' && *(dptr-1)!=' ')
-                           dptr++;
-                        else{
-                           dptr++;
-                           *dptr++=' ';
-                        }
-                        for(ptr=bankname3[j];*dptr=*ptr++;dptr++);
-                        dptr--;
-                        while(*dptr==' ' && dptr>=name_buffer)dptr--;
-                        if(*++dptr==' ')*dptr=0;
-                        fprintf(plain,"%s",name_buffer);
+                     case 'N':   /* Bankname (komplett, Teil 1-3 zusammen; jetzt äquivalent zu %n und %n1) */
+                        fprintf(plain,"%s",bankname[j]);
                         break;
                      case 'p':   /* Kontoprüfparameter */
                         fprintf(plain,"%s",tabelle[table_idx[pruef_tabelle[j]]]);
@@ -880,6 +908,9 @@ DLL_EXPORT int generate_lut_at(char *inputname,char *outputname,char *plain_name
       }
       fclose(plain);
    }
+   free(namebuffer);
+   free(table_idx);
+   free(buffer);
    return OK;
 }
 
@@ -962,6 +993,14 @@ static int read_lut(char *lut_name)
       /* nun die Tabellen lesen und eintragen */
    for(idx=0,uptr=UCP ptr;uptr<eptr;idx++){
       bankleitzahl=blz[idx]=C2UM;
+      if(bankleitzahl>=100000){
+           /* bei der Testdatei trat ein an dieser Stelle ein Fehler auf (mit
+            * anschließendem core dump); Bankleitzahlen>100000 sind in jedem
+            * Fall falsch.
+            */
+         idx--;
+         continue;
+      }
       switch(j= *uptr++){
          case 0xff:  /* gelöschte BLZ */
             j=C2UM;
@@ -998,13 +1037,13 @@ static int read_lut(char *lut_name)
    return OK;
 }
 
-/* Funktion dump_lutfile()  +§§§1 */
+/* Funktion dump_lutfile_at()  +§§§1 */
 /* ###############################################################################
- * # dump_lutfile: Inhalt einer .lut-Datei als Klartextdatei ausgeben            #
+ * # dump_lutfile_at: Inhalt einer .lut-Datei als Klartextdatei ausgeben         #
  * ###############################################################################
  */
 
-DLL_EXPORT int dump_lutfile(char *inputname, char *outputname)
+DLL_EXPORT int dump_lutfile_at(char *inputname, char *outputname)
 {
    int i,retval;
    FILE *out;
@@ -1014,7 +1053,7 @@ DLL_EXPORT int dump_lutfile(char *inputname, char *outputname)
    fprintf(out," BLZ  Löschdatum Prüftabelle/-parameter\n---------------------------------------\n\n");
    for(i=0;i<blz_anzahl;i++){
       fprintf(out,"%5d %10s T%s %s\n",
-            blz[i],loesch_datum[i*12]?loesch_datum[i]:"",tabelle[pruef_tabelle[i]],
+            blz[i],loesch_datum[i][0]?loesch_datum[i]:"",tabelle[pruef_tabelle[i]],
             tabelle[pruef_tabelle[i]]+6);
    }
    fclose(out);
@@ -1151,6 +1190,7 @@ DLL_EXPORT const char *get_loesch_datum(char *blz1)
    return loesch_datum[search_blz(atoi(blz1))];
 }
 
+#ifndef INCLUDE_KONTO_CHECK_DE
 /* Funktion kto_check_retval2txt() +§§§1 */
 /* ###########################################################################
  * # Die Funktion gibt eine Klartext-Fehlermeldung zur Variablen retval      #
@@ -1381,6 +1421,7 @@ DLL_EXPORT char *kto_check_retval2html(int retval)
 
    }
 }
+#endif /* INCLUDE_KONTO_CHECK_DE */
 
 /* Funktion kto_check_at() +§§§1 */
 /* Funktion kto_check_at()  +§§§2 */
@@ -1547,7 +1588,6 @@ DLL_EXPORT int kto_check_at(char *blz1,char *kto1,char *lut_name)
             if(pz1>9)pz1-=9;
             pz+=pz1;
          }
-         pruefziffer_g=pz; methode_g=methode;
          if(!(pz%10))return ok;
       }  /* Ende von Methode 0 */
          /* Methode 1 ... 8 +§§§3 */
@@ -1561,7 +1601,6 @@ DLL_EXPORT int kto_check_at(char *blz1,char *kto1,char *lut_name)
              * Verfahren mehr angegeben ist, wird die Schleife verlassen
              * und FALSE zurückgegeben.
              */
-         pruefziffer_g=pz; methode_g=methode;
          switch(methode){
             case 1:
                if(!(pz%11))return ok;
@@ -1697,7 +1736,7 @@ int main(int argc,char **argv)
          exit(1);
       }
       fprintf(stderr,"dump %s -> %s: ",argv[2],argv[3]);
-      retval=dump_lutfile(argv[2],argv[3]);
+      retval=dump_lutfile_at(argv[2],argv[3]);
       fprintf(stderr,"%d (%s)\n",retval,kto_check_retval2txt(retval));
       return 0;
    }
@@ -1773,8 +1812,8 @@ int main(int argc,char **argv)
          extra="";
       *ptr=0;
       retval=kto_check_at(blz1,kto1,lut_name);
-      fprintf(out,"%s # %5s # %-11s # %s -> %s (Meth./PZ: %d/%d)",retval>0?"+":"-",
-            blz1,kto1,extra,kto_check_retval2txt(retval),methode_g,pruefziffer_g);
+      fprintf(out,"%s # %5s # %-11s # %s -> %s",retval>0?"+":"-",
+            blz1,kto1,extra,kto_check_retval2txt(retval));
       if(retval==BLZ_GELOESCHT)
          fprintf(out," (Löschdatum: %s)\n",get_loesch_datum(blz1));
       else
@@ -1824,7 +1863,7 @@ int xmain(int argc,char **argv)
          exit(1);
       }
       fprintf(stderr,"dump %s -> %s: ",argv[2],argv[3]);
-      retval=dump_lutfile(argv[2],argv[3]);
+      retval=dump_lutfile_at(argv[2],argv[3]);
       fprintf(stderr,"%d (%s)\n",retval,kto_check_retval2txt(retval));
       return 0;
    }
@@ -1927,11 +1966,12 @@ int xmain(int argc,char **argv)
          case OK                         : retval_txt="OK                         "; break;
          case OK_NO_CHK                  : retval_txt="OK_NO_CHK                  "; break;
       }
-      fprintf(out,"%s %s %5s %11s %s (Meth./PZ: %d/%d)\n",retval>0?"+":"-",
-            retval_txt,blz1[j],kto1[j],extra[j],methode_g,pruefziffer_g);
+      fprintf(out,"%s %s %5s %11s %s\n",retval>0?"+":"-",
+            retval_txt,blz1[j],kto1[j],extra[j]);
       fflush(out);
    }
    fclose(in);
+   free(buffer);
    return 0;
 }
 #endif
@@ -1945,5 +1985,5 @@ int generate_lut_at(char *inputname,char *outputname,char *plainname,char *plain
 int konto_check_at_version_major(void){return EXCLUDED_AT_COMPILETIME;};
 int konto_check_at_version_minor(void){return EXCLUDED_AT_COMPILETIME;};
 int konto_check_at_version_release(void){return EXCLUDED_AT_COMPILETIME;};
-int dump_lutfile(char *inputname, char *outputname){return EXCLUDED_AT_COMPILETIME;};
+int dump_lutfile_at(char *inputname, char *outputname){return EXCLUDED_AT_COMPILETIME;};
 #endif

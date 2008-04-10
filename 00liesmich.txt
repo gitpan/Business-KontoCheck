@@ -1,4 +1,4 @@
-vim:set tw=70; set ft=text; set ai
+vim:tw=80:ft=text:ai
 
 ########################################################################
 # PRÜFZIFFERBERECHNUNG VON DEUTSCHEN UND ÖSTERREICHISCHEN KONTONUMMERN #
@@ -6,21 +6,21 @@ vim:set tw=70; set ft=text; set ai
 ########################################################################
 #                                                                      #
 # Autor             : Michael Plugge <m.plugge@hs-mannheim.de>         #
-# Version           : 2.4 (stabil)                                     #
-# Datum             : 13.11.2007                                       #
+# Version           : 2.6 (stabil)                                     #
+# Datum             : 10.04.2008                                       #
 #                                                                      #
 ########################################################################
 
 1. Einführung
 =============
 
-Das Modul Business::KontoCheck besteht aus zwei C-Bibliotheken, die
-an sich relativ selbständig sind, aber auch gemeinsam verwendet werden können.
-Die Bibliotheken berechnen anhand von Bankleitzahl und Prüfziffermethode, ob
-eine angegebene Kontonummer plausibel ist. Es kann natürlich nicht ausgesagt
-werden, ob eine etsprechende Kontonummer wirklich existiert; allerdings können
-Fehler bei der Übermittlung auf diese Weise oft entdeckt werden und ersparen
-so kostspielige Rückbuchungen.
+Das Modul Business::KontoCheck besteht aus zwei C-Bibliotheken, die an sich
+relativ selbständig sind, aber auch gemeinsam verwendet werden können. Die
+Bibliotheken berechnen anhand von Bankleitzahl und Prüfziffermethode, ob eine
+angegebene Kontonummer plausibel ist. Es kann natürlich nicht ausgesagt werden,
+ob eine etsprechende Kontonummer wirklich existiert; allerdings können Fehler
+bei der Übermittlung auf diese Weise oft entdeckt werden und ersparen so
+kostspielige Rückbuchungen.
 
 Diese Datei bezieht sich vor allem auf die Perlversion der Bibliothek; in der
 C-Version gibt es kleine Unterschiede, besonders in der Paketliste und
@@ -42,7 +42,7 @@ konto_check.h               : C Header-Datei für die deutsche Version
 konto_check-at.h            : C Header-Datei für die österreichische Version
 konto_check.c               : C Quellcode für die deutsche Version
 konto_check-at.c            : C Quellcode für die österreichische Version
-inpar.dat                   : Testdatei für das INPAR Datenformat (s.u.)
+inpar.dat.gz                : (gepackte) Testdatei für das INPAR Datenformat (s.u.)
 test.pl                     : kleine Beispielsdatei
 KontoCheck.xs               : XSUB-Datei mit C/Perl glue code
 lib/Business/KontoCheck.pm  : Perl Interface und Dokumentation
@@ -70,10 +70,9 @@ Bibliothek mittels "use Business::KontoCheck" eingebunden und verwendet werden.
 ===============
 
 Eine kurze Beschreibung der exportierten Funktionen gibt es in der Datei
-lib/Business/KontoCheck.pm. Die Beschreibung wird bei der Installation auch
-ins Hilfesystem von Perl integriert, so daß die Syntax und Parameter der
-einzelnen Funktionen mittels "perldoc Business::KontoCheck" nachgelesen werden
-kann.
+lib/Business/KontoCheck.pm. Die Beschreibung wird bei der Installation auch ins
+Hilfesystem von Perl integriert, so daß die Syntax und Parameter der einzelnen
+Funktionen mittels "perldoc Business::KontoCheck" nachgelesen werden kann.
 
 
 5. Prüfparameter
@@ -104,21 +103,21 @@ unter http://www.bdb.de/verband/Intern.htm
 5.2 Österreichische Banken 
 --------------------------
 
-Die aktuellen Prüfparameter sind nicht frei verfügbar; sie können von der
-Firma First Data Austria, Wien (http://www.firstdata.at) käuflich bezogen
-werden. Das Handbuch zu INPAR (mit der Spezifikation des Dateiformats) ist auf
-Anfrage ebenfalls von First Data Austria erhältlich. Interessenten wenden sich
-bitte an Andreas.Krickl@firstdata.at. Die Spezifikation findet sich auch unter
+Die aktuellen Prüfparameter sind nicht frei verfügbar; sie können von der Firma
+First Data Austria, Wien (http://www.firstdata.at) käuflich bezogen werden. Das
+Handbuch zu INPAR (mit der Spezifikation des Dateiformats) ist auf Anfrage
+ebenfalls von First Data Austria erhältlich. Interessenten wenden sich bitte an
+Andreas.Krickl@firstdata.at. Die Spezifikation findet sich auch unter
 
 http://www.firstdata.at/de/service/downloads.htm
 
-im Abschnitt "Downloads INPAR" -> "Handbuch PDF" (aktuell (11.9.06) ist die
-Version 2.1).
+im Abschnitt "Downloads INPAR" -> "Handbuch PDF" (aktuell (10.4.08) ist die
+Version 2.3).
 
-Diesem Paket liegt eine Datei inpar.dat bei; sie dient als Referenz für das
+Diesem Paket liegt eine Datei inpar.dat.gz bei; sie dient als Referenz für das
 Dateiformat der INPAR-Daten. Die Datei ist ebenfalls unter der oben angegebenen
 Adresse verfügbar (als "Testdatei ZIP"). Die Liste ist weder vollständig noch
-aktuell. Sie enthält nur die Daten von 32 Banken, und auch die Prüfparameter
+aktuell. Sie enthält nur die Daten von 21 Banken, und auch die Prüfparameter
 haben sich teilweise geändert
 
 
@@ -128,9 +127,11 @@ haben sich teilweise geändert
 Momentan sind keine Fehler in den Prüfziffermethoden bekannt. Falls Sie einen
 Fehler finden, würde ich mich sehr freuen, davon zu hören ;-))).
 
-Die Bibliothek ist momentan nicht threadfest, da einige globale Variablen
-benutzt werden; die nächsten Version wird eine threadfeste Variante enthalten
-(der kleine Geschwindigkeitsvorteil macht die Nachteile nicht wett).
+Die Bibliothek ist in dieser Version nicht threadfest, da einige globale
+Variablen benutzt werden; die nächsten Version wird threadfest sein. Der kleine
+Geschwindigkeitsvorteil (etwa 10 %) macht die Nachteile für eine Anwendung bei
+Serverprozessen einfach nicht wett. Die Nachfolgeversion ist praktisch fertig
+und wird bald (in einer Betaversion) auf den Server gelegt.
 
 Die Funktionen generate_lut() und generate_lut_at() sollte nicht von einem
 Programm aufgerufen werden, das zum Testen von Kontoverbindungen benutzt wird,
@@ -145,21 +146,21 @@ Funktionalität, um einen Zugriff von anderen Threads zu verhindern; daher
 wurde die Funktion nicht exportiert. Momentan scheint der beste Weg zu sein,
 den entsprechenden Server neu zu starten :-( - nicht schön, aber sauber.
 
-
-Die Arbeit an der neuen Version (3.0) ist schon ziemlig weit; da aber zum
-Dezember eine neue Prüfmethode Gültigkeit bekommt, wurde noch eine Version der
-2.x Reihe herausgegeben. Die Version 3.0.Beta-1 dürfte bis Ende November/Anfang
-Dezember fertig werden. In der Version sind die LUT2 Routinen integriert,
-etliche Altlasten beseitigt, und alle globalen R/W Variablen entfernt;
-die Prüfziffertabelle kann durch eine neue Version ersetzt werden; außerdem
-lassen sich zu einer gegebenen Bankleitzahl alle Felder der Bundesbankdatei
-bestimmen. Die Daten werden komprimiert gespeichert; die vollständige Datei ist
-256KB groß, eine Datei mit Bankleitzahl, Bankname, PLZ, Ort und Prüfziffer der
-Hauptstellen benötigt 53KB.
-
-Es ist außerdem geplant, daß man auch zwei Versionen der Bankleitzahlendatei
-in derselben LUT-Datei unterbringen kann; das vereinfacht die Umstellung der
-LUT-Datei am Aktualisierungsdatum (kann automatisch erfolgen). 
+Die Arbeit an der neuen Version (3.0) ist schon ziemlig weit; da aber zum Juni
+zwei neue Prüfmethoden Gültigkeit bekommen, wurde wieder eine Version der 2.x
+Reihe herausgegeben. Die Version 2.91 (3.0.Beta 1) wird auch bald auf den Server
+gelegt. In dieser Version sind die LUT2 Routinen integriert, etliche Altlasten
+beseitigt, und alle globalen R/W Variablen entfernt; die Prüfziffertabelle kann
+durch eine neue Version ersetzt werden; außerdem lassen sich zu einer gegebenen
+Bankleitzahl alle Felder der Bundesbankdatei bestimmen. Die Daten werden
+komprimiert gespeichert; die vollständige Datei ist 270KB groß, eine Datei mit
+Bankleitzahl, Bankname, PLZ, Ort und Prüfziffer der Hauptstellen benötigt 53KB,
+eine Datei mit nur den Bankleitzahlen und Prüfziffern (wie aktuell) benötigt nur
+noch 9K. Außerdem kann man auch zwei Versionen der Bankleitzahlendatei in
+derselben LUT-Datei unterbringen kann; das vereinfacht die Umstellung der
+LUT-Datei am Aktualisierungsdatum (die Auswahl des Datensatzes kann manuell oder
+automatisch nach Datum erfolgen). Die Dokumentation zu dieser Version fehlt noch
+komplett, außerdem sind noch einige Tests und diverse Aufräumarbeiten notwendig.
 
 
 7. Technische Informationen 
@@ -180,8 +181,8 @@ die von der Deutschen Bundesbank zur Verfügung gestellt werden.
 Feld 1	-> Bankleitzahl oder Prüfziffer
 Feld 2	-> Kontonummer.
 
-Die Bibliothek wurde mit allen Testkontonummern  der Dokumentation der
-Prüfziffernberechnungmethoden der Deutschen Bundesbank (Stand Mai 2007)
+Die Bibliothek wurde mit allen Testkontonummern aus der Dokumentation der
+Prüfziffernberechnungmethoden der Deutschen Bundesbank (Stand März 2008)
 erfolgreich getestet. Außerdem wurden etliche Millionen Testkontonummern (für
 jede Methode bzw. Teilmethode ca. 50000...100000) mit dem Modul konto122.pl
 von Andreas Butzko und anderen Programmen verglichen.

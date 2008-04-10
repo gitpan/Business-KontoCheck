@@ -49,8 +49,8 @@
 /* Definitionen und Includes  */
 #define BLZ_BIG_JUMP 0  /* noch optimalen Wert suchen */
 
-#define VERSION "2.4"
-#define VERSION_DATE "2007-11-13"
+#define VERSION "2.6"
+#define VERSION_DATE "2008-04-03"
 
 #ifndef INCLUDE_KONTO_CHECK_DE
 #define INCLUDE_KONTO_CHECK_DE 1
@@ -225,6 +225,7 @@ int hash_shift=HASH_SHIFT,
 #define CHECK_PZ8     return (*(kto+7)-'0'==pz ? OK : FALSE)
 #define CHECK_PZ9     return (*(kto+8)-'0'==pz ? OK : FALSE)
 #define CHECK_PZ10    return (*(kto+9)-'0'==pz ? OK : FALSE)
+#define INVALID_PZ10  if(pz==10)return INVALID_KTO
 
 /*
  * ######################################################################
@@ -247,6 +248,7 @@ int hash_shift=HASH_SHIFT,
 #define CHECK_PZX8    if(*(kto+7)-'0'==pz)return OK; if(untermethode)return FALSE;
 #define CHECK_PZX9    if(*(kto+8)-'0'==pz)return OK; if(untermethode)return FALSE;
 #define CHECK_PZX10   if(*(kto+9)-'0'==pz)return OK; if(untermethode)return FALSE;
+#define CHECK_PZ10M5  if((pz1=*(kto+9)-'0')>=5 && pz<5)pz+=5; return (pz1==pz ? OK : FALSE)
 #else
 #define CASE0(nr)     case nr: pz_str[0]=nr/10+'0'; pz_str[1]=nr%10+'0';
 #define CASE1(nr)     case nr: pz_str[0]=nr/10-10+'a'; pz_str[1]=nr%10+'0';
@@ -256,6 +258,7 @@ int hash_shift=HASH_SHIFT,
 #define CHECK_PZX8    if(*(kto+7)-'0'==pz)return OK;
 #define CHECK_PZX9    if(*(kto+8)-'0'==pz)return OK;
 #define CHECK_PZX10   if(*(kto+9)-'0'==pz)return OK;
+#define CHECK_PZ10M5  if((pz1=*(kto+9)-'0')>=5 && pz<5)pz+=5; return (pz1==pz ? OK : FALSE)
 #endif
 
 /* noch einige Makros +§§§2 */
@@ -477,8 +480,8 @@ DLL_EXPORT int generate_lut(char *inputname,char *outputname,char *user_info,int
 #endif
 {
    unsigned char *outbuffer,*uptr,*methoden_array,*valid_array,*sptr,*dptr,buffer[256],zeile[256];
-   int i,j,blz,prev_blz,diff,last_index,cnt,m,valid,*array,blz_file_format,line;
-   UINT4 adler;
+   int i,j,blz,prev_blz,diff,last_index,cnt,m,valid,blz_file_format,line;
+   UINT4 adler,*array;
    time_t t;
    struct tm *lt;
    FILE *in,*out;
@@ -561,6 +564,14 @@ DLL_EXPORT int generate_lut(char *inputname,char *outputname,char *user_info,int
          EXTRACT(old_pruefziffer);
       }
       else{ /* neues Dateiformat */
+
+            /* manchmal sind in der Bundesbankdatei für eine BLZ mehrere
+             * Verfahren eingetragen; in dem Fall sollte dann das der
+             * Hauptstelle benutzt werden. Daher werden nur noch Hauptstellen
+             * berücksichtigt.
+             */
+         if(*(zeile+8)=='2')continue;
+
             /* BLZ holen */
          EXTRACT(bankleitzahl);
          blz=atoi((char *)buffer);
@@ -2869,19 +2880,49 @@ static int kto_check_int(char *pz_or_blz,char *kto,char *lut_name)
          CHECK_PZX7;
 
       CASE_U(50,2)
-         pz = (kto[3]-'0') * 7
-            + (kto[4]-'0') * 6
-            + (kto[5]-'0') * 5
-            + (kto[6]-'0') * 4
-            + (kto[7]-'0') * 3
-            + (kto[8]-'0') * 2;
+         if(kto[0]=='0' && kto[1]=='0' && kto[2]=='0'){
 
-         MOD_11_176;   /* pz%=11 */
-         if(pz<=1)
-            pz=0;
-         else
-            pz=11-pz;
-         CHECK_PZ10;
+               /* Methode 50b nur bei maximal 7-stelligen Kontonummern
+                * anwenden (bei längeren Kontonummern dürfte die
+                * Unterkontonummer schon drin sein, und ist wohl nicht
+                * weggelassen worden.
+               */
+            pz = (kto[3]-'0') * 7
+               + (kto[4]-'0') * 6
+               + (kto[5]-'0') * 5
+               + (kto[6]-'0') * 4
+               + (kto[7]-'0') * 3
+               + (kto[8]-'0') * 2;
+
+            MOD_11_176;   /* pz%=11 */
+            if(pz<=1)
+               pz=0;
+            else
+               pz=11-pz;
+            CHECK_PZ10;
+         }
+         else{
+#if DEBUG
+               /* bei DEBUG wurde evl. direkt die Methode angesprungen; daher nochmal 50a testen */
+            pz_str[0]='5';  /* Untermethode 50a eintragen */
+            pz_str[1]='0';
+            pz_str[2]='a';
+            pz = (kto[0]-'0') * 7
+               + (kto[1]-'0') * 6
+               + (kto[2]-'0') * 5
+               + (kto[3]-'0') * 4
+               + (kto[4]-'0') * 3
+               + (kto[5]-'0') * 2;
+
+            MOD_11_176;   /* pz%=11 */
+            if(pz<=1)
+               pz=0;
+            else
+               pz=11-pz;
+            CHECK_PZ7;
+         }
+#endif
+            return FALSE;
 
 /*  Berechnung nach der Methode 51 +§§§4 */
 /*
@@ -4315,8 +4356,8 @@ static int kto_check_int(char *pz_or_blz,char *kto,char *lut_name)
             }
 #endif
             pz=5-(pz1%5);  /* hochrechnen auf nächste Halbdekade */
-//            if(pz==5)pz=0;  /* fraglich, ob in dem Fall 0 oder 5 genommen wird */
-            CHECK_PZ10;
+            if(pz==5)pz=0;  /* fraglich, ob in dem Fall 0 oder 5 genommen wird */
+            CHECK_PZ10M5;
          }
          else
             return FALSE;
@@ -8161,7 +8202,6 @@ static int kto_check_int(char *pz_or_blz,char *kto,char *lut_name)
  */
 
       CASE1(125)
-
       CASE_U1(125,1)
 
             /* Variante 1a:
@@ -8389,6 +8429,152 @@ static int kto_check_int(char *pz_or_blz,char *kto,char *lut_name)
             pz=0;
          else
             pz=11-pz;
+         CHECK_PZ10;
+
+/* Berechnung nach der Methode C8 +§§§4 */
+/*
+ * ######################################################################
+ * #              Berechnung nach der Methode C8                        #
+ * ######################################################################
+ * # Die Kontonummer ist einschließlich der Prüfziffer 10-stellig,	   #
+ * # ggf. ist die Kontonummer für die Prüfzifferberechnung durch	      #
+ * # linksbündige Auffüllung mit Nullen 10-stellig darzustellen.        #
+ * #                                                                    #
+ * # Variante 1:                                                        #
+ * # Modulus 10, Gewichtung 2, 1, 2, 1, 2, 1, 2, 1, 2                   #  
+ * # Gewichtung und Berechnung erfolgen nach der Methode 00. Führt      # 
+ * # die Berechnung nach Variante 1 zu einem Prüfzifferfehler, so ist   #    
+ * # nach Variante 2 zu prüfen.                                         #
+ * #                                                                    #
+ * # Variante 2:                                                        #
+ * # Modulus 11, Gewichtung 2, 3, 4, 5, 6, 7, 2, 3, 4                   #  
+ * # Gewichtung und Berechnung erfolgen nach der Methode 04. Führt      # 
+ * # auch die Berechnung nach Variante 2 zu einem Prüfzifferfehler,     #  
+ * # so ist nach Variante 3 zu prüfen.                                  # 
+ * #                                                                    #
+ * # Variante 3:                                                        #
+ * # Modulus 11, Gewichtung 2, 3, 4, 5, 6, 7, 8, 9, 10                  #   
+ * # Gewichtung und Berechnung erfolgen nach der Methode 07.            #  
+ * ######################################################################
+ */
+
+   CASE1(128)
+   CASE_U1(128,1)
+#ifdef __ALPHA
+         pz = ((kto[0]<'5') ? (kto[0]-'0')*2 : (kto[0]-'0')*2-9)
+            +  (kto[1]-'0')
+            + ((kto[2]<'5') ? (kto[2]-'0')*2 : (kto[2]-'0')*2-9)
+            +  (kto[3]-'0')
+            + ((kto[4]<'5') ? (kto[4]-'0')*2 : (kto[4]-'0')*2-9)
+            +  (kto[5]-'0')
+            + ((kto[6]<'5') ? (kto[6]-'0')*2 : (kto[6]-'0')*2-9)
+            +  (kto[7]-'0')
+            + ((kto[8]<'5') ? (kto[8]-'0')*2 : (kto[8]-'0')*2-9);
+#else
+         pz=(kto[1]-'0')+(kto[3]-'0')+(kto[5]-'0')+(kto[7]-'0');
+         if(kto[0]<'5')pz+=(kto[0]-'0')*2; else pz+=(kto[0]-'0')*2-9;
+         if(kto[2]<'5')pz+=(kto[2]-'0')*2; else pz+=(kto[2]-'0')*2-9;
+         if(kto[4]<'5')pz+=(kto[4]-'0')*2; else pz+=(kto[4]-'0')*2-9;
+         if(kto[6]<'5')pz+=(kto[6]-'0')*2; else pz+=(kto[6]-'0')*2-9;
+         if(kto[8]<'5')pz+=(kto[8]-'0')*2; else pz+=(kto[8]-'0')*2-9;
+#endif
+         MOD_10_80;   /* pz%=10 */
+         if(pz)pz=10-pz;
+         CHECK_PZX10;
+
+      /* Variante 2 */
+   CASE_U1(128,2)
+         pz = (kto[0]-'0') * 4
+            + (kto[1]-'0') * 3
+            + (kto[2]-'0') * 2
+            + (kto[3]-'0') * 7
+            + (kto[4]-'0') * 6
+            + (kto[5]-'0') * 5
+            + (kto[6]-'0') * 4
+            + (kto[7]-'0') * 3
+            + (kto[8]-'0') * 2;
+
+         MOD_11_176;   /* pz%=11 */
+         if(pz)pz=11-pz;
+         CHECK_PZX10;
+
+      /* Variante 3 */
+   CASE_U1(128,3)
+         pz = (kto[0]-'0') * 10
+            + (kto[1]-'0') * 9
+            + (kto[2]-'0') * 8
+            + (kto[3]-'0') * 7
+            + (kto[4]-'0') * 6
+            + (kto[5]-'0') * 5
+            + (kto[6]-'0') * 4
+            + (kto[7]-'0') * 3
+            + (kto[8]-'0') * 2;
+
+         MOD_11_352;   /* pz%=11 */
+         if(pz)pz=11-pz;
+         INVALID_PZ10;
+         CHECK_PZ10;
+
+/* Berechnung nach der Methode C9 +§§§4 */
+/*
+ * ######################################################################
+ * #              Berechnung nach der Methode C9                        #
+ * ######################################################################
+ * # Die Kontonummer ist einschließlich der Prüfziffer 10-stellig,      #
+ * # ggf. ist die Kontonummer für die Prüfzifferberechnung durch        #
+ * # linksbündige Auffüllung mit Nullen 10-stellig darzustellen.        #
+ * # 								                                             #
+ * # Variante 1:						                                       #
+ * # Modulus 10, Gewichtung 2, 1, 2, 1, 2, 1, 2, 1, 2		               #
+ * # Gewichtung und Berechnung erfolgen nach der Methode 00. Führt die  #
+ * # Berechnung nach Variante 1 zu einem Prüfzifferfehler, so ist nach  #
+ * # Variante 2 zu prüfen.					                                 #
+ * # 								                                             #
+ * # Variante 2:						                                       #
+ * # Modulus 11, Gewichtung 2, 3, 4, 5, 6, 7, 8, 9, 10		            #
+ * # Gewichtung und Berechnung erfolgen nach der Methode 07.	         #
+ * ######################################################################
+ */
+
+      CASE1(129)
+      CASE_U1(129,1)
+#ifdef __ALPHA
+         pz = ((kto[0]<'5') ? (kto[0]-'0')*2 : (kto[0]-'0')*2-9)
+            +  (kto[1]-'0')
+            + ((kto[2]<'5') ? (kto[2]-'0')*2 : (kto[2]-'0')*2-9)
+            +  (kto[3]-'0')
+            + ((kto[4]<'5') ? (kto[4]-'0')*2 : (kto[4]-'0')*2-9)
+            +  (kto[5]-'0')
+            + ((kto[6]<'5') ? (kto[6]-'0')*2 : (kto[6]-'0')*2-9)
+            +  (kto[7]-'0')
+            + ((kto[8]<'5') ? (kto[8]-'0')*2 : (kto[8]-'0')*2-9);
+#else
+         pz=(kto[1]-'0')+(kto[3]-'0')+(kto[5]-'0')+(kto[7]-'0');
+         if(kto[0]<'5')pz+=(kto[0]-'0')*2; else pz+=(kto[0]-'0')*2-9;
+         if(kto[2]<'5')pz+=(kto[2]-'0')*2; else pz+=(kto[2]-'0')*2-9;
+         if(kto[4]<'5')pz+=(kto[4]-'0')*2; else pz+=(kto[4]-'0')*2-9;
+         if(kto[6]<'5')pz+=(kto[6]-'0')*2; else pz+=(kto[6]-'0')*2-9;
+         if(kto[8]<'5')pz+=(kto[8]-'0')*2; else pz+=(kto[8]-'0')*2-9;
+#endif
+         MOD_10_80;   /* pz%=10 */
+         if(pz)pz=10-pz;
+         CHECK_PZX10;
+
+      /* Variante 2 */
+      CASE_U1(129,2)
+         pz = (kto[0]-'0') * 10
+            + (kto[1]-'0') * 9
+            + (kto[2]-'0') * 8
+            + (kto[3]-'0') * 7
+            + (kto[4]-'0') * 6
+            + (kto[5]-'0') * 5
+            + (kto[6]-'0') * 4
+            + (kto[7]-'0') * 3
+            + (kto[8]-'0') * 2;
+
+         MOD_11_352;   /* pz%=11 */
+         if(pz)pz=11-pz;
+         INVALID_PZ10;
          CHECK_PZ10;
 
 /* nicht abgedeckte Fälle +§§§3 */
@@ -8811,6 +8997,108 @@ DLL_EXPORT char *kto_check_str_t(char *pz_or_blz,char *kto,char *lut_name,KTO_CH
 }
 #endif
 
+/* Funktion iban_check() +§§§1 */
+/* ###########################################################################
+ * # Die Funktion iban_check prüft, ob die Prüfsumme des IBAN ok ist und     #
+ * # testet außerdem noch die BLZ/Konto Kombination. Für den Test des Kontos #
+ * # wird keine Initialisierung gemacht, da diese Funktion aus der Version   #
+ * # 3.0 zurückportiert wurde; stattdessen muß u.U. vorher eine andere       #
+ * # Prüfung aufgerufen werden.                                              #
+ * #                                                                         #
+ * # Parameter:                                                              #
+ * #    iban:       IBAN die getestet werden soll                            #
+ * #    retval:     NULL oder Adresse einer Variablen, in die der Rückgabe-  #
+ * #                wert der Kontoprüfung geschrieben wird                   #
+ * #                                                                         #
+ * # Copyright (C) 2008 Michael Plugge <m.plugge@hs-mannheim.de>             #
+ * ###########################################################################
+ */
+
+DLL_EXPORT int iban_check(char *iban,int *retval)
+{
+   char c,check[128],*ptr,*dptr;
+   int j,test,ret;
+   UINT4 zahl,rest;
+
+      /* BBAN (Basic Bank Account Number) kopieren (alphanumerisch) */
+   test=0;
+   for(ptr=iban+4,dptr=check;*ptr;ptr++){
+      if((c=*ptr)>='0' && c<='9')
+         *dptr++=c;
+      else if(c>='A' && c<='Z'){
+         c+=10-'A';
+         *dptr++=c/10+'0';
+         *dptr++=c%10+'0';
+      }
+      else if(c>='a' && c<='z'){
+         c+=10-'a';
+         *dptr++=c/10+'0';
+         *dptr++=c%10+'0';
+      }
+   }
+
+      /* Ländercode (2-stellig/alphabetisch) kopieren */
+   ptr=iban;
+   if((c=*ptr++)>='A' && c<='Z'){
+      c+=10-'A';
+      *dptr++=c/10+'0';
+      *dptr++=c%10+'0';
+   }
+   else if(c>='a' && c<='z'){
+      c+=10-'a';
+      *dptr++=c/10+'0';
+      *dptr++=c%10+'0';
+   }
+   if((c=*ptr++)>='A' && c<='Z'){
+      c+=10-'A';
+      *dptr++=c/10+'0';
+      *dptr++=c%10+'0';
+   }
+   else if(c>='a' && c<='z'){
+      c+=10-'a';
+      *dptr++=c/10+'0';
+      *dptr++=c%10+'0';
+   }
+
+      /* Prüfziffer kopieren */
+   *dptr++=*ptr++;
+   *dptr++=*ptr++;
+   *dptr=0;
+
+   for(rest=0,ptr=check;*ptr;){
+      zahl=rest/10;
+      zahl=zahl*10+rest%10;
+      for(j=0;j<6 && *ptr;ptr++,j++)zahl=zahl*10+ *ptr-'0';
+      rest=zahl%97;
+   }
+   zahl=98-rest;
+   if(rest==1)test=1;
+   if((*iban=='D'|| *iban=='d') && (*(iban+1)=='E' || *(iban+1)=='e')){ /* Konto testen */
+      for(ptr=iban+4,dptr=check,j=0;j<8;ptr++)if(isdigit(*ptr)){
+         *dptr++=*ptr;
+         j++;
+      }
+      *dptr++=0;
+      for(j=0;j<10;ptr++)if(isdigit(*ptr)){
+         *dptr++=*ptr;
+         j++;
+      }
+      *dptr=0;
+      if((ret=kto_check(check,check+9,""))>0)test|=2;
+      if(retval)*retval=ret;
+   }
+   else
+      test|=2;
+   if(test==1)
+      return IBAN_OK_KTO_NOT;
+   else if(test==2)
+      return KTO_OK_IBAN_NOT;
+   else if(test==3)
+      return OK;
+   else
+      return FALSE;
+}
+
 /* Funktion kto_check_test_vars() +§§§1 */
 /* ###########################################################################
  * # Die Funktion kto_check_test_vars() macht nichts anderes, als die beiden #
@@ -8849,4 +9137,5 @@ DLL_EXPORT int get_lut_info(char **info,char *lut_name){return EXCLUDED_AT_COMPI
 DLL_EXPORT int get_lut_info_t(char **info,char *lut_name,KTO_CHK_CTX *ctx){return EXCLUDED_AT_COMPILETIME;};
 DLL_EXPORT char *get_kto_check_version(void){return "EXCLUDED_AT_COMPILETIME";};
 DLL_EXPORT char *kto_check_test_vars(char *txt,int i){return "EXCLUDED_AT_COMPILETIME";};
+DLL_EXPORT int iban_check(char *iban){return EXCLUDED_AT_COMPILETIME;}
 #endif

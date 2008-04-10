@@ -105,6 +105,8 @@
  * ######################################################################
  */
 
+#define IBAN_OK_KTO_NOT            -67  /* aus konto_check 3.0 */
+#define KTO_OK_IBAN_NOT            -66  /* aus konto_check 3.0 */
 #define UNDEFINED_SUBMETHOD        -29
 #define EXCLUDED_AT_COMPILETIME    -28
 #define INVALID_LUT_VERSION        -27
@@ -222,6 +224,9 @@ DLL_EXPORT char *kto_check_str_t(char *pz_or_blz,char *kto,char *lut_name,KTO_CH
  */
 DLL_EXPORT int cleanup_kto(void);
 DLL_EXPORT int cleanup_kto_t(KTO_CHK_CTX *ctx);
+
+   /* IBAN-Sachen */
+DLL_EXPORT int iban_check(char *iban,int *retval);
 
 /*
  * ######################################################################

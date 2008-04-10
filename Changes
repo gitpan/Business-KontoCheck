@@ -3,7 +3,20 @@ Revision history for Perl extension Business::KontoCheck.
 The complete history can be found in 0_history.txt (in german). The perl
 version starts with 2.1; all previous versions are C only libraries.
 
-2.4 Tue November 13,2007
+2.6 Thu April 10, 2008
+   one more minor release: bugfixes, new check methods
+      - some memory leaks fixed
+      - newly defined check methods C8 and C9 implemented
+      - beginning with this release, also a PHP module is available ;-)
+
+2.5 Sat February 16, 2008
+   minor release again: some bugfixes. This is a version of the stable 2.x
+   releases; the 3.x release is currently in alpha/beta status.
+      - bugfixes in method 50b and 74b (details in 0_history.txt)
+      - fix in generation of blz.lut file, when multiple check methods are
+        used for a single bank
+
+2.4 Tue November 13, 2007
    minor release; the next major release (3.0) will come soon (most work is
    already done):
       - newly defined check methods C7 implemented

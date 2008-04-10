@@ -1,4 +1,4 @@
-#vim:set tw=70;set ft=text; set si
+#vim:tw=70:ft=text:si
 
 package Business::KontoCheck;
 
@@ -16,7 +16,7 @@ our @EXPORT_OK = qw( kto_check kto_check_str generate_lut
 our @EXPORT = qw( kto_check kto_check_str kto_check_at
       kto_check_at_str %kto_retval );
 
-our $VERSION = '2.4';
+our $VERSION = '2.6';
 
 require XSLoader;
 XSLoader::load('Business::KontoCheck', $VERSION);
@@ -24,6 +24,8 @@ XSLoader::load('Business::KontoCheck', $VERSION);
 # Preloaded methods go here.
 
 %Business::KontoCheck::kto_retval = (
+ -67  =>  'Die Prüfziffer der IBAN stimmt, die der Kontonummer nicht',
+ -66  =>  ' Die Prüfziffer der Kontonummer stimmt, die der IBAN nicht',
  -29  =>  'Die Untermethode ist nicht definiert',
  -28  =>  'Die Funktion wurde beim Kompilieren ausgeschlossen',
  -27  =>  'Die Versionsnummer für die LUT-Datei ist ungültig',
@@ -58,6 +60,8 @@ XSLoader::load('Business::KontoCheck', $VERSION);
    2  =>  'ok, ohne Prüfung',
    3  =>  'ok; als BLZ wurde die Test-BLZ benutzt',
 
+ 'IBAN_OK_KTO_NOT'               =>  'Die Prüfziffer der IBAN stimmt, die der Kontonummer nicht',
+ 'KTO_OK_IBAN_NOT'               =>  'Die Prüfziffer der Kontonummer stimmt, die der IBAN nicht',
  'UNDEFINED_SUBMETHOD'           =>  'Die Untermethode ist nicht definiert',
  'EXCLUDED_AT_COMPILETIME'       =>  'Die Funktion wurde beim Kompilieren ausgeschlossen',
  'INVALID_LUT_VERSION'           =>  'Die Versionsnummer für die LUT-Datei ist ungültig',

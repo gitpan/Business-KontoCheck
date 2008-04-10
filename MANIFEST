@@ -12,7 +12,7 @@ konto_check.c
 konto_check.h
 konto_check-at.c
 konto_check-at.h
-inpar.dat
+inpar.dat.gz
 blz.lut
 blz-at.lut
 test.pl

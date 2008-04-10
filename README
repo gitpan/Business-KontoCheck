@@ -1,11 +1,11 @@
-vim:set tw=70; set ft=text; set ai
+vim:tw=80:ft=text:ai
 
-Business::KontoCheck version 2.4
+Business::KontoCheck version 2.6
 ================================
 
 This module checks the validity of German and Austrian Bank Account Numbers.
 All currently defined test methods by Deutsche Bundesbank (currently: 00 to
-C7, November 2007) are implemented.
+C9, March 2008) are implemented.
 
 The Österreichische Bundesbank uses a quite different approach. The basic
 tests are more generic; the concrete tests are described by the hash file,
@@ -16,8 +16,9 @@ The original library is a C library; the Perl port was build using the h2xs
 tool.
 
 Due to performance considerations in the C library, this module is not thread
-safe. But since KontoCheck is *very* fast and it's not a great speed loss, I'll
-implement a thread safe version in the next major release (planned for this year).
+safe. But since KontoCheck is *very* fast and it's not a great speed loss, I've
+implemented a thread safe version as the next major release. This releasee is
+currently available in beta status as konto_check 2.91 (3.0 beta 1)
 
 If you want support only for german or only for austrian Bank Account Numbers,
 edit line 15 of Makefile.PL. To use only the german module, use
@@ -31,8 +32,8 @@ http://www.informatik.hs-mannheim.de/konto_check
 
 DOCUMENTATION
 
-The C source code contains the description of each check method. A synopsis
-and short description of all exported functions is included in the file
+The C source code contains the description of each check method. A synopsis and
+short description of all export functions is included in the file
 lib/Business/KontoCheck.pm; this is can be read after installation using the
 command "perldoc Businesss::KontoCheck".
 
@@ -56,7 +57,7 @@ This module requires a C compiler to build the library.
 
 COPYRIGHT AND LICENCE
 
-Copyright (C) 2007 by Michael Plugge
+Copyright (C) 2007-2008 by Michael Plugge
 
 This library is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself, either Perl version 5.8.8 or, at your option,

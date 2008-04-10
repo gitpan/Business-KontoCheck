@@ -1,7 +1,7 @@
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl Business-KontoCheck.t'
 
-use Test::More tests => 1041;
+use Test::More tests => 1040;
 BEGIN { use_ok('Business::KontoCheck') };
 
 # Insert your test code below, the Test::More module is use()ed here so read
@@ -9,7 +9,6 @@ BEGIN { use_ok('Business::KontoCheck') };
 
 ok(kto_check("10010010","73395105","") eq 1,"Test 1");
 ok(kto_check_str("10010010","73395105","") eq "OK","Test 2");
-ok(kto_check_at("19800","95556599990","blz-at.lut") eq 2,"Test 1 AT");
 
 while(<DATA>){
    chomp;
@@ -1018,19 +1017,19 @@ __DATA__
 1 0 C71 5073321010
 1 0 C72 1234517892
 1 0 C72 987614325
-2 2 10000 00243551900
-2 2 10000 10412006400
+2 -4 10000 00243551900
+2 -4 10000 10412006400
 2 1 14000 00115303384
 2 1 14000 00159001040
 2 1 31000 00000975409
 2 1 40000 59990080003
 2 1 40000 68136400006
-2 -17 -12000 04975889900
+2 1 12000 04975889900
 2 -17 -60000 1740400
 2 -17 -60000 7622670
-2 -16 12000 04975889900
+2 1 12000 04975889900
 2 1 15000 611803412
-2 -16 12000 04975889900
+2 1 12000 04975889900
 2 -4 20851 2100251301
 2 1 31000 109313032
 2 1 p001b1100039310003934800191e8bb45410 243551900
