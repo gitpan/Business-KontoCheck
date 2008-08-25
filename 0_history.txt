@@ -1,13 +1,13 @@
-vim:set tw=70; set ft=text; set ai
+vim:tw=80:ft=text:ai
 
 ########################################################################
 #          PRÜFZIFFERBERECHNUNG VON DEUTSCHEN KONTONUMMERN             #
-#                           C-/Perl-Bibliothek                         #
+#                     C-/Perl/PHP-Bibliothek                           #
 ########################################################################
 #                                                                      #
 # Autor             : Michael Plugge <m.plugge@fh-mannheim.de>         #
-# Version           : 2.1                                              #
-# Datum             : 11.06.2007                                       #
+# Version           : 2.4                                              #
+# Datum             : 13.11.2007                                       #
 ########################################################################
 
 Versionen der deutschen Bibliothek:
@@ -16,47 +16,43 @@ Versionen der deutschen Bibliothek:
                  erste Version (nur privat, wenige Methoden)
 
   13.06.02  Version 0.2:
-                 Berechnungsmethoden umgeschrieben, zusätzliche
-                 Methoden eingefügt.
+                 Berechnungsmethoden umgeschrieben, zusätzliche Methoden
+                 eingefügt.
 
                  Jede implementierte Methode wird mit dem Perl-Modul
-                 Business::konto.pm von Andreas Butzko
-                 <andreas@butzko.net> mit mindestens 40000
-                 Testkontonummern (oft auch mehr) getestet.
+                 Business::konto.pm von Andreas Butzko <andreas@butzko.net> mit
+                 mindestens 40000 Testkontonummern (oft auch mehr) getestet.
 
   10.07.02  Version 0.3:
-                 weitere Berechnungsmethoden; zusätzliche Datei
-                 blz_utils.c mit diversen Hilfsfunktionen für
-                 (wesentlich) schnelleren Zugriff auf die Prüfziffer-
-                 methoden (unter VMS ergab sich für eine Testdatei mit
-                 knapp 200 Einträgen eine Beschleunigung von 4,9s auf
-                 0,13s (mit einem remote filesystem); bei Linux (mit
-                 lokalem Filesystem und blz.txt/blz.lut im Cache) von
-                 175 ms auf 2,4 ms).
+                 weitere Berechnungsmethoden; zusätzliche Datei blz_utils.c mit
+                 diversen Hilfsfunktionen für (wesentlich) schnelleren Zugriff
+                 auf die Prüfziffer- methoden (unter VMS ergab sich für eine
+                 Testdatei mit knapp 200 Einträgen eine Beschleunigung von 4,9s
+                 auf 0,13s (mit einem remote filesystem); bei Linux (mit lokalem
+                 Filesystem und blz.txt/blz.lut im Cache) von 175 ms auf 2,4
+                 ms).
 
-                 Für die Brechnung wird nicht mehr auf die Datei der
-                 Deutschen Bundesbank zugegriffen, sondern nur noch
-                 auf eine generierte Binärdatei (blz.lut); sie kann
-                 mit der Funktion generate_lut() aus der Bundesbank-
-                 datei erzeugt werden.
+                 Für die Brechnung wird nicht mehr auf die Datei der Deutschen
+                 Bundesbank zugegriffen, sondern nur noch auf eine generierte
+                 Binärdatei (blz.lut); sie kann mit der Funktion generate_lut()
+                 aus der Bundesbank- datei erzeugt werden.
 
- ----------------------------------------------------------------------
+ --------------------------------------------------------------------------------
 
   13.9.02  Version 1.0:
-                 Die Berechnungsmethoden sind jetzt komplett;  bis
-                 auf Methode 87 (Pascalcode) wurden alle Methoden mit
-                 dem Perl-Modul konto.pm mit jeweils ca. 50000...
-                 100000 Testkontonummern überprüft (dabei wurden auch
-                 einige Fehler im Perl-Modul aufgedeckt und
-                 beseitigt).
+                 Die Berechnungsmethoden sind jetzt komplett;  bis auf Methode
+                 87 (Pascalcode) wurden alle Methoden mit dem Perl-Modul
+                 konto.pm mit jeweils ca. 50000... 100000 Testkontonummern
+                 überprüft (dabei wurden auch einige Fehler im Perl-Modul
+                 aufgedeckt und beseitigt).
 
-                 Die Funktionen aus blz_utils.c sind jetzt in die
-                 Hauptdatei integriert; diese kann als stand-alone
-                 Programm oder als library verwendet werden.
+                 Die Funktionen aus blz_utils.c sind jetzt in die Hauptdatei
+                 integriert; diese kann als stand-alone Programm oder als
+                 library verwendet werden.
 
    10.10.02 Version 1.0.1:
-                 Einige kleine Fehler wurden noch korrigiert und die
-                 main() Funktion etwas erweitert.
+                 Einige kleine Fehler wurden noch korrigiert und die main()
+                 Funktion etwas erweitert.
 
    06.11.02 Version 1.0.2:
                  main() Routine mit Hilfefunktion, DOS-Exe in das
@@ -66,68 +62,60 @@ Versionen der deutschen Bibliothek:
                  Bugfixes:
                  - Fehler in den Methoden 47, 52, 87 und 93 behoben
                  - falls der 1. Parameter (BLZ/Prüfziffermethode) nur
-                   zweistellig angegeben wird, wurde die Funktion
-                   init_w() nicht aufgerufen, so daß etliche Varibalen
-                   undefiniert blieben.
-                 - Lizenzbedingungen: Unterschied der LGPL zur normalen
-                   GPL im readme und am Programmanfang deutlicher
-                   gesagt (nicht nur Hinweis auf den Text)
+                   zweistellig angegeben wird, wurde die Funktion init_w() nicht
+                   aufgerufen, so daß etliche Varibalen undefiniert blieben.
+                 - Lizenzbedingungen: Unterschied der LGPL zur normalen GPL im
+                   readme und am Programmanfang deutlicher gesagt (nicht nur
+                   Hinweis auf den Text)
                  - neues blz.lut aus der Datei blz0212.exe
 
    13.03.03 Version 1.1.0:
                  Bugfixes:
-                 - Methode 95: Ausnahmekonten 0001999999 etc. gelten als
-                   richtig (ohne Test; Im Vergleich wurde auf kleiner
-                   getestet statt auf kleiner/gleich)
+                 - Methode 95: Ausnahmekonten 0001999999 etc. gelten als richtig
+                   (ohne Test; Im Vergleich wurde auf kleiner getestet statt auf
+                   kleiner/gleich)
 
                  Weitere Änderungen:
-                 - Die Konstanten MAYBE_OK/MAYBE_FALSE werden nicht
-                   mehr benutzt und wurden entfernt (dadurch ändern
-                   sich die numerischen Rückgabewerte, nicht jedoch die
-                   symbolischen).
-                 - Datei konto_check.h geschrieben mit public interface
-                   und möglichen Rückgabewerten.
+                 - Die Konstanten MAYBE_OK/MAYBE_FALSE werden nicht mehr benutzt
+                   und wurden entfernt (dadurch ändern sich die numerischen
+                   Rückgabewerte, nicht jedoch die symbolischen).
+                 - Datei konto_check.h geschrieben mit public interface und
+                   möglichen Rückgabewerten.
                  - die Methode A1 wird zum 9.6.2003 geändert; das neue
                    Berechnungsverfahren kann über eine globale Variable
                    ausgewählt werden.
-                 - Die Methoden A2...A5 wurden implementiert (neue
-                   Verfahren)
-                 - Neues Dateiformat für die Datei blz.lut: sie enthält
-                   jetzt eine Infozeile, in der das Erzeugungsdatum
-                   und der Name der ursprünglichen Bankleitzahlendatei
-                   festgehalten wird.
-                 - neue Funktionen get_lut_info(): gibt (beim neuen
-                   Format) die Infozeile der LUT-Datei zurück.
-                 - neue Funktion get_kto_check_version() zur Versions-
-                   kontrolle
+                 - Die Methoden A2...A5 wurden implementiert (neue Verfahren)
+                 - Neues Dateiformat für die Datei blz.lut: sie enthält jetzt
+                   eine Infozeile, in der das Erzeugungsdatum und der Name der
+                   ursprünglichen Bankleitzahlendatei festgehalten wird.
+                 - neue Funktionen get_lut_info(): gibt (beim neuen Format) die
+                   Infozeile der LUT-Datei zurück.
+                 - neue Funktion get_kto_check_version() zur Versions- kontrolle
                  - main() Routine in eigene Datei ausgelagert
                  - Test von Untermethoden mit dreistelliger "BLZ"
 
    25.03.03 Version 1.1.1:
-                 - zusätzlicher Test in read_lut(), ob die LUT-Datei
-                   gelesen wurde.
-                 - eine Reihe Untermethoden wurde anders numeriert
-                   (dies betrifft nur die Debug-Version und ist nur für
-                   Tests relevant; es hat keine Auswirkung auf das
-                   normale Programm).
+                 - zusätzlicher Test in read_lut(), ob die LUT-Datei gelesen
+                   wurde.
+                 - eine Reihe Untermethoden wurde anders numeriert (dies
+                   betrifft nur die Debug-Version und ist nur für Tests
+                   relevant; es hat keine Auswirkung auf das normale Programm).
                  - neue Variable pz_str (char[4]), in der die benutzte
-                   Prüfmethode und Untermethode zurückgegeben wird.
-                   Falls die Untermethode unerwünscht ist, kann sie mit
-                   pz_str[2]=0 gelöscht werden.
-                   Die Methode entspricht der Notation der Deutschen
-                   Bundesbank (00 bis A5), für die Untermethoden werden
-                   kleine Buchstaben benutzt (a, b, c...).
+                   Prüfmethode und Untermethode zurückgegeben wird. Falls die
+                   Untermethode unerwünscht ist, kann sie mit pz_str[2]=0
+                   gelöscht werden. Die Methode entspricht der Notation der
+                   Deutschen Bundesbank (00 bis A5), für die Untermethoden
+                   werden kleine Buchstaben benutzt (a, b, c...).
 
    10.06.03 Version 1.1.2:
-                 - Fehler in Methode 21 behoben (Quersumme der Faktoren
-                   fehlte)
+                 - Fehler in Methode 21 behoben (Quersumme der Faktoren fehlte)
                  - Methode A1 auf neues Berechnungsverfahren umgestellt
-                 - (Bei dem Generator für die Testkonten wurde noch
-                   einige Pattern berichtigt)
+                 - (Bei dem Generator für die Testkonten wurde noch einige
+                   Pattern berichtigt)
 
    28.01.04 Version 1.1.3 (aus 2.0-Alpha1 hinzugefügt in 1.1.2)=
-                 - Die Fehler in Methode 76.2 und 80 (s.u., Version
-                   2.0-Alpha1 wurden korrigiert
+                 - Die Fehler in Methode 76.2 und 80 (s.u., Version 2.0-Alpha1
+                   wurden korrigiert
 
                  - Die neu definierten Methoden (A6 bis A9) sind jetzt
                    iplementiert.
@@ -147,13 +135,13 @@ Versionen der deutschen Bibliothek:
                  - Geschwindigkeitsoptimierung aller Methoden sowie der
                    Hilfsfunktionen und der main() Routine
 
-                 - Methode 80: Der Sonderfall mit 99 an der 3. und 4.
-                   Stelle wird jetzt nur noch für die Variante 2
-                   angenommen, nicht global.
+                 - Methode 80: Der Sonderfall mit 99 an der 3. und 4. Stelle
+                   wird jetzt nur noch für die Variante 2 angenommen, nicht
+                   global.
 
-                 - In Methode 76.2 wurde die 1. Stelle auf 1,2,3,5
-                   getestet; aufgrund der Verschiebung muß jedoch die
-                   3. Stelle getestet werden.
+                 - In Methode 76.2 wurde die 1. Stelle auf 1,2,3,5 getestet;
+                   aufgrund der Verschiebung muß jedoch die 3. Stelle getestet
+                   werden.
 
                  - Die neu definierten Methoden (A6 bis A9) sind jetzt
                    iplementiert.
@@ -174,19 +162,17 @@ Versionen der deutschen Bibliothek:
    06.08.05 Version 2.0 final
                  - Makefiles aktualisiert
                  - sharable library für Linux/Unix
-                 - Fehler bei BLZ-Lookup beseitigt (nicht existierende
-                   BLZ wurde u.U. auf die 1. BLZ-Methode geführt)
+                 - Fehler bei BLZ-Lookup beseitigt (nicht existierende BLZ wurde
+                   u.U. auf die 1. BLZ-Methode geführt)
                  - Methoden B1, B2 und B4 bis B8 neu implementiert
-                 - Die Datei pruefziffermethoden_0509.pdf wurde noch
-                   einmal mit den implementierten Methoden verglichen;
-                   die Methoden 73, 80, 81, 84, 86, 87, 90, 91, A4, A8
-                   wurden danach aktualisiert
+                 - Die Datei pruefziffermethoden_0509.pdf wurde noch einmal mit
+                   den implementierten Methoden verglichen; die Methoden 73, 80,
+                   81, 84, 86, 87, 90, 91, A4, A8 wurden danach aktualisiert
                  - Variable methode_a1_alt herausgenommen (obsolet)
-                 - set_globals() an mehreren Stellen in
-                   generate_lut() eingefügt (in der threadfesten
-                   Version wurde der Rückgabetext nicht in die
-                   globalen Variablen eingesetzt, da die Funktion
-                   direkt aufgerufen wird).
+                 - set_globals() an mehreren Stellen in generate_lut() eingefügt
+                   (in der threadfesten Version wurde der Rückgabetext nicht in
+                   die globalen Variablen eingesetzt, da die Funktion direkt
+                   aufgerufen wird).
 
    01.12.05 Version 2.0.1
                  - Methoden B9 und C0 implementiert
@@ -197,11 +183,10 @@ Versionen der deutschen Bibliothek:
                  - Variable methode_a1_alt gelöscht
 
    23.08.06 Version 2.0.3
-                 - Default für lut_version in generate_lut() auf 2
-                   (vorher war kein Defaultwert definiert; bei einem
-                   ungültigem Wert für lut_version wurde eine fehler-
-                   hafte blz.lut Datei generiert, jedoch fälschlich OK
-                   zurückgegeben.
+                 - Default für lut_version in generate_lut() auf 2 (vorher war
+                   kein Defaultwert definiert; bei einem ungültigem Wert für
+                   lut_version wurde eine fehler- hafte blz.lut Datei generiert,
+                   jedoch fälschlich OK zurückgegeben.
 
    20.11.06 Version 2.0.4
                  - falsche Berechnung in Methode B6 korrigiert
@@ -211,124 +196,105 @@ Versionen der deutschen Bibliothek:
                  - Methoden C3 und C4 implementiert
 
    26.05.07 Version 2.1
-                 - falls die LUT-Datei nicht gefunden wurde, stürzte
-                   das Programm beim nächsten Aufruf mit einer access
-                   violation ab; korrigiert.
+                 - falls die LUT-Datei nicht gefunden wurde, stürzte das
+                   Programm beim nächsten Aufruf mit einer access violation ab;
+                   korrigiert.
                  - falls als Dateiname für die LUT-Datei ein Leerstring
                    angegeben wird, wird jetzt der Defaultname benutzt.
-                 - die main() Routine kann jetzt auch im Filterbetrieb
-                   arbeiten
-                 - Fehler in Methode 74 beseitigt: wenn die Unterkonto-
-                   nummer nicht angegeben war, wurde bei einer Prüf-
-                   ziffer von 10 gleich INVALID_KTO zurückgegeben, statt
-                   den Test mit Unterkontonummer "00" zu wiederholen.
-                 - einige Deklarationen mit long ersetzt durch INT4,
-                   da auf 64 Bit Systemen Probleme entstanden (betrifft
-                   vor allem die Funktion adler32)
+                 - die main() Routine kann jetzt auch im Filterbetrieb arbeiten
+                 - Fehler in Methode 74 beseitigt: wenn die Unterkonto- nummer
+                   nicht angegeben war, wurde bei einer Prüf- ziffer von 10
+                   gleich INVALID_KTO zurückgegeben, statt den Test mit
+                   Unterkontonummer "00" zu wiederholen.
+                 - einige Deklarationen mit long ersetzt durch INT4, da auf 64
+                   Bit Systemen Probleme entstanden (betrifft vor allem die
+                   Funktion adler32)
                  - erste Perl-Version mittels h2xs generiert
                  - einige Anpassungen für Perl, Perl Dokumentation
 
 
    22.08.07 Version 2.2
-                    Diese Version ist nur ein Zwischenrelease, um die
-                    neu definierten Prüfmethoden C5 und C6, die ab
-                    September gültig werden, in die Library einzufügen.
-                    Ansonsten wurden in der kleinere Details geändert.
-                    Die Threadfestigkeit wurde zwar angegangen, ist bis
-                    jetzt allerdings nur in der Entwicklerversion
-                    implementiert (braucht noch einige Tests).
+                    Diese Version ist nur ein Zwischenrelease, um die neu
+                    definierten Prüfmethoden C5 und C6, die ab September gültig
+                    werden, in die Library einzufügen. Ansonsten wurden in der
+                    kleinere Details geändert. Die Threadfestigkeit wurde zwar
+                    angegangen, ist bis jetzt allerdings nur in der
+                    Entwicklerversion implementiert (braucht noch einige Tests).
 
                   - Methoden C5 und C6 implementiert
-                  - einige Aufräumarbeiten, unbenutzte Prototypen für
-                    das LUT2 Datei-Format entfernt. Die Funktionen
-                    werden in der nächsten größeren Version eingeführt.
+                  - einige Aufräumarbeiten, unbenutzte Prototypen für das LUT2
+                    Datei-Format entfernt. Die Funktionen werden in der nächsten
+                    größeren Version eingeführt.
 
    25.08.07 Version 2.3
-                    Bugfix-Release für den Perl-Port von Version 2.2. 
+                    Bugfix-Release für den Perl-Port von Version 2.2.
 
                   - In Version 2.2 (Perl) fehlten die beiden Dateien
                     testkonten.txt und testkonten-at.txt. Bei make test ein
                     Fehler zurückgeliefert (eigentlich unkritisch, aber nicht
                     sehr schön).
 
-                  - neuer Rückgabewert OK_TEST_BLZ_USED für die Methoden 52,
-                    53, B6 und C0 (keine Warnung mehr nach stderr, falls die
+                  - neuer Rückgabewert OK_TEST_BLZ_USED für die Methoden 52, 53,
+                    B6 und C0 (keine Warnung mehr nach stderr, falls die
                     Prüfziffermethode direkt angegeben wird, ohne BLZ).
+
    13.11.07 Version 2.4
-                   Diese Version ist wieder ein Zwischenrelease, um die
-                   neu definierte Prüfmethode C7 (gültig ab Dezember)
-                   in die Library einzufügen; außerdem wurde ein Fehler
-                   in der Methode B9 beseitigt.
+                    Diese Version ist wieder ein Zwischenrelease, um die neu
+                    definierte Prüfmethode C7 (gültig ab Dezember) in die
+                    Library einzufügen; außerdem wurde ein Fehler in der Methode
+                    B9 beseitigt.
 
-                 - Methoden C7 implementiert
+                  - Methoden C7 implementiert
 
-                 - In Methode B9 war für den Test auf 3 führende Nullen
-                   irrtümlich if(kto[3]!='0') (statt if(kto[2]!='0') )
-                   geschrieben; korrigiert.
-
-                 - Die Funktion kto_check_test_vars() gibt den Wert
-                   der übergebenen Variablen auch in einem String
-                   zurück, um so auch Anwendungen zu unterstützen, die
-                   die Ausgabe von stderr unterdrücken (insbesondere
-                   DLL-Anwendungen unter Windows).
-
-                 - neue Funktion kto_check_str(), die dieselbe Funktio-
-                   nalität hat wie kto_check(), jedoch als Rückgabe
-                   einen kurzen String als Ergebnis liefert (war schon
-                   in 2.2 eingeführt).
+                  - In Methode B9 war für den Test auf 3 führende Nullen
+                    irrtümlich if(kto[3]!='0') (statt if(kto[2]!='0') )
+                    geschrieben; korrigiert.
 
    16.02.08 Version 2.5
-                   Diese Version ist ein Übergangsrelease, da in der
-                   Version 3.0 sehr viel Code neu geschrieben wurde;
-                   die Version 2.5 enthält noch den alten Code mit
-                   einigen kleineren Bugfixes und kann als stabile
-                   Variante angesehen werden (3.0 ist noch etwas
-                   experimentell, und macht unter Windows in Zusammen-
-                   hang mit VB ziemlig Probleme; die C- und Perlversion
-                   scheinen dagegen zu laufen).
+                    Diese Version ist ein Übergangsrelease, da in der Version
+                    3.0 sehr viel Code neu geschrieben wurde; die Version 2.5
+                    enthält noch den alten Code mit einigen kleineren Bugfixes
+                    und kann als stabile Variante angesehen werden (3.0 ist noch
+                    etwas experimentell, und macht unter Windows in Zusammen-
+                    hang mit VB ziemlig Probleme; die C- und Perlversion
+                    scheinen dagegen zu laufen).
 
-                 - Methode 50b wird nur noch angewendet, falls die
-                   Kontonummer nicht mehr als sieben Stellen hat; nur
-                   in dem Fall scheint es möglich zu sein, daß ein
-                   Unterkonto weggelassen wurde.
+                  - Methode 50b wird nur noch angewendet, falls die Kontonummer
+                    nicht mehr als sieben Stellen hat; nur in dem Fall scheint
+                    es möglich zu sein, daß ein Unterkonto weggelassen wurde.
 
-                 - Bei Methode 74b wird die Prüfziffer (aus der 10.
-                   Stelle) modulo 5 genommen, da bei mindestens einer
-                   Bank Prüfziffern für 74b >5 vorkommen.
+                  - Bei Methode 74b wird die Prüfziffer (aus der 10. Stelle)
+                    modulo 5 genommen, da bei mindestens einer Bank Prüfziffern
+                    für 74b >5 vorkommen.
 
-                 - Falls in der Bundesbankdatei für eine Bank mehrere
-                   Prüfverfahren angegeben sind, wird das der Haupt-
-                   stelle benutzt. Die alte Version nutzte als Prüf-
-                   zifferverfahren dasjenige, das in der Bankdatei als
-                   letztes aufgeführt wurde; dieses ist oft von einer
-                   Nebenstelle und ist somit i.A. nicht korrekt.
+                  - Falls in der Bundesbankdatei für eine Bank mehrere
+                    Prüfverfahren angegeben sind, wird das der Haupt- stelle
+                    benutzt. Die alte Version nutzte als Prüf- zifferverfahren
+                    dasjenige, das in der Bankdatei als letztes aufgeführt
+                    wurde; dieses ist oft von einer Nebenstelle und ist somit
+                    i.A. nicht korrekt.
 
-   10.04.08 Version 2.6
-                   Diese Version ist wieder ein Zwischenrelease zur
-                   Version 3.0, da zum nächsten Termin am 9.6.2008 zwei
-                   neue Prüfziffermethoden eingeführt wurden. Die
-                   erste Betaversion zu 3.0 (2.91) wird praktisch
-                   gleichzeitig mit dieser Version freigegeben.
+   03.04.08 Version 2.6
+                    Diese Version ist wieder ein Übergangsrelease zu Version 3.0
+                    die Version 2.6 enthält noch den alten Code mit den neu
+                    definierten Prüfziffermethoden.
 
-                 - Methoden C8 und C9 implementiert
+                  - Prüfziffermethoden C8 und C9 implementiert
 
-                 - in der Funktion read_lut() wurde Speicher allokiert,
-                   der im Fehlerfall nicht wieder freigegeben wurde;
-                   das ist jetzt (an etlichen Stellen) berichtigt.
-
-                 - erste Version eines PHP-Moduls. Die PHP-Version wurde
-                   aus 2.91 rückportiert und enthält nur die beiden
-                   Funktionen kto_check() und kto_check_str(); aber
-                   für einen ersten Test ist sie schon brauchbar.
-
-   23.04.08 Version 2.91
-                   Dies ist die erste Beta-Version für das 3.0 Release
-                   von konto_check. Die Dateien 0_history.txt und
-                   00liesmich.txt sind noch weitgehend von 2.6; es gibt
-                   sehr viele Änderungen in den Funktionen und im API.
-                   Das alte API kann jedoch auch weiterhin benutzt
-                   werden; es wird intern auf die neuen Funktionen
-                   abgebildet.
+   23.08.08 Version 2.7                                                 
+                   Diese Version ist wieder ein Zwischenrelease zur Version 3.0,
+                   da zum nächsten Termin am 8.9.2008 zwei neue Prüfziffermethoden
+                   eingeführt wurden. Die zweite Betaversion zu 3.0 (2.92) wird
+                   gleichzeitig mit dieser Version freigegeben.                      
+                                                                        
+                 - Methoden D0 und D1 implementiert                     
+                                                                        
+                 - in Methode 53 und B6 wurde eine Rückgabe vergessen; dadurch
+                   konnten unter Umständen Konten fälschlich als richtig
+                   klassifiziert werden.                    
+                                                                        
+                 - Methode 57 wurde zum 4.12.2006 ziemlig stark geändert; die
+                   Änderungen sind jetzt berücksichtigt.  
 
 
 ##############################################################################
@@ -337,8 +303,8 @@ Versionen der deutschen Bibliothek:
 ##############################################################################
 #                                                                            #
 # Autor             : Michael Plugge <m.plugge@fh-mannheim.de>               #
-# Version           : 1.3                                                    #
-# Datum             : 16.01.2008                                             #
+# Version           : 2.1                                                    #
+# Datum             : 11.06.2007                                             #
 ##############################################################################
 
 Versionen der österreichischen Bibliothek:
@@ -531,20 +497,3 @@ Version 2.1 (4.6.07):
  - einige kleinere Änderungen für die Anpassung an Perl
  - Der Datentyp von adler32 wurde von unsigned long auf UINT4 geändert, um
    Probleme mit modernen 64 Bit Compilern zu beheben.
-
-Version 1.3 (16.1.08):
-======================
- - Die eigene Versionszählung für das österreichische Modul wird doch wieder
-   eingeführt.
-
- - diese Version implementiert das INPAR-Dateiformat; das Programm kann jetzt
-   beide Dateiformate lesen
-
- - die Funktion dump_lutfile() mußte auf dump_lutfile_at() umbenannt werden,
-   da in der neuen deutschen Bibliothek jetzt auch eine Funktion mit demselben
-   Namen, aber wesentlich erweiterter Funktionalität als Teil der LUT2
-   Routinen vorkommt (diese Funktion ist allerdings nicht nach perl
-   exportiert).
-
- - einige kleinere Aufräumarbeiten
-

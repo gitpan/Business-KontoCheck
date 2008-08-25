@@ -6,7 +6,8 @@ Makefile.PL
 MANIFEST
 ppport.h
 README
-t/Business-KontoCheck.t
+t/austrian.t
+t/german.t
 lib/Business/KontoCheck.pm
 konto_check.c
 konto_check.h
@@ -15,7 +16,7 @@ konto_check-at.h
 inpar.dat.gz
 blz.lut
 blz-at.lut
-test2.pl
+test.pl
 testkonten.txt
 testkonten-at.txt
 lgpl.txt
