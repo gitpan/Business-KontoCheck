@@ -6,8 +6,8 @@ vim:tw=80:ft=text:ai
 ########################################################################
 #                                                                      #
 # Autor             : Michael Plugge <m.plugge@hs-mannheim.de>         #
-# Version           : 2.6 (stabil)                                     #
-# Datum             : 10.04.2008                                       #
+# Version           : 2.92 (3.0 Beta 2)                                #
+# Datum             : 23.08.2008                                       #
 #                                                                      #
 ########################################################################
 
@@ -46,11 +46,12 @@ inpar.dat.gz                : (gepackte) Testdatei für das INPAR Datenformat (s.
 test.pl                     : kleine Beispielsdatei
 KontoCheck.xs               : XSUB-Datei mit C/Perl glue code
 lib/Business/KontoCheck.pm  : Perl Interface und Dokumentation
-t/Business-KontoCheck.t     : Testdatei für make test
+t/*                         : diverse Testdateien für make test
+zlib.tar.gz                 : abgespeckte Version der zlib
+README.zlib                 : kleines README dazu
 Makefile.PL                 : Perl Makefile
 META.yml                    : (von Perl benötigt)
 ppport.h                    : (von Perl benötigt)
-
 
 3. Installation
 ===============
@@ -127,40 +128,9 @@ haben sich teilweise geändert
 Momentan sind keine Fehler in den Prüfziffermethoden bekannt. Falls Sie einen
 Fehler finden, würde ich mich sehr freuen, davon zu hören ;-))).
 
-Die Bibliothek ist in dieser Version nicht threadfest, da einige globale
-Variablen benutzt werden; die nächsten Version wird threadfest sein. Der kleine
-Geschwindigkeitsvorteil (etwa 10 %) macht die Nachteile für eine Anwendung bei
-Serverprozessen einfach nicht wett. Die Nachfolgeversion ist praktisch fertig
-und wird bald (in einer Betaversion) auf den Server gelegt.
-
-Die Funktionen generate_lut() und generate_lut_at() sollte nicht von einem
-Programm aufgerufen werden, das zum Testen von Kontoverbindungen benutzt wird,
-da teilweise dieselben Variablen benutzt werden, und so falsche Ergebnisse
-erzeugt werden können. Stattdessen sind diese Funktionen offline aufzurufen.
-
-Momentan gibt es für langlaufende Serveranwendungen noch keine elegante
-Methode, eine neue LUT-Datei zu aktivieren; das wird auch im Zusammenhang mit
-der Threadfestigkeit in Angriff genommen werden. Es wäre möglich dafür die
-Funktion cleanup_kto() zu benutzen; diese enthält allerdings keine locking
-Funktionalität, um einen Zugriff von anderen Threads zu verhindern; daher
-wurde die Funktion nicht exportiert. Momentan scheint der beste Weg zu sein,
-den entsprechenden Server neu zu starten :-( - nicht schön, aber sauber.
-
-Die Arbeit an der neuen Version (3.0) ist schon ziemlig weit; da aber zum Juni
-zwei neue Prüfmethoden Gültigkeit bekommen, wurde wieder eine Version der 2.x
-Reihe herausgegeben. Die Version 2.91 (3.0.Beta 1) wird auch bald auf den Server
-gelegt. In dieser Version sind die LUT2 Routinen integriert, etliche Altlasten
-beseitigt, und alle globalen R/W Variablen entfernt; die Prüfziffertabelle kann
-durch eine neue Version ersetzt werden; außerdem lassen sich zu einer gegebenen
-Bankleitzahl alle Felder der Bundesbankdatei bestimmen. Die Daten werden
-komprimiert gespeichert; die vollständige Datei ist 270KB groß, eine Datei mit
-Bankleitzahl, Bankname, PLZ, Ort und Prüfziffer der Hauptstellen benötigt 53KB,
-eine Datei mit nur den Bankleitzahlen und Prüfziffern (wie aktuell) benötigt nur
-noch 9K. Außerdem kann man auch zwei Versionen der Bankleitzahlendatei in
-derselben LUT-Datei unterbringen kann; das vereinfacht die Umstellung der
-LUT-Datei am Aktualisierungsdatum (die Auswahl des Datensatzes kann manuell oder
-automatisch nach Datum erfolgen). Die Dokumentation zu dieser Version fehlt noch
-komplett, außerdem sind noch einige Tests und diverse Aufräumarbeiten notwendig.
+Dies ist die zweite Betaversion der neuen Version (2.92, bzw. 3.0 Beta 2).
+Eine genauere Übersicht zu dieser Version findet sich in der Datei 00liesmich
+der C-Distribution.
 
 
 7. Technische Informationen 
@@ -181,8 +151,8 @@ die von der Deutschen Bundesbank zur Verfügung gestellt werden.
 Feld 1	-> Bankleitzahl oder Prüfziffer
 Feld 2	-> Kontonummer.
 
-Die Bibliothek wurde mit allen Testkontonummern aus der Dokumentation der
-Prüfziffernberechnungmethoden der Deutschen Bundesbank (Stand März 2008)
+Die Bibliothek wurde mit allen Testkontonummern der Dokumentation der
+Prüfziffernberechnungmethoden der Deutschen Bundesbank (Stand Oktober 2008)
 erfolgreich getestet. Außerdem wurden etliche Millionen Testkontonummern (für
 jede Methode bzw. Teilmethode ca. 50000...100000) mit dem Modul konto122.pl
 von Andreas Butzko und anderen Programmen verglichen.

@@ -6,8 +6,14 @@ Makefile.PL
 MANIFEST
 ppport.h
 README
+README.zlib
 t/austrian.t
-t/german.t
+t/iban.t
+t/ipi.t
+t/lut2.t
+t/new_blz.t
+t/new_pz.t
+t/old.t
 lib/Business/KontoCheck.pm
 konto_check.c
 konto_check.h
@@ -16,8 +22,10 @@ konto_check-at.h
 inpar.dat.gz
 blz.lut
 blz-at.lut
-test.pl
+test2.pl
 testkonten.txt
 testkonten-at.txt
 lgpl.txt
+zlib.tar.gz
+makefile.zlib
 META.yml                                 Module meta-data (added by MakeMaker)

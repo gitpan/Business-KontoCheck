@@ -1,7 +1,7 @@
 vim:tw=80:ft=text:ai
 
-Business::KontoCheck version 2.7
-================================
+Business::KontoCheck version 2.91 (3.0 beta 1)
+==============================================
 
 This module checks the validity of German and Austrian Bank Account Numbers.
 All currently defined test methods by Deutsche Bundesbank (currently: 00 to
@@ -15,10 +15,10 @@ from http://www.firstdata.at/de/service/downloads.htm.
 The original library is a C library; the Perl port was build using the h2xs
 tool.
 
-Due to performance considerations in the C library, this module is not thread
-safe. But since KontoCheck is *very* fast and it's not a great speed loss, I've
-implemented a thread safe version as the next major release. This releasee is
-currently available in beta status as konto_check 2.92 (3.0 beta 2)
+Due to performance considerations in the C library, this module was not thread
+safe in the last versions. But since KontoCheck is *very* fast and it's not a
+great speed loss, I've implemented a thread safe version; this is the first beta
+release of the new version.
 
 If you want support only for german or only for austrian Bank Account Numbers,
 edit line 15 of Makefile.PL. To use only the german module, use
@@ -33,7 +33,7 @@ http://www.informatik.hs-mannheim.de/konto_check
 DOCUMENTATION
 
 The C source code contains the description of each check method. A synopsis and
-short description of all export functions is included in the file
+short description of (most) export functions is included in the file
 lib/Business/KontoCheck.pm; this is can be read after installation using the
 command "perldoc Businesss::KontoCheck".
 

@@ -1,0 +1,13 @@
+# This is a little makefile to check if the zlib development package is
+# installed; if not, a static version is build and the konto_check library
+# is linked against this version.
+
+dynamic:
+	@ $(CC) $(CFLAGS) $(LDFLAGS) -lz test_zlib.c -o test_zlib
+
+static: libz.a
+	@ $(CC) -Izlib $(CFLAGS) $(LDFLAGS) test_zlib.c libz.a -o test_zlib
+
+libz.a:
+	@ tar xzf zlib.tar.gz ; cd zlib ; ./configure ; $(MAKE) libz.a ; cp libz.a .. ; make clean
+
