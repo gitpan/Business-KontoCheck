@@ -1,18 +1,25 @@
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl Business-KontoCheck.t'
 
-use Test::More tests => 1032;
+use Test::More tests => 1033;
 
 BEGIN { use_ok('Business::KontoCheck') };
 
 $ok_cnt=$nok_cnt=0;
-while(<DATA>){
-   chomp;
-   ($ret,$blz,$kto)=split(/ /);
-   $retval=kto_check($blz,$kto,"blz.lut");
-   $ret_txt=$kto_retval{$retval};
-   if($retval==$ret){$ok_cnt++;}else{$nok_cnt++;}
-   ok($retval eq $ret,"BLZ/KTO (alt) $blz $kto: $retval (Soll: $ret) => $ret_txt (ok: $ok_cnt, nok: $nok_cnt)");
+$retval=lut_init("blz.lut");
+$ret_txt=$kto_retval{$retval};
+if($retval>0){$ok_cnt++;}else{$nok_cnt++;}
+ok($retval gt 0,"init: $retval => $ret_txt (ok: $ok_cnt, nok: $nok_cnt)");
+
+if($retval>0){
+   while(<DATA>){
+      chomp;
+      ($ret,$blz,$kto)=split(/ /);
+      $retval=kto_check($blz,$kto,"blz.lut");
+      $ret_txt=$kto_retval{$retval};
+      if($retval==$ret){$ok_cnt++;}else{$nok_cnt++;}
+      ok($retval eq $ret,"BLZ/KTO (alt) $blz $kto: $retval (Soll: $ret) => $ret_txt (ok: $ok_cnt, nok: $nok_cnt)");
+   }
 }
 
 __DATA__

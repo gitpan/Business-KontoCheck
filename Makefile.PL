@@ -8,7 +8,6 @@ $use_austrian = 1;
 $use_lx2l     = 0;
 $zlib         = "zlib";
 
-
 # first check, if the zlib development package is available. On serveral systems
 # this library was missing, resulting in a fail for automated smoke tests of CPAN testers.
 
@@ -65,7 +64,7 @@ unlink("test_zlib.c");
 unlink("test_zlib");
 print "use $zlib_version version of zlib\n";
 
-$define="-Wno-parentheses -Wno-uninitialized";
+$define="-Wno-uninitialized";
 
 if($use_austrian){
    $define.=" -DINCLUDE_KONTO_CHECK_AT=1 ";

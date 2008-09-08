@@ -47,8 +47,10 @@
  */
 
 /* Definitionen und Includes  */
-#define VERSION "2.92 (3.0 Beta 2)"
-#define VERSION_DATE "2008-08-23"
+#ifndef VERSION
+#define VERSION "2.93 (3.0 Beta 3)"
+#endif
+#define VERSION_DATE "2008-09-08"
 
 #ifndef INCLUDE_KONTO_CHECK_DE
 #define INCLUDE_KONTO_CHECK_DE 1
@@ -93,6 +95,7 @@
 
 #define KONTO_CHECK_VARS
 #include "konto_check.h"
+#line 391 "konto_check.lx"
 
    /* Testwert zur Markierung ungültiger Ziffern im BLZ-String (>8 Stellen) */
 #define BLZ_FEHLER 100000000
@@ -230,6 +233,7 @@
     */
 #define CHECK_RETVAL(fkt) do{if((retval=fkt)!=OK)goto fini;}while(0)     /* es muß noch aufgeräumt werden, daher goto */
 #define CHECK_RETURN(fkt) do{if((retval=fkt)!=OK)return retval;}while(0)
+#line 534 "konto_check.lx"
 
    /* einige Makros zur Umwandlung zwischen unsigned int und char */
 #define UCP (unsigned char*)
@@ -325,6 +329,7 @@ int pz=-777;
 
 #define E_START(x)
 #define E_END(x)
+#line 635 "konto_check.lx"
 
    /* Variable für die Methoden 27, 29 und 69 */
 const static int m10h_digits[4][10]={
@@ -1315,7 +1320,7 @@ DLL_EXPORT int generate_lut2(char *inputname,char *outputname,char *user_info,
    }
    cnt=fread(buffer,1,s_buf.st_size,in);
    dptr=buffer+cnt;
-   for(ptr=testbanken;*dptr++=*ptr++;cnt++);
+   for(ptr=testbanken;(*dptr++=*ptr++);cnt++);
    bank_cnt=cnt/168; /* etwas zuviel allokieren, aber so ist es sicherer (CR/LF wird bei der Datensatzlänge 168 nicht mitgezählt) */
 
       /* Speicher für die Arrays allokieren */
@@ -1508,7 +1513,7 @@ DLL_EXPORT int generate_lut2(char *inputname,char *outputname,char *user_info,
          "%04x%04x%04x%04x%04x%04x%04x%04x\n",
          timeptr->tm_mday,timeptr->tm_mon+1,timeptr->tm_year+1900,timeptr->tm_hour,
          timeptr->tm_min,inputname,*user_info?"\\\n":"",user_info,
-         bank_cnt,h,strlen(testbanken)/168,auch_filialen?"auch die Filialen":"nur die Hauptstellen",
+         bank_cnt,h,(int)strlen(testbanken)/168,auch_filialen?"auch die Filialen":"nur die Hauptstellen",
          rand()&32767,rand()&32767,rand()&32767,rand()&32767,rand()&32767,rand()&32767,rand()&32767,rand()&32767);
 
       /* die ersten beiden Zeilen ist nur für den Gültigkeitsblock, nicht für den Vorspann */
@@ -1876,6 +1881,7 @@ DLL_EXPORT int get_lut_info2(char *lut_name,int *version_p,char **prolog_p,char 
 {
    char *buffer,*ptr,*sptr,*info,*user_info,name_buffer[LUT_PATH_LEN];
    int i,j,k,buflen,version,zeile;
+   unsigned long offset1,offset2;
    struct stat s_buf;
    FILE *lut;
 
@@ -1939,14 +1945,27 @@ DLL_EXPORT int get_lut_info2(char *lut_name,int *version_p,char **prolog_p,char 
       if(s_buf.st_size<(ptr-buffer)*2+10)buffer=realloc(buffer,(ptr-buffer)*2+10);
 
          /* Variablen setzen, dann info und user_info kopieren */
-      *prolog_p=buffer;
       for(sptr=info,info=ptr;*sptr && *sptr!='\n' && *sptr!='\\';)*ptr++=*sptr++;
       *ptr++=0;
       for(sptr=user_info,user_info=ptr;*sptr && *sptr!='\n' && *sptr!='\\';)*ptr++=*sptr++;
       *ptr++=0;
-      if(info_p)*info_p=info;
-      if(user_info_p)*user_info_p=user_info;
+
+         /* realloc liefert auf einigen Systemen (FreeBSD u.a.) auch bei
+          * Verkleinerung des Buffers eine andere Adresse zurück. Daher werden
+          * info_p und user_info_p zunächst nur als Offset relativ zu buffer
+          * als Basisadresse genommen, und nach dem realloc auf absolute
+          * Adressen gesetzt. Dieser Fehler [perl5.11.0 in free(): error: page
+          * is already free] tauchte in den Versionen 2.91 und 2.92 in etlichen
+          * Tests auf CPAN auf; er dürfte jetzt behoben sein.
+          */
+      offset1=(info-buffer);
+      offset2=(user_info-buffer);
       buffer=realloc(buffer,(ptr-buffer+10)); /* überflüssigen Speicher wieder freigeben */
+
+         /* nun die absoluten Adressen eintragen */
+      *prolog_p=buffer;
+      if(info_p)*info_p=buffer+offset1;
+      if(user_info_p)*user_info_p=buffer+offset2;
    }
    fclose(lut);
    return OK;
@@ -2251,7 +2270,7 @@ DLL_EXPORT int kto_check_init(char *lut_name,UINT4 *required,int **status,UINT4 
        * eine Millisekunde warten, damit evl. laufende Tests sicher beendet
        * sind.
        */
-   if(init_status&6==6)usleep(1000);
+   if((init_status&6)==6)usleep(1000);
    if(!incremental){
       lut_cleanup(); /* falls nicht inkrementelles init, alle bisher allokierten Variablen freigeben */
       if(!(init_status&1))init_atoi_table();
@@ -2299,7 +2318,7 @@ DLL_EXPORT int kto_check_init(char *lut_name,UINT4 *required,int **status,UINT4 
          if(info1)free(info1);
          set_offset=SET_OFFSET;
       }
-      if(!current_info || incremental && !ci){
+      if(!current_info || (incremental && !ci)){
          init_in_progress=0;
          init_status&=7;
          return LUT2_BLOCK_NOT_IN_FILE;
@@ -2382,9 +2401,9 @@ DLL_EXPORT int kto_check_init(char *lut_name,UINT4 *required,int **status,UINT4 
          }
       }
       own_buffer=malloc(strlen(prolog)+strlen(info)+strlen(user_info)+10);
-      for(lut_prolog=optr=own_buffer,ptr=prolog;*optr++=*ptr++;);
-      for(ptr=info,lut_sys_info=optr;*optr++=*ptr++;);
-      for(ptr=user_info,lut_user_info=optr;*optr++=*ptr++;);
+      for(lut_prolog=optr=own_buffer,ptr=prolog;(*optr++=*ptr++););
+      for(ptr=info,lut_sys_info=optr;(*optr++=*ptr++););
+      for(ptr=user_info,lut_user_info=optr;(*optr++=*ptr++););
       free(prolog);
    }
 
@@ -2550,7 +2569,7 @@ DLL_EXPORT int kto_check_init(char *lut_name,UINT4 *required,int **status,UINT4 
          case LUT2_2_FILIALEN:
             release_data=1;
              if(!(filialen=calloc(len,sizeof(int)))
-                   || !startidx && !(startidx=calloc(lut2_cnt_hs,sizeof(int))))
+                   || (!startidx && !(startidx=calloc(lut2_cnt_hs,sizeof(int)))))
                lut2_block_status[typ]=lut2_block_status[typ1]=ERROR_MALLOC;
             else{
                for(i=j=0,ptr=data,eptr=data+len;i<len;i++){
@@ -2775,7 +2794,7 @@ static int lut_index(char *b)
    short *iptr;
    int n,h;
 
-   if(init_status&7!=7)return LUT2_NOT_INITIALIZED;   /* BLZ oder atoi_table noch nicht initialisiert */
+   if((init_status&7)!=7)return LUT2_NOT_INITIALIZED;   /* BLZ oder atoi_table noch nicht initialisiert */
    n= b8[UI *b]; h= h1[UI *b++];
    n+=b7[UI *b]; h+=h2[UI *b++];
    n+=b6[UI *b]; h+=h3[UI *b++];
@@ -3566,6 +3585,7 @@ static void init_atoi_table(void)
    lut_block_name1[113]="NACHFOLGE_BLZ (2)";
    lut_block_name1[114]="NAME_NAME_KURZ (2)";
    lut_block_name1[115]="INFO (2)";
+#line 3824 "konto_check.lx"
    init_status|=1;
 }
 
@@ -3611,7 +3631,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
    memset(xkto,'0',10);
    for(kto_len=0,ptr=kto;*ptr++;kto_len++);
    dptr=xkto+10-kto_len;
-   for(ptr=kto;*dptr++= *ptr++;);
+   for(ptr=kto;(*dptr++= *ptr++););
    kto=xkto;
 
 /* Methoden der Prüfzifferberechnung +§§§2
@@ -3624,6 +3644,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
 
    switch(pz_methode){
 
+#line 3886 "konto_check.lx"
 /* Berechnungsmethoden 00 bis 09 +§§§3
    Berechnung nach der Methode 00 +§§§4 */
 /*
@@ -4090,6 +4111,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1013;
          }
 #endif
+#line 4268 "konto_check.lx"
 #ifdef __ALPHA
          pz =  (kto[1]-'0')
             + ((kto[2]<'5') ? (kto[2]-'0')*2 : (kto[2]-'0')*2-9)
@@ -4114,6 +4136,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2013;
          }
 #endif
+#line 4286 "konto_check.lx"
 #ifdef __ALPHA
          pz =  (kto[3]-'0')
             + ((kto[4]<'5') ? (kto[4]-'0')*2 : (kto[4]-'0')*2-9)
@@ -5616,6 +5639,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1049;
          }
 #endif
+#line 5572 "konto_check.lx"
 #ifdef __ALPHA
          pz = ((kto[0]<'5') ? (kto[0]-'0')*2 : (kto[0]-'0')*2-9)
             +  (kto[1]-'0')
@@ -5645,6 +5669,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2049;
          }
 #endif
+#line 5595 "konto_check.lx"
          pz = (kto[0]-'0')
             + (kto[1]-'0') * 7
             + (kto[2]-'0') * 3
@@ -5691,6 +5716,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1050;
          }
 #endif
+#line 5635 "konto_check.lx"
          pz = (kto[0]-'0') * 7
             + (kto[1]-'0') * 6
             + (kto[2]-'0') * 5
@@ -5712,6 +5738,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2050;
          }
 #endif
+#line 5650 "konto_check.lx"
          if(kto[0]=='0' && kto[1]=='0' && kto[2]=='0'){
 
                /* Methode 50b nur bei maximal 7-stelligen Kontonummern
@@ -5837,6 +5864,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=4051;
          }
 #endif
+#line 5769 "konto_check.lx"
             pz =         9 * 8
             + (kto[3]-'0') * 7
             + (kto[4]-'0') * 6
@@ -5860,6 +5888,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=5051;
          }
 #endif
+#line 5786 "konto_check.lx"
                pz = (kto[0]-'0') * 10
                + (kto[1]-'0') * 9
                +            9 * 8
@@ -5886,6 +5915,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1051;
          }
 #endif
+#line 5806 "konto_check.lx"
          pz = (kto[3]-'0') * 7
             + (kto[4]-'0') * 6
             + (kto[5]-'0') * 5
@@ -5908,6 +5938,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2051;
          }
 #endif
+#line 5822 "konto_check.lx"
          pz = (kto[4]-'0') * 6
             + (kto[5]-'0') * 5
             + (kto[6]-'0') * 4
@@ -5929,6 +5960,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=3051;
          }
 #endif
+#line 5837 "konto_check.lx"
          pz = (kto[4]-'0') * 6
             + (kto[5]-'0') * 5
             + (kto[6]-'0') * 4
@@ -5968,6 +6000,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
  * # Prüfziffer nach Kennziffer 20 zu berechnen.                        #
  * ######################################################################
  */
+#line 5878 "konto_check.lx"
       case 52:
 
             /* Berechnung nach Methode 20 */
@@ -5978,6 +6011,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1052;
          }
 #endif
+#line 5882 "konto_check.lx"
          if(*kto=='9'){
             pz = (kto[0]-'0') * 3
                + (kto[1]-'0') * 9
@@ -6005,6 +6039,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2052;
          }
 #endif
+#line 5903 "konto_check.lx"
          if(!x_blz){
             ok=OK_TEST_BLZ_USED;
             x_blz="13051172";
@@ -6022,7 +6057,9 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
          kto_alt[4]= *ptr++;
          kto_alt[5]= *ptr++;
          while(*ptr=='0' && *ptr)ptr++;
-         for(dptr=kto_alt+6;*dptr= *ptr++;dptr++);
+         for(dptr=kto_alt+6;(*dptr= *ptr++);dptr++);
+            /* die Konto-Nr. des ESER-Altsystems darf maximal 12 Stellen haben */
+         if((dptr-kto_alt)>12)return INVALID_KTO;
          p1=kto_alt[5];   /* Prüfziffer */
          kto_alt[5]='0';
          for(pz=0,ptr=dptr-1,i=0;ptr>=kto_alt;ptr--,i++)pz+=(*ptr-'0')*w52[i];
@@ -6045,6 +6082,8 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
          else
             return FALSE;
 
+#line 5946 "konto_check.lx"
+#line 5948 "konto_check.lx"
 /*  Berechnung nach der Methode 53 +§§§4 */
 /*
  * ######################################################################
@@ -6076,6 +6115,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1053;
          }
 #endif
+#line 5973 "konto_check.lx"
          pz = (kto[0]-'0') * 3
             + (kto[1]-'0') * 9
             + (kto[2]-'0') * 8
@@ -6102,6 +6142,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2053;
          }
 #endif
+#line 5993 "konto_check.lx"
          if(!x_blz){
             ok=OK_TEST_BLZ_USED;
             x_blz="16052072";
@@ -6124,7 +6165,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
          kto_alt[4]=kto[1];
          kto_alt[5]=kto[3];
          for(ptr=kto+4;*ptr=='0' && *ptr;ptr++);
-         for(dptr=kto_alt+6;*dptr= *ptr++;dptr++);
+         for(dptr=kto_alt+6;(*dptr= *ptr++);dptr++);
          kto=kto_alt;
          p1=kto_alt[5];   /* Prüfziffer merken */
          kto_alt[5]='0';
@@ -6341,7 +6382,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
  * # bewerten.                                                          #
  * ######################################################################
  */
-
+#line 6215 "konto_check.lx"
       case 57:
 #if DEBUG
       case 1057:  /* die Untermethoden werden in einem eigenen switch abgearbeitet, daher alle hier zusammen */
@@ -6671,6 +6712,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2061;
          }
 #endif
+#line 6520 "konto_check.lx"
 #ifdef __ALPHA
             pz = ((kto[0]<'5') ? (kto[0]-'0')*2 : (kto[0]-'0')*2-9)
                +  (kto[1]-'0')
@@ -6702,6 +6744,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1061;
          }
 #endif
+#line 6545 "konto_check.lx"
 #ifdef __ALPHA
             pz = ((kto[0]<'5') ? (kto[0]-'0')*2 : (kto[0]-'0')*2-9)
                +  (kto[1]-'0')
@@ -7061,6 +7104,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1068;
          }
 #endif
+#line 6856 "konto_check.lx"
          if(*kto!='0'){
             if(*(kto+3)!='9')return INVALID_KTO;
 #ifdef __ALPHA
@@ -7089,6 +7133,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2068;
          }
 #endif
+#line 6878 "konto_check.lx"
 #ifdef __ALPHA
          pz =  (kto[1]-'0')
             + ((kto[2]<'5') ? (kto[2]-'0')*2 : (kto[2]-'0')*2-9)
@@ -7117,6 +7162,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=3068;
          }
 #endif
+#line 6900 "konto_check.lx"
 #ifdef __ALPHA
          pz =  (kto[1]-'0')
             + ((kto[4]<'5') ? (kto[4]-'0')*2 : (kto[4]-'0')*2-9)
@@ -7180,6 +7226,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1069;
          }
 #endif
+#line 6951 "konto_check.lx"
             /* Sonderfall 97xxxxxxxx nur über Variante 2 */
          if(*kto!='9' || *(kto+1)!='7'){
             pz = (kto[0]-'0') * 8
@@ -7206,6 +7253,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2069;
          }
 #endif
+#line 6971 "konto_check.lx"
          pz = m10h_digits[0][(unsigned int)(kto[0]-'0')]
             + m10h_digits[3][(unsigned int)(kto[1]-'0')]
             + m10h_digits[2][(unsigned int)(kto[2]-'0')]
@@ -7406,6 +7454,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=4073;
          }
 #endif
+#line 7147 "konto_check.lx"
             pz =         9 * 8
             + (kto[3]-'0') * 7
             + (kto[4]-'0') * 6
@@ -7429,6 +7478,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=5073;
          }
 #endif
+#line 7164 "konto_check.lx"
                pz = (kto[0]-'0') * 10
                + (kto[1]-'0') * 9
                +            9 * 8
@@ -7454,6 +7504,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1073;
          }
 #endif
+#line 7183 "konto_check.lx"
 #ifdef __ALPHA
          pz1= ((kto[4]<'5') ? (kto[4]-'0')*2 : (kto[4]-'0')*2-9)
             +  (kto[5]-'0')
@@ -7479,6 +7530,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2073;
          }
 #endif
+#line 7202 "konto_check.lx"
 #if DEBUG
 #ifdef __ALPHA
          pz = ((kto[4]<'5') ? (kto[4]-'0')*2 : (kto[4]-'0')*2-9)
@@ -7507,6 +7559,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=3073;
          }
 #endif
+#line 7224 "konto_check.lx"
 #if DEBUG
 #ifdef __ALPHA
          pz = ((kto[4]<'5') ? (kto[4]-'0')*2 : (kto[4]-'0')*2-9)
@@ -7558,6 +7611,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1074;
          }
 #endif
+#line 7269 "konto_check.lx"
 #ifdef __ALPHA
          pz = ((kto[0]<'5') ? (kto[0]-'0')*2 : (kto[0]-'0')*2-9)
             +  (kto[1]-'0')
@@ -7590,6 +7644,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2074;
          }
 #endif
+#line 7295 "konto_check.lx"
 #if DEBUG
             if(untermethode){
 
@@ -7649,7 +7704,8 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1075;
          }
 #endif
-            if(*(kto+2)!='0' || *(kto+2)=='0' && *(kto+3)=='0' && *(kto+4)=='0')
+#line 7342 "konto_check.lx"
+            if(*(kto+2)!='0' || (*(kto+2)=='0' && *(kto+3)=='0' && *(kto+4)=='0'))
                return INVALID_KTO;   /* 8- oder <6-stellige Kontonummer */
 #ifdef __ALPHA
             pz = ((kto[4]<'5') ? (kto[4]-'0')*2 : (kto[4]-'0')*2-9)
@@ -7675,6 +7731,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2075;
          }
 #endif
+#line 7362 "konto_check.lx"
 #ifdef __ALPHA
             pz = ((kto[2]<'5') ? (kto[2]-'0')*2 : (kto[2]-'0')*2-9)
                +  (kto[3]-'0')
@@ -7699,6 +7756,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=3075;
          }
 #endif
+#line 7380 "konto_check.lx"
 #ifdef __ALPHA
             pz = ((kto[1]<'5') ? (kto[1]-'0')*2 : (kto[1]-'0')*2-9)
                +  (kto[2]-'0')
@@ -7743,6 +7801,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1076;
          }
 #endif
+#line 7418 "konto_check.lx"
          if((p1= *kto)=='1' || p1=='2' || p1=='3' || p1=='5'){
             pz= -3;
             return INVALID_KTO;
@@ -7764,6 +7823,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2076;
          }
 #endif
+#line 7433 "konto_check.lx"
          if((p1=kto[2])=='1' || p1=='2' || p1=='3' || p1=='5'){
 #if DEBUG
             pz= -3;
@@ -7809,6 +7869,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1077;
          }
 #endif
+#line 7472 "konto_check.lx"
          pz = (kto[5]-'0') * 5
             + (kto[6]-'0') * 4
             + (kto[7]-'0') * 3
@@ -7827,6 +7888,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2077;
          }
 #endif
+#line 7484 "konto_check.lx"
          pz = (kto[5]-'0') * 5
             + (kto[6]-'0') * 4
             + (kto[7]-'0') * 3
@@ -8010,6 +8072,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=3080;
          }
 #endif
+#line 7649 "konto_check.lx"
             pz =         9 * 8
             + (kto[3]-'0') * 7
             + (kto[4]-'0') * 6
@@ -8033,6 +8096,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=4080;
          }
 #endif
+#line 7666 "konto_check.lx"
                pz = (kto[0]-'0') * 10
                + (kto[1]-'0') * 9
                +            9 * 8
@@ -8059,6 +8123,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1080;
          }
 #endif
+#line 7686 "konto_check.lx"
 #ifdef __ALPHA
          pz = ((kto[4]<'5') ? (kto[4]-'0')*2 : (kto[4]-'0')*2-9)
             +  (kto[5]-'0')
@@ -8084,6 +8149,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2080;
          }
 #endif
+#line 7705 "konto_check.lx"
 #ifdef __ALPHA
          pz = ((kto[4]<'5') ? (kto[4]-'0')*2 : (kto[4]-'0')*2-9)
             +  (kto[5]-'0')
@@ -8133,6 +8199,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2081;
          }
 #endif
+#line 7748 "konto_check.lx"
             pz =         9 * 8
             + (kto[3]-'0') * 7
             + (kto[4]-'0') * 6
@@ -8156,6 +8223,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=3081;
          }
 #endif
+#line 7765 "konto_check.lx"
                pz = (kto[0]-'0') * 10
                + (kto[1]-'0') * 9
                +            9 * 8
@@ -8181,6 +8249,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1081;
          }
 #endif
+#line 7784 "konto_check.lx"
          pz = (kto[3]-'0') * 7
             + (kto[4]-'0') * 6
             + (kto[5]-'0') * 5
@@ -8213,6 +8282,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1082;
          }
 #endif
+#line 7810 "konto_check.lx"
             /* Verfahren 10 */
          if(*(kto+2)=='9' && *(kto+3)=='9'){
             pz = (kto[0]-'0') * 10
@@ -8241,6 +8311,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2082;
          }
 #endif
+#line 7832 "konto_check.lx"
          pz = (kto[4]-'0') * 6
             + (kto[5]-'0') * 5
             + (kto[6]-'0') * 4
@@ -8325,6 +8396,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=4083;
          }
 #endif
+#line 7910 "konto_check.lx"
          if(*(kto+2)=='9' && *(kto+3)=='9'){
             pz =      9       * 8
                +      9       * 7
@@ -8350,6 +8422,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1083;
          }
 #endif
+#line 7929 "konto_check.lx"
          pz = (kto[3]-'0') * 7
             + (kto[4]-'0') * 6
             + (kto[5]-'0') * 5
@@ -8372,6 +8445,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2083;
          }
 #endif
+#line 7945 "konto_check.lx"
          pz = (kto[4]-'0') * 6
             + (kto[5]-'0') * 5
             + (kto[6]-'0') * 4
@@ -8393,6 +8467,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=3083;
          }
 #endif
+#line 7960 "konto_check.lx"
          pz = (kto[4]-'0') * 6
             + (kto[5]-'0') * 5
             + (kto[6]-'0') * 4
@@ -8446,6 +8521,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=3084;
          }
 #endif
+#line 8007 "konto_check.lx"
             pz =         9 * 8
             + (kto[3]-'0') * 7
             + (kto[4]-'0') * 6
@@ -8469,6 +8545,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=4084;
          }
 #endif
+#line 8024 "konto_check.lx"
                pz = (kto[0]-'0') * 10
                + (kto[1]-'0') * 9
                +            9 * 8
@@ -8495,6 +8572,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1084;
          }
 #endif
+#line 8044 "konto_check.lx"
          pz = (kto[4]-'0') * 6
             + (kto[5]-'0') * 5
             + (kto[6]-'0') * 4
@@ -8516,6 +8594,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2084;
          }
 #endif
+#line 8059 "konto_check.lx"
          pz = (kto[4]-'0') * 6
             + (kto[5]-'0') * 5
             + (kto[6]-'0') * 4
@@ -8550,6 +8629,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=4085;
          }
 #endif
+#line 8087 "konto_check.lx"
             /* Sachkonten */
          if(*(kto+2)=='9' && *(kto+3)=='9'){
             pz =      9       * 8
@@ -8574,6 +8654,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1085;
          }
 #endif
+#line 8105 "konto_check.lx"
          pz = (kto[3]-'0') * 7
             + (kto[4]-'0') * 6
             + (kto[5]-'0') * 5
@@ -8596,6 +8677,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2085;
          }
 #endif
+#line 8121 "konto_check.lx"
          pz = (kto[4]-'0') * 6
             + (kto[5]-'0') * 5
             + (kto[6]-'0') * 4
@@ -8617,6 +8699,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=3085;
          }
 #endif
+#line 8136 "konto_check.lx"
          pz = (kto[4]-'0') * 6
             + (kto[5]-'0') * 5
             + (kto[6]-'0') * 4
@@ -8673,6 +8756,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=3086;
          }
 #endif
+#line 8186 "konto_check.lx"
             pz =         9 * 8
             + (kto[3]-'0') * 7
             + (kto[4]-'0') * 6
@@ -8696,6 +8780,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=4086;
          }
 #endif
+#line 8203 "konto_check.lx"
                pz = (kto[0]-'0') * 10
                + (kto[1]-'0') * 9
                +            9 * 8
@@ -8722,6 +8807,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1086;
          }
 #endif
+#line 8223 "konto_check.lx"
 #ifdef __ALPHA
             pz =  (kto[3]-'0')
                + ((kto[4]<'5') ? (kto[4]-'0')*2 : (kto[4]-'0')*2-9)
@@ -8748,6 +8834,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2086;
          }
 #endif
+#line 8243 "konto_check.lx"
          pz = (kto[3]-'0') * 7
             + (kto[4]-'0') * 6
             + (kto[5]-'0') * 5
@@ -8813,6 +8900,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=4087;
          }
 #endif
+#line 8302 "konto_check.lx"
             pz =         9 * 8
             + (kto[3]-'0') * 7
             + (kto[4]-'0') * 6
@@ -8836,6 +8924,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=5087;
          }
 #endif
+#line 8319 "konto_check.lx"
                pz = (kto[0]-'0') * 10
                + (kto[1]-'0') * 9
                +            9 * 8
@@ -8861,6 +8950,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1087;
          }
 #endif
+#line 8338 "konto_check.lx"
             /* Der Startindex für das Array konto[] ist 1, nicht wie in C
              * üblich 0; daher hat das es auch 11 Elemente (nicht wie in der
              * Beschreibung angegeben 10). Daß das so ist, sieht man an der
@@ -8964,6 +9054,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2087;
          }
 #endif
+#line 8435 "konto_check.lx"
          pz = (kto[4]-'0') * 6
             + (kto[5]-'0') * 5
             + (kto[6]-'0') * 4
@@ -8985,6 +9076,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=3087;
          }
 #endif
+#line 8450 "konto_check.lx"
          pz = (kto[4]-'0') * 6
             + (kto[5]-'0') * 5
             + (kto[6]-'0') * 4
@@ -9072,6 +9164,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1089;
          }
 #endif
+#line 8525 "konto_check.lx"
          if(*kto=='0' && (*(kto+1)!='0' || *(kto+2)!='0')){
             pz = (kto[1]-'0') * 9
                + (kto[2]-'0') * 8
@@ -9098,6 +9191,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2089;
          }
 #endif
+#line 8545 "konto_check.lx"
          if(*kto=='0' && *(kto+1)=='0' && *(kto+2)=='0' && *(kto+3)!='0'){
             pz=(kto[3]-'0')*7;
             if(pz>=40){
@@ -9188,6 +9282,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=3089;
          }
 #endif
+#line 8629 "konto_check.lx"
          return OK_NO_CHK;
 
 
@@ -9239,6 +9334,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=6090;
          }
 #endif
+#line 8674 "konto_check.lx"
          pz =      9       * 8 /* immer 9; kann vom Compiler optimiert werden */
             + (kto[3]-'0') * 7
             + (kto[4]-'0') * 6
@@ -9263,6 +9359,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1090;
          }
 #endif
+#line 8692 "konto_check.lx"
          pz = (kto[3]-'0') * 7
             + (kto[4]-'0') * 6
             + (kto[5]-'0') * 5
@@ -9285,6 +9382,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2090;
          }
 #endif
+#line 8708 "konto_check.lx"
          pz = (kto[4]-'0') * 6
             + (kto[5]-'0') * 5
             + (kto[6]-'0') * 4
@@ -9306,6 +9404,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=3090;
          }
 #endif
+#line 8723 "konto_check.lx"
          pz = (kto[4]-'0') * 6
             + (kto[5]-'0') * 5
             + (kto[6]-'0') * 4
@@ -9324,6 +9423,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=4090;
          }
 #endif
+#line 8735 "konto_check.lx"
          pz = (kto[4]-'0') * 6
             + (kto[5]-'0') * 5
             + (kto[6]-'0') * 4
@@ -9342,6 +9442,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=5090;
          }
 #endif
+#line 8747 "konto_check.lx"
          pz = (kto[4]-'0') * 2
             + (kto[5]-'0')
             + (kto[6]-'0') * 2
@@ -9408,6 +9509,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1091;
          }
 #endif
+#line 8807 "konto_check.lx"
          pz = (kto[0]-'0') * 7
             + (kto[1]-'0') * 6
             + (kto[2]-'0') * 5
@@ -9430,6 +9532,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2091;
          }
 #endif
+#line 8823 "konto_check.lx"
          pz = (kto[0]-'0') * 2
             + (kto[1]-'0') * 3
             + (kto[2]-'0') * 4
@@ -9452,6 +9555,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=3091;
          }
 #endif
+#line 8839 "konto_check.lx"
          pz = (kto[0]-'0') * 10
             + (kto[1]-'0') * 9
             + (kto[2]-'0') * 8
@@ -9477,6 +9581,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=4091;
          }
 #endif
+#line 8858 "konto_check.lx"
          pz = (kto[0]-'0') * 9
             + (kto[1]-'0') * 10
             + (kto[2]-'0') * 5
@@ -9554,6 +9659,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2093;
          }
 #endif
+#line 8923 "konto_check.lx"
             pz = (kto[4]-'0') * 6
                + (kto[5]-'0') * 5
                + (kto[6]-'0') * 4
@@ -9571,6 +9677,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1093;
          }
 #endif
+#line 8934 "konto_check.lx"
             pz = (kto[0]-'0') * 6
                + (kto[1]-'0') * 5
                + (kto[2]-'0') * 4
@@ -9600,6 +9707,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=4093;
          }
 #endif
+#line 8957 "konto_check.lx"
                for(p1=0,ptr=kto+8,i=0;i<5;ptr--,i++)
                   p1+=(*ptr-'0')*w93[i];
             }
@@ -9611,6 +9719,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=3093;
          }
 #endif
+#line 8962 "konto_check.lx"
                for(p1=0,ptr=kto+4,i=0;i<5;ptr--,i++)
                   p1+=(*ptr-'0')*w93[i];
                   *(kto+9)= *(kto+5);  /* Prüfziffer nach Stelle 10 */
@@ -9685,10 +9794,10 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
          }
 #endif
         if(   /* Ausnahmen: keine Prüfzifferberechnung */
-            strcmp(kto,"0000000001")>=0 && strcmp(kto,"0001999999")<=0
-         || strcmp(kto,"0009000000")>=0 && strcmp(kto,"0025999999")<=0
-         || strcmp(kto,"0396000000")>=0 && strcmp(kto,"0499999999")<=0
-         || strcmp(kto,"0700000000")>=0 && strcmp(kto,"0799999999")<=0)
+            (strcmp(kto,"0000000001")>=0 && strcmp(kto,"0001999999")<=0)
+         || (strcmp(kto,"0009000000")>=0 && strcmp(kto,"0025999999")<=0)
+         || (strcmp(kto,"0396000000")>=0 && strcmp(kto,"0499999999")<=0)
+         || (strcmp(kto,"0700000000")>=0 && strcmp(kto,"0799999999")<=0))
             return OK_NO_CHK;
          pz = (kto[0]-'0') * 4
             + (kto[1]-'0') * 3
@@ -9730,6 +9839,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=3096;
          }
 #endif
+#line 9063 "konto_check.lx"
             /* die Berechnung muß in diesem Fall nicht gemacht werden */
          if(strcmp(kto,"0001300000")>=0 && strcmp(kto,"0099400000")<0)
             return OK_NO_CHK;
@@ -9742,6 +9852,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1096;
          }
 #endif
+#line 9069 "konto_check.lx"
          pz = (kto[0]-'0')
             + (kto[1]-'0') * 9
             + (kto[2]-'0') * 8
@@ -9767,6 +9878,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2096;
          }
 #endif
+#line 9088 "konto_check.lx"
 #ifdef __ALPHA
          pz = ((kto[0]<'5') ? (kto[0]-'0')*2 : (kto[0]-'0')*2-9)
             +  (kto[1]-'0')
@@ -9840,6 +9952,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1098;
          }
 #endif
+#line 9149 "konto_check.lx"
          pz = (kto[2]-'0') * 3
             + (kto[3]-'0') * 7
             + (kto[4]-'0')
@@ -9860,6 +9973,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2098;
          }
 #endif
+#line 9163 "konto_check.lx"
          pz = (kto[3]-'0') * 7
             + (kto[4]-'0') * 6
             + (kto[5]-'0') * 5
@@ -9980,8 +10094,8 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=101;
          }
 #endif
-         if(*kto=='0' && *(kto+1)!='0'
-               || *kto=='0' && *(kto+1)=='0' && *(kto+2)=='0')
+         if((*kto=='0' && *(kto+1)!='0')
+               || (*kto=='0' && *(kto+1)=='0' && *(kto+2)=='0'))
             return INVALID_KTO;
 #ifdef __ALPHA
          pz = ((kto[2]<'5') ? (kto[2]-'0')*2 : (kto[2]-'0')*2-9)
@@ -10036,6 +10150,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1102;
          }
 #endif
+#line 9315 "konto_check.lx"
 
             /* Variante 1: Berechnung nach Methode 00 */
 #ifdef __ALPHA
@@ -10069,6 +10184,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2102;
          }
 #endif
+#line 9342 "konto_check.lx"
          pz = (kto[0]-'0') * 4
             + (kto[1]-'0') * 3
             + (kto[2]-'0') * 2
@@ -10121,6 +10237,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1103;
          }
 #endif
+#line 9388 "konto_check.lx"
 #ifdef __ALPHA
          pz = ((kto[0]<'5') ? (kto[0]-'0')*2 : (kto[0]-'0')*2-9)
             +  (kto[1]-'0')
@@ -10152,6 +10269,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2103;
          }
 #endif
+#line 9413 "konto_check.lx"
          pz = (kto[0]-'0') * 10
             + (kto[1]-'0') * 9
             + (kto[2]-'0') * 8
@@ -10240,6 +10358,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1104;
          }
 #endif
+#line 9495 "konto_check.lx"
          pz = (kto[3]-'0') * 7
             + (kto[4]-'0') * 6
             + (kto[5]-'0') * 5
@@ -10262,6 +10381,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2104;
          }
 #endif
+#line 9511 "konto_check.lx"
          pz = (kto[3]-'0') * 7
             + (kto[4]-'0') * 6
             + (kto[5]-'0') * 5
@@ -10283,6 +10403,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=3104;
          }
 #endif
+#line 9526 "konto_check.lx"
          pz = (kto[4]-'0') * 6
             + (kto[5]-'0') * 5
             + (kto[6]-'0') * 4
@@ -10305,6 +10426,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=4104;
          }
 #endif
+#line 9542 "konto_check.lx"
          if(*kto=='0' && *(kto+1)=='0' && *(kto+2)=='0' && *(kto+3)=='0'){   /* Fall b) */
             pz = (kto[4]-'0') * 6
                + (kto[5]-'0') * 5
@@ -10341,6 +10463,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=5104;
          }
 #endif
+#line 9572 "konto_check.lx"
          if(untermethode){ /* pz wurde noch nicht berechnet */
             if(*kto=='0' && *(kto+1)=='0' && *(kto+2)=='0' && *(kto+3)=='0'){   /* Fall b) */
                for(p1=0,ptr=kto+8,i=0;i<5;ptr--,i++)
@@ -10387,6 +10510,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1105;
          }
 #endif
+#line 9612 "konto_check.lx"
             /* Variante 1: Berechnung nach Methode 00 */
 #ifdef __ALPHA
          pz = ((kto[0]<'5') ? (kto[0]-'0')*2 : (kto[0]-'0')*2-9)
@@ -10420,6 +10544,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2105;
          }
 #endif
+#line 9639 "konto_check.lx"
          pz = (kto[0]-'0') * 10
             + (kto[1]-'0') * 9
             + (kto[2]-'0') * 8
@@ -10469,6 +10594,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1106;
          }
 #endif
+#line 9682 "konto_check.lx"
 #ifdef __ALPHA
             pz = ((kto[0]<'5') ? (kto[0]-'0')*2 : (kto[0]-'0')*2-9)
                +  8
@@ -10501,6 +10627,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2106;
          }
 #endif
+#line 9708 "konto_check.lx"
             pz = (kto[0]-'0')
                + (kto[1]-'0') * 7
                + (kto[2]-'0') * 3
@@ -10547,6 +10674,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1107;
          }
 #endif
+#line 9748 "konto_check.lx"
 #ifdef __ALPHA
          pz = ((kto[0]<'5') ? (kto[0]-'0')*2 : (kto[0]-'0')*2-9)
             +  (kto[1]-'0')
@@ -10577,6 +10705,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2107;
          }
 #endif
+#line 9772 "konto_check.lx"
          pz = (kto[0]-'0') * 2
             + (kto[1]-'0')
             + (kto[2]-'0') * 2
@@ -10635,6 +10764,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=3108;
          }
 #endif
+#line 9824 "konto_check.lx"
             pz =         9 * 8
             + (kto[3]-'0') * 7
             + (kto[4]-'0') * 6
@@ -10658,6 +10788,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=4108;
          }
 #endif
+#line 9841 "konto_check.lx"
                pz = (kto[0]-'0') * 10
                + (kto[1]-'0') * 9
                + (kto[2]-'0') * 8
@@ -10683,6 +10814,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1108;
          }
 #endif
+#line 9860 "konto_check.lx"
          pz = (kto[3]-'0') * 7
             + (kto[4]-'0') * 6
             + (kto[5]-'0') * 5
@@ -10705,6 +10837,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2108;
          }
 #endif
+#line 9876 "konto_check.lx"
 #ifdef __ALPHA
          pz =  (kto[3]-'0')
             + ((kto[4]<'5') ? (kto[4]-'0')*2 : (kto[4]-'0')*2-9)
@@ -10755,6 +10888,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1109;
          }
 #endif
+#line 9920 "konto_check.lx"
          pz = (kto[0]-'0')
             + (kto[1]-'0') * 7
             + (kto[2]-'0') * 3
@@ -10777,6 +10911,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2109;
          }
 #endif
+#line 9936 "konto_check.lx"
          pz = (kto[0]-'0') * 4
             + (kto[1]-'0') * 3
             + (kto[2]-'0') * 2
@@ -10841,6 +10976,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1110;
          }
 #endif
+#line 9988 "konto_check.lx"
             return OK_NO_CHK;
          }
 
@@ -10852,6 +10988,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2110;
          }
 #endif
+#line 9993 "konto_check.lx"
          pz = (kto[0]-'0') * 4
             + (kto[1]-'0') * 3
             + (kto[2]-'0') * 2
@@ -10900,6 +11037,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1111;
          }
 #endif
+#line 10035 "konto_check.lx"
          pz = (kto[0]-'0')
             + (kto[1]-'0') * 3
             + (kto[2]-'0') * 7
@@ -10922,6 +11060,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2111;
          }
 #endif
+#line 10051 "konto_check.lx"
          pz = (kto[0]-'0')
             + (kto[1]-'0') * 7
             + (kto[2]-'0') * 3
@@ -10970,6 +11109,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1112;
          }
 #endif
+#line 10093 "konto_check.lx"
             pz = (kto[0]-'0') * 2
                + (kto[1]-'0') * 9
                + (kto[2]-'0') * 8
@@ -10993,6 +11133,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2112;
          }
 #endif
+#line 10110 "konto_check.lx"
                /* Variante 2: Methode 00 */
 #ifdef __ALPHA
             pz = ((kto[0]<'5') ? (kto[0]-'0')*2 : (kto[0]-'0')*2-9)
@@ -11056,6 +11197,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1113;
          }
 #endif
+#line 10167 "konto_check.lx"
             pz = (kto[3]-'0') * 7
                + (kto[4]-'0') * 6
                + (kto[5]-'0') * 5
@@ -11080,6 +11222,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2113;
          }
 #endif
+#line 10185 "konto_check.lx"
             pz = (kto[0]-'0') * 4
                + (kto[1]-'0') * 3
                + (kto[2]-'0') * 2
@@ -11134,6 +11277,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1114;
          }
 #endif
+#line 10233 "konto_check.lx"
 
                /* Alpha: etwas andere Berechnung, wesentlich schneller
                 * (benötigt nur 75 statt 123 Takte, falls Berechnung wie Intel.
@@ -11172,6 +11316,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2114;
          }
 #endif
+#line 10265 "konto_check.lx"
             pz = (kto[0]-'0') * 10
                + (kto[1]-'0') * 9
                + (kto[2]-'0') * 8
@@ -11220,6 +11365,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1115;
          }
 #endif
+#line 10307 "konto_check.lx"
          pz = (kto[0]-'0')
             + (kto[1]-'0') * 3
             + (kto[2]-'0') * 7
@@ -11242,6 +11388,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2115;
          }
 #endif
+#line 10323 "konto_check.lx"
 #ifdef __ALPHA
          pz = ((kto[0]<'5') ? (kto[0]-'0')*2 : (kto[0]-'0')*2-9)
             +  (kto[1]-'0')
@@ -11292,6 +11439,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1116;
          }
 #endif
+#line 10367 "konto_check.lx"
             pz = (kto[0]-'0') * 3
                + (kto[1]-'0') * 9
                + (kto[2]-'0') * 8
@@ -11317,6 +11465,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2116;
          }
 #endif
+#line 10386 "konto_check.lx"
             if(!x_blz){
                ok=OK_TEST_BLZ_USED;
                x_blz="80053762";
@@ -11339,7 +11488,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             kto_alt[4]=kto[1];
             kto_alt[5]=kto[3];
             for(ptr=kto+4;*ptr=='0' && *ptr;ptr++);
-            for(dptr=kto_alt+6;*dptr= *ptr++;dptr++);
+            for(dptr=kto_alt+6;(*dptr= *ptr++);dptr++);
             kto=kto_alt;
             p1=kto_alt[5];   /* Prüfziffer merken */
             kto_alt[5]='0';
@@ -11397,6 +11546,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1117;
          }
 #endif
+#line 10460 "konto_check.lx"
          if(kto[0]=='0' && ((kto[1]=='7' || kto[1]=='8')
                  || (kto[1]=='0' && kto[2]=='0' && kto[3]>='1' && kto[3]<'6'))){
             pz = (kto[0]-'0')
@@ -11421,6 +11571,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2117;
          }
 #endif
+#line 10478 "konto_check.lx"
             return OK_NO_CHK;
          }
 
@@ -11454,6 +11605,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1118;
          }
 #endif
+#line 10505 "konto_check.lx"
          pz = (kto[0]-'0') * 3
             + (kto[1]-'0') * 9
             + (kto[2]-'0') * 8
@@ -11478,6 +11630,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2118;
          }
 #endif
+#line 10523 "konto_check.lx"
          pz = m10h_digits[0][(unsigned int)(kto[0]-'0')]
             + m10h_digits[3][(unsigned int)(kto[1]-'0')]
             + m10h_digits[2][(unsigned int)(kto[2]-'0')]
@@ -11558,6 +11711,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1119;
          }
 #endif
+#line 10591 "konto_check.lx"
             pz  = (kto[2]-'0') * 1 + 1;   /* Maximum von pz1 ist 9*1+1=10 -> kann direkt genommen werden */
 
             pz1 = (kto[3]-'0') * 2 + 2;   /* Maximum von pz1 ist 9*2+2=20 -> nur ein Test auf >=11 */
@@ -11609,6 +11763,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2119;
          }
 #endif
+#line 10636 "konto_check.lx"
             pz = (kto[3]-'0') * 6
                + (kto[4]-'0') * 5
                + (kto[5]-'0') * 4
@@ -11669,6 +11824,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1120;
          }
 #endif
+#line 10690 "konto_check.lx"
             if(!x_blz){
                ok=OK_TEST_BLZ_USED;
                x_blz="13051172";
@@ -11686,7 +11842,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             kto_alt[4]= *ptr++;
             kto_alt[5]= *ptr++;
             while(*ptr=='0' && *ptr)ptr++;
-            for(dptr=kto_alt+6;*dptr= *ptr++;dptr++);
+            for(dptr=kto_alt+6;(*dptr= *ptr++);dptr++);
             p1=kto_alt[5];   /* Prüfziffer */
             kto_alt[5]='0';
             for(pz=0,ptr=dptr-1,i=0;ptr>=kto_alt;ptr--,i++)
@@ -11716,6 +11872,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2120;
          }
 #endif
+#line 10731 "konto_check.lx"
          pz = (kto[0]-'0') * 3
             + (kto[1]-'0') * 9
             + (kto[2]-'0') * 8
@@ -11800,6 +11957,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1121;
          }
 #endif
+#line 10809 "konto_check.lx"
 #ifdef __ALPHA
             pz =  (kto[1]-'0')
                + ((kto[2]<'5') ? (kto[2]-'0')*2 : (kto[2]-'0')*2-9)
@@ -11827,6 +11985,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2121;
          }
 #endif
+#line 10830 "konto_check.lx"
 #ifdef __ALPHA
             pz =  (kto[0]-'0')
                + ((kto[1]<'5') ? (kto[1]-'0')*2 : (kto[1]-'0')*2-9)
@@ -11884,6 +12043,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1122;
          }
 #endif
+#line 10881 "konto_check.lx"
          pz = (kto[1]-'0')+(kto[3]-'0')+(kto[5]-'0')+(kto[7]-'0');
 
             if(kto[0]<'4')
@@ -11933,6 +12093,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2122;
          }
 #endif
+#line 10924 "konto_check.lx"
 #ifdef __ALPHA
          pz = ((kto[0]<'5') ? (kto[0]-'0')*2 : (kto[0]-'0')*2-9)
             +  (kto[1]-'0')
@@ -11992,6 +12153,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1123;
          }
 #endif
+#line 10977 "konto_check.lx"
 #ifdef __ALPHA
             pz = ((kto[0]<'5') ? (kto[0]-'0')*2 : (kto[0]-'0')*2-9)
                +  (kto[1]-'0')
@@ -12022,6 +12184,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2123;
          }
 #endif
+#line 11001 "konto_check.lx"
             pz = (kto[4]-'0') * 6
                + (kto[5]-'0') * 5
                + (kto[6]-'0') * 4
@@ -12069,6 +12232,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1124;
          }
 #endif
+#line 11042 "konto_check.lx"
             pz = (kto[5]-'0') * 5
                + (kto[6]-'0') * 4
                + (kto[7]-'0') * 3
@@ -12089,6 +12253,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2124;
          }
 #endif
+#line 11056 "konto_check.lx"
             pz = (kto[4]-'0') * 6
                + (kto[5]-'0') * 5
                + (kto[6]-'0') * 4
@@ -12168,6 +12333,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1125;
          }
 #endif
+#line 11129 "konto_check.lx"
 
             /* Variante 1a:
              *  6-stellige Kontonummern; 5. Stelle = 1-8, Prüfziffer an Stelle 10
@@ -12212,7 +12378,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
          }
 
             /* Variante 2: 10-stellige Kontonummern, 1. Stelle = 1, 4, 5, 6 oder 9 */
-         else if(kto[0]=='1' || kto[0]>='4' && kto[0]<='6' || kto[0]=='9'){
+         else if(kto[0]=='1' || (kto[0]>='4' && kto[0]<='6') || kto[0]=='9'){
 #if DEBUG
       case 2125:
          if(retvals){
@@ -12220,6 +12386,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2125;
          }
 #endif
+#line 11175 "konto_check.lx"
             pz = m10h_digits[0][(unsigned int)(kto[0]-'0')]
                + m10h_digits[3][(unsigned int)(kto[1]-'0')]
                + m10h_digits[2][(unsigned int)(kto[2]-'0')]
@@ -12243,6 +12410,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=3125;
          }
 #endif
+#line 11192 "konto_check.lx"
 #ifdef __ALPHA
             pz = ((kto[0]<'5') ? (kto[0]-'0')*2 : (kto[0]-'0')*2-9)
                +  (kto[1]-'0')
@@ -12270,9 +12438,9 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
              *    8-stellige KOntonummern mit 3. Stelle = 3,4, oder 5
              *    10-stellige Kontonummern, 1. und 2. Stelle = 70 oder 85:
              */
-         else if( kto[0]=='0' && kto[1]=='0' && kto[2]>='3' && kto[2]<='5'
-               || kto[0]=='7' && kto[1]=='0'
-               || kto[0]=='8' && kto[1]=='5'){
+         else if( (kto[0]=='0' && kto[1]=='0' && kto[2]>='3' && kto[2]<='5')
+               || (kto[0]=='7' && kto[1]=='0')
+               || (kto[0]=='8' && kto[1]=='5')){
 #if DEBUG
       case 4125:
          if(retvals){
@@ -12280,6 +12448,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=4125;
          }
 #endif
+#line 11223 "konto_check.lx"
          return OK_NO_CHK;
       }
       else  /* Kontonummer entspricht keinem vorgegebenen Kontenkreis */
@@ -12370,6 +12539,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1127;
          }
 #endif
+#line 11301 "konto_check.lx"
             if(*(kto+1)=='0' && *(kto+2)=='0'){
 #ifdef __ALPHA
                pz =   (kto[3]-'0')
@@ -12416,6 +12586,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2127;
          }
 #endif
+#line 11341 "konto_check.lx"
          pz = (kto[0]-'0') * 4
             + (kto[1]-'0') * 3
             + (kto[2]-'0') * 2
@@ -12470,6 +12641,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1128;
          }
 #endif
+#line 11389 "konto_check.lx"
 #ifdef __ALPHA
          pz = ((kto[0]<'5') ? (kto[0]-'0')*2 : (kto[0]-'0')*2-9)
             +  (kto[1]-'0')
@@ -12500,6 +12672,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2128;
          }
 #endif
+#line 11413 "konto_check.lx"
          pz = (kto[0]-'0') * 4
             + (kto[1]-'0') * 3
             + (kto[2]-'0') * 2
@@ -12522,6 +12695,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=3128;
          }
 #endif
+#line 11429 "konto_check.lx"
          pz = (kto[0]-'0') * 10
             + (kto[1]-'0') * 9
             + (kto[2]-'0') * 8
@@ -12567,6 +12741,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1129;
          }
 #endif
+#line 11468 "konto_check.lx"
 #ifdef __ALPHA
          pz = ((kto[0]<'5') ? (kto[0]-'0')*2 : (kto[0]-'0')*2-9)
             +  (kto[1]-'0')
@@ -12597,6 +12772,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2129;
          }
 #endif
+#line 11492 "konto_check.lx"
          pz = (kto[0]-'0') * 10
             + (kto[1]-'0') * 9
             + (kto[2]-'0') * 8
@@ -12650,6 +12826,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2130;
          }
 #endif
+#line 11539 "konto_check.lx"
          if(kto[0]=='5' && kto[1]=='7')
             return OK_NO_CHK;
          else{
@@ -12662,6 +12839,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=1130;
          }
 #endif
+#line 11545 "konto_check.lx"
             pz = (kto[0]-'0') * 3
                + (kto[1]-'0') * 9
                + (kto[2]-'0') * 8
@@ -12757,6 +12935,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
          return NOT_IMPLEMENTED;
    }
 }
+#line 11638 "konto_check.lx"
 
 /*
  * ######################################################################
@@ -12917,7 +13096,7 @@ DLL_EXPORT int kto_check_blz_dbg(char *blz,char *kto,RETVAL *retvals)
  * # Copyright (C) 2007 Michael Plugge <m.plugge@hs-mannheim.de>             #
  * ###########################################################################
  */
-
+#line 11799 "konto_check.lx"
 DLL_EXPORT int kto_check_pz_dbg(char *pz,char *kto,char *blz,RETVAL *retvals)
 {
    int untermethode,pz_methode;
@@ -13176,6 +13355,7 @@ DLL_EXPORT char *kto_check_retval2txt(int retval)
       case LUT1_SET_LOADED: return "Die Datei ist im alten LUT-Format (1.0/1.1)";
       case LUT1_FILE_GENERATED: return "OK; es wurde allerdings eine LUT-Datei im alten Format (1.0/1.1) generiert (version<3)";
       default: return "ungültiger Rückgabewert";
+#line 11975 "konto_check.lx"
    }
 }
 
@@ -13275,6 +13455,7 @@ DLL_EXPORT char *kto_check_retval2dos(int retval)
       case LUT1_SET_LOADED: return "Die Datei ist im alten LUT-Format (1.0/1.1)";
       case LUT1_FILE_GENERATED: return "OK; es wurde allerdings eine LUT-Datei im alten Format (1.0/1.1) generiert (version<3)";
       default: return "ungltiger Rckgabewert";
+#line 11992 "konto_check.lx"
    }
 }
 
@@ -13374,6 +13555,7 @@ DLL_EXPORT char *kto_check_retval2html(int retval)
       case LUT1_SET_LOADED: return "Die Datei ist im alten LUT-Format (1.0/1.1)";
       case LUT1_FILE_GENERATED: return "OK; es wurde allerdings eine LUT-Datei im alten Format (1.0/1.1) generiert (version<3)";
       default: return "ung&uuml;ltiger R&uuml;ckgabewert";
+#line 12009 "konto_check.lx"
    }
 }
 
@@ -13473,6 +13655,7 @@ DLL_EXPORT char *kto_check_retval2utf8(int retval)
       case LUT1_SET_LOADED: return "Die Datei ist im alten LUT-Format (1.0/1.1)";
       case LUT1_FILE_GENERATED: return "OK; es wurde allerdings eine LUT-Datei im alten Format (1.0/1.1) generiert (version<3)";
       default: return "ungÃ¼ltiger RÃ¼ckgabewert";
+#line 12026 "konto_check.lx"
    }
 }
 
@@ -13572,6 +13755,7 @@ DLL_EXPORT char *kto_check_retval2txt_short(int retval)
       case LUT1_SET_LOADED: return "LUT1_SET_LOADED";
       case LUT1_FILE_GENERATED: return "LUT1_FILE_GENERATED";
       default: return "UNDEFINED_RETVAL";
+#line 12043 "konto_check.lx"
    }
 }
 
@@ -13782,7 +13966,7 @@ DLL_EXPORT int dump_lutfile(char *outputname,UINT4 *required)
          xr[j++]=required[i];
    }
    xr[j]=0;
-   for(i=cnt=0;xr[cnt];cnt++)switch(xr[cnt]){  /* Anzahl der Elemente im Array bestimmen und Überschriften ausgeben */
+   for(i=cnt=0;(xr[cnt]);cnt++)switch(xr[cnt]){  /* Anzahl der Elemente im Array bestimmen und Überschriften ausgeben */
       case 1:
          fprintf(out,"%-8s ","BLZ");
          i+=9;
@@ -13846,6 +14030,7 @@ DLL_EXPORT int dump_lutfile(char *outputname,UINT4 *required)
       default:
          break;
    }
+#line 12242 "konto_check.lx"
    fputc('\n',out);
    while(--i)fputc('=',out);
    fputc('\n',out);
@@ -14355,8 +14540,8 @@ DLL_EXPORT int ipi_gen(char *zweck,char *dst,char *papier)
       /* Prüfziffer schreiben */
    *buffer=zahl/10+'0';
    *(buffer+1)=zahl%10+'0';
-   if(dst)for(ptr=buffer,dptr=dst;*dptr++=*ptr++;);
-   if(papier)for(ptr=buffer,dptr=papier,i=1;*dptr++=*ptr++;)if(i<20 && !(i++%4))*dptr++=' ';
+   if(dst)for(ptr=buffer,dptr=dst;(*dptr++=*ptr++););
+   if(papier)for(ptr=buffer,dptr=papier,i=1;(*dptr++=*ptr++);)if(i<20 && !(i++%4))*dptr++=' ';
    return OK;
 }
 
@@ -14423,7 +14608,9 @@ DLL_EXPORT int ipi_check(char *zweck)
  * # Die Funktion kto_check_test_vars() macht nichts anderes, als die beiden #
  * # übergebenen Variablen txt und i auszugeben und als String zurückzugeben.#
  * # Sie kann für Debugzwecke benutzt werden, wenn Probleme mit Variablen in #
- * # der DLL auftreten; ansonsten ist sie nicht allzu nützlich.              #
+ * # der DLL auftreten; ansonsten ist sie nicht allzu nützlich. Sie ist      #
+ * # allerdings nicht threadfest, da sie mit *einem* statischem Buffer für   #
+ * # die Ausgabe arbeitet ;-).                                               #
  * #                                                                         #
  * # Parameter:                                                              #
  * #    txt:        Textvariable                                             #
@@ -14435,9 +14622,9 @@ DLL_EXPORT int ipi_check(char *zweck)
 
 DLL_EXPORT char *kto_check_test_vars(char *txt,UINT4 i)
 {
-   static char test_buffer[1300];
+   static char test_buffer[200];
 
-   snprintf(test_buffer,1024,"Textvariable: %s, Integervariable: %d (Hexwert: 0x%08X)\n",txt,i,i);
+   snprintf(test_buffer,200,"Textvariable: %s, Integervariable: %d (Hexwert: 0x%08X)\n",txt,i,i);
    return test_buffer;
 }
 
@@ -14446,65 +14633,72 @@ DLL_EXPORT char *kto_check_test_vars(char *txt,UINT4 i)
 #else /* !INCLUDE_KONTO_CHECK_DE */
 /* Leerdefinitionen für !INCLUDE_KONTO_CHECK_DE +§§§1 */
 #include "konto_check.h"
-DLL_EXPORT int kto_check_blz(char *blz,char *kto){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int kto_check_pz(char *pz,char *kto,char *blz){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int kto_check(char *pz_or_blz,char *kto,char *lut_name){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int kto_check_t(char *pz_or_blz,char *kto,char *lut_name,KTO_CHK_CTX *ctx){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT char *kto_check_str(char *pz_or_blz,char *kto,char *lut_name){return "EXCLUDED_AT_COMPILETIME";}
-DLL_EXPORT char *kto_check_str_t(char *pz_or_blz,char *kto,char *lut_name,KTO_CHK_CTX *ctx){return "EXCLUDED_AT_COMPILETIME";}
-DLL_EXPORT int cleanup_kto(void){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int cleanup_kto_t(KTO_CHK_CTX *ctx){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int generate_lut(char *inputname,char *outputname,char *user_info,int lut_version){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int get_lut_info(char **info,char *lut_name){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int get_lut_info_b(char **info,char *lutname){return EXCLUDED_AT_COMPILETIME;};
-DLL_EXPORT int get_lut_info2_b(char *lutname,int *version,char **prolog_p,char **info_p,char **user_info_p){return EXCLUDED_AT_COMPILETIME;};
-DLL_EXPORT int get_lut_info_t(char **info,char *lut_name,KTO_CHK_CTX *ctx){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int get_lut_info2(char *lut_name,int *version_p,char **prolog_p,char **info_p,char **user_info_p){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int get_lut_id(char *lut_name,int set,char *id){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT char *get_kto_check_version(void){return "EXCLUDED_AT_COMPILETIME";}
-DLL_EXPORT int create_lutfile(char *name, char *prolog, int slots){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int write_lut_block(FILE *lut, int typ,UINT4 len,char *data){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int read_lut_block(FILE *lut, UINT4 typ,UINT4 *blocklen,char **data){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int read_lut_slot(FILE *lut, int slot,UINT4 *blocklen,char **data){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int lut_dir_dump(char *filename,FILE *out){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int generate_lut2_p(char *inputname,char *outputname,char *user_info,char *gueltigkeit,
-      UINT4 felder,UINT4 filialen,int slots,int lut_version,UINT4 set){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int generate_lut2(char *inputname,char *outputname,char *user_info,char *gueltigkeit,
-      UINT4 *felder,int slots,int lut_version,UINT4 set){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int copy_lutfile(char *old_name,char *new_name,int new_slots){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int lut_init(char *lut_name,UINT4 required,UINT4 set){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int kto_check_init(char *lut_name,UINT4 *required,int **status,UINT4 set,UINT4 incremental){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int kto_check_init_p(char *lut_name,UINT4 required,UINT4 set,UINT4 incremental){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int lut_info(char *lut_name,char **info1,char **info2,int *valid1,int *valid2){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int lut_valid(void){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int lut_multiple(char *b,int *cnt,int **p_blz,char  ***p_name,char ***p_name_kurz,int **p_plz,char ***p_ort,
+
+#define EXCLUDED   {return EXCLUDED_AT_COMPILETIME;} 
+#define EXCLUDED_S {return "EXCLUDED_AT_COMPILETIME";}
+#define XI DLL_EXPORT int
+#define XV DLL_EXPORT void
+#define XCP DLL_EXPORT char *
+
+XI kto_check_blz(char *blz,char *kto)EXCLUDED
+XI kto_check_pz(char *pz,char *kto,char *blz)EXCLUDED
+XI kto_check(char *pz_or_blz,char *kto,char *lut_name)EXCLUDED
+XI kto_check_t(char *pz_or_blz,char *kto,char *lut_name,KTO_CHK_CTX *ctx)EXCLUDED
+XC kto_check_str(char *pz_or_blz,char *kto,char *lut_name)EXCLUDED_S
+XC kto_check_str_t(char *pz_or_blz,char *kto,char *lut_name,KTO_CHK_CTX *ctx)EXCLUDED_S
+XI cleanup_kto(void)EXCLUDED
+XI cleanup_kto_t(KTO_CHK_CTX *ctx)EXCLUDED
+XI generate_lut(char *inputname,char *outputname,char *user_info,int lut_version)EXCLUDED
+XI get_lut_info(char **info,char *lut_name)EXCLUDED
+XI get_lut_info_b(char **info,char *lutname)EXCLUDED;
+XI get_lut_info2_b(char *lutname,int *version,char **prolog_p,char **info_p,char **user_info_p)EXCLUDED;
+XI get_lut_info_t(char **info,char *lut_name,KTO_CHK_CTX *ctx)EXCLUDED
+XI get_lut_info2(char *lut_name,int *version_p,char **prolog_p,char **info_p,char **user_info_p)EXCLUDED
+XI get_lut_id(char *lut_name,int set,char *id)EXCLUDED
+XC get_kto_check_version(void)EXCLUDED_S
+XI create_lutfile(char *name, char *prolog, int slots)EXCLUDED
+XI write_lut_block(FILE *lut, int typ,UINT4 len,char *data)EXCLUDED
+XI read_lut_block(FILE *lut, UINT4 typ,UINT4 *blocklen,char **data)EXCLUDED
+XI read_lut_slot(FILE *lut, int slot,UINT4 *blocklen,char **data)EXCLUDED
+XI lut_dir_dump(char *filename,FILE *out)EXCLUDED
+XI generate_lut2_p(char *inputname,char *outputname,char *user_info,char *gueltigkeit,
+      UINT4 felder,UINT4 filialen,int slots,int lut_version,UINT4 set)EXCLUDED
+XI generate_lut2(char *inputname,char *outputname,char *user_info,char *gueltigkeit,
+      UINT4 *felder,int slots,int lut_version,UINT4 set)EXCLUDED
+XI copy_lutfile(char *old_name,char *new_name,int new_slots)EXCLUDED
+XI lut_init(char *lut_name,UINT4 required,UINT4 set)EXCLUDED
+XI kto_check_init(char *lut_name,UINT4 *required,int **status,UINT4 set,UINT4 incremental)EXCLUDED
+XI kto_check_init_p(char *lut_name,UINT4 required,UINT4 set,UINT4 incremental)EXCLUDED
+XI lut_info(char *lut_name,char **info1,char **info2,int *valid1,int *valid2)EXCLUDED
+XI lut_valid(void)EXCLUDED
+XI lut_multiple(char *b,int *cnt,int **p_blz,char  ***p_name,char ***p_name_kurz,int **p_plz,char ***p_ort,
       int **p_pan,char ***p_bic,int *p_pz,int **p_nr,char **p_aenderung,char **p_loeschung,int **p_nachfolge_blz,
-      int *id,int *cnt_all,int **start_idx){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int lut_filialen(char *b,int *retval){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int dump_lutfile(char *outputname,UINT4 *required){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int dump_lutfile_p(char *outputname,UINT4 felder){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT char *lut_name(char *b,int zweigstelle,int *retval){return "EXCLUDED_AT_COMPILETIME";}
-DLL_EXPORT char *lut_name_kurz(char *b,int zweigstelle,int *retval){return "EXCLUDED_AT_COMPILETIME";}
-DLL_EXPORT int lut_plz(char *b,int zweigstelle,int *retval){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT char *lut_ort(char *b,int zweigstelle,int *retval){return "EXCLUDED_AT_COMPILETIME";}
-DLL_EXPORT int lut_pan(char *b,int zweigstelle,int *retval){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT char *lut_bic(char *b,int zweigstelle,int *retval){return "EXCLUDED_AT_COMPILETIME";}
-DLL_EXPORT int lut_pz(char *b,int zweigstelle,int *retval){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int lut_aenderung(char *b,int zweigstelle,int *retval){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int lut_loeschung(char *b,int zweigstelle,int *retval){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int lut_nachfolge_blz(char *b,int zweigstelle,int *retval){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT void lut_cleanup(void){}
-DLL_EXPORT char *kto_check_retval2txt(int retval){return "EXCLUDED_AT_COMPILETIME";}
-DLL_EXPORT char *kto_check_retval2txt_short(int retval){return "EXCLUDED_AT_COMPILETIME";}
-DLL_EXPORT char *kto_check_retval2html(int retval){return "EXCLUDED_AT_COMPILETIME";}
-DLL_EXPORT char *kto_check_retval2dos(int retval){return "EXCLUDED_AT_COMPILETIME";}
-DLL_EXPORT int rebuild_blzfile(char *inputname,char *outputname,UINT4 set){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int iban_check(char *iban,int *retval){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT char *iban2bic(char *iban,int *retval){return "EXCLUDED_AT_COMPILETIME";}
-DLL_EXPORT char *iban_gen(char *kto,char *blz,int *retval){return "EXCLUDED_AT_COMPILETIME";}
-DLL_EXPORT int ipi_gen(char *zweck,char *dst,char *papier){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int ipi_check(char *zweck){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int kto_check_blz_dbg(char *blz,char *kto,RETVAL *retvals){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT int kto_check_pz_dbg(char *pz,char *kto,char *blz,RETVAL *retvals){return EXCLUDED_AT_COMPILETIME;}
-DLL_EXPORT char *kto_check_test_vars(char *txt,UINT4 i){return "EXCLUDED_AT_COMPILETIME";}
+      int *id,int *cnt_all,int **start_idx)EXCLUDED
+XI lut_filialen(char *b,int *retval)EXCLUDED
+XI dump_lutfile(char *outputname,UINT4 *required)EXCLUDED
+XI dump_lutfile_p(char *outputname,UINT4 felder)EXCLUDED
+XC lut_name(char *b,int zweigstelle,int *retval)EXCLUDED_S
+XC lut_name_kurz(char *b,int zweigstelle,int *retval)EXCLUDED_S
+XI lut_plz(char *b,int zweigstelle,int *retval)EXCLUDED
+XC lut_ort(char *b,int zweigstelle,int *retval)EXCLUDED_S
+XI lut_pan(char *b,int zweigstelle,int *retval)EXCLUDED
+XC lut_bic(char *b,int zweigstelle,int *retval)EXCLUDED_S
+XI lut_pz(char *b,int zweigstelle,int *retval)EXCLUDED
+XI lut_aenderung(char *b,int zweigstelle,int *retval)EXCLUDED
+XI lut_loeschung(char *b,int zweigstelle,int *retval)EXCLUDED
+XI lut_nachfolge_blz(char *b,int zweigstelle,int *retval)EXCLUDED
+XV lut_cleanup(void){}
+XC kto_check_retval2txt(int retval)EXCLUDED_S
+XC kto_check_retval2txt_short(int retval)EXCLUDED_S
+XC kto_check_retval2html(int retval)EXCLUDED_S
+XC kto_check_retval2dos(int retval)EXCLUDED_S
+XI rebuild_blzfile(char *inputname,char *outputname,UINT4 set)EXCLUDED
+XI iban_check(char *iban,int *retval)EXCLUDED
+XC iban2bic(char *iban,int *retval)EXCLUDED_S
+XC iban_gen(char *kto,char *blz,int *retval)EXCLUDED_S
+XI ipi_gen(char *zweck,char *dst,char *papier)EXCLUDED
+XI ipi_check(char *zweck)EXCLUDED
+XI kto_check_blz_dbg(char *blz,char *kto,RETVAL *retvals)EXCLUDED
+XI kto_check_pz_dbg(char *pz,char *kto,char *blz,RETVAL *retvals)EXCLUDED
+XC kto_check_test_vars(char *txt,UINT4 i)EXCLUDED_S
 #endif

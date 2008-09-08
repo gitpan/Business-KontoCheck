@@ -321,6 +321,31 @@ Versionen der deutschen Bibliothek:
                    Funktionen kto_check() und kto_check_str(); aber
                    für einen ersten Test ist sie schon brauchbar.
 
+   23.08.08 Version 2.7 (gleichzeitig mit 2.92)
+                   Diese Version ist wieder ein Zwischenrelease zur
+                   Version 3.0, da zum nächsten Termin am 8.9.2008 zwei
+                   neue Prüfziffermethoden eingeführt wurden. Die
+                   zweite Betaversion zu 3.0 (2.92) wird gleichzeitig
+                   mit dieser Version freigegeben.
+
+                 - Methoden D0 und D1 implementiert
+
+                 - in Methode 53 und B6 wurde eine Rückgabe vergessen;
+                   dadurch konnten unter Umständen Konten fälschlich
+                   als richtig klassifiziert werden.
+
+                 - Methode 57 wurde zum 4.12.2006 ziemlig stark
+                   geändert; die Änderungen sind jetzt berücksichtigt.
+
+                 - Die Windows-DLL wird jetzt sowohl in cdecl als auch
+                   mit stdcall kompiliert; dann kann jeder die Version
+                   benutzen, die für ihn passend ist.
+
+                 - Die PHP-Version wurde für die Version 2.7 entfernt,
+                   da die Version aufgrund mangelnder Threadfestigkeit
+                   und fehlender Initialisierungsfunktionen u.a. für
+                   PHP nicht geeignet ist.
+
    23.04.08 Version 2.91
                    Dies ist die erste Beta-Version für das 3.0 Release
                    von konto_check. Die Dateien 0_history.txt und
@@ -331,6 +356,91 @@ Versionen der deutschen Bibliothek:
                    abgebildet.
 
    23.08.08 Version 2.92
+                   Diese Version ist das zweite Beta-Release für die
+                   Version 3.0. Sie enthält die Korrekturen der Version
+                   2.7 sowie noch eine Reihe kleinerer Bugfixes etc.
+                   Die folgenden Änderungen finden sich nur in 2.92:
+
+                 - Es gibt ein zweitesa Demo-Programm konto_check_mini,
+                   das die zu prüfenden Konto/BLZ-Kombinationen von der
+                   Kommandozeile liest; außerdem werden noch Tests von
+                   IBAN und Strukturiertem Verwendungszweck unterstützt.
+
+                 - Die main-Routine im Beispielsprogramm wurde etwas
+                   erweitert; falls keine Datei angegeben wird, geht
+                   das Programm in einen interaktiven Modus, in dem
+                   interaktiv diverse Tests gemacht werden können sowie
+                   die LUT-Datei neu geladen werden kann; außerdem kann
+                   auch das benutzte Systemdatum gesetzt werden, um
+                   einen Datumswechsel zu simulieren. Hilfe gibt es in
+                   dem Batchmodus mit dem Kommando -h.
+
+                 - Für die LUT-Datei können jetzt mehrere Suchpfade
+                   angegeben werden, die nacheinander durchsucht werden;
+                   außerdem sind mehrere Default-Dateinamen möglich.
+                   Falls bei der Initialisierung kein Dateiname für die
+                   LUT-Datei angegeben wird, werden in allen Default-
+                   Verzeichnissen die Defaultnamen probiert; falls eine
+                   passende Datei gefunden wird, wird diese genommen.
+                   Die Default-Namen und -Pfade können in konto_check.h
+                   definiert werden (es sind dieMakros DEFAULT_LUT_NAME
+                   und  DEFAULT_LUT_PATH).
+
+                 - Die Funktion lut_init() ist jetzt nicht mehr eine
+                   Kopie der Funktion kto_check_init(), sondern eine
+                   eigene Funktion mit vereinfachtem Aufrufinterface,
+                   die i.A. eine inkrementelle Initialisierung macht
+                   (näheres in konto_check.c).
+
+                 - Es gibt eine neue Funktion get_lut_id(), die die
+                   Datei-ID einer LUT-Datei liefert. Diese Funktion
+                   wird vor allem für inkrementelle Initialisierung
+                   benötigt.
+
+                 - Es gibt eine neue Funktion kto_check_retval2utf8(),
+                   die das Ergebnis einer Rückgabe in einen UTF-8
+                   kodierten String umwandelt.
+
+                 - In einigen Prüfziffermethoden der Debugversion wurde
+                   retvals->pz nicht gesetzt; korrigiert.
+
+                 - Einige Beschreibungen der Prüfziffermethoden wurden
+                   leicht angepasst; alte Versionsbeschreibungen
+                   gelöscht.
+
+                 - Die Funktion rebuild_blzfile() funktioniert jetzt
+                   (wieder); sie dient als Härtetest für die LUT2
+                   Routinen, da eine BLZ-Datei der Bundesbank aus einer
+                   LUT-Datei wiederhergestellt wird.
+
+                 - Die Testroutinen der Perl-Version wurden komplett
+                   neu geschrieben, um aus den automatisierten Tests
+                   der CPAN-Tester bessere Rückschlüsse auf Programm-
+                   fehler zu erhalten.
+
+                 - Die Perl-Version enthält eine abgespeckte Version
+                   der ZLIB, damit bei Fehlen des zlib-development
+                   Pakets die Kompilierung nicht mit einem Fehler
+                   abbricht (das Vorhandensein wird in Makefile.PL
+                   überprüft).
+
+                 - Die Windows-DLL macht in Verbindung mit PHP oder
+                   Access öfters Probleme; die Ursache dafür wurde noch
+                   nicht gefunden, wird aber bald angegangen.
+
+   08.09.08 Version 2.93
+                   Diese Version ist ein Bugfix-Release, das einen
+                   Fehler in der Funktion get_lut_info2() behebt. Für
+                   den verwendeten Ausgabebuffer wurde ein realloc()
+                   gemacht, um die Buffergröße auf den tatsächlich
+                   verwendeten Wert zu reduzieren; es wurde allerdings
+                   die alte Adresse zurückgegeben. Auf Systemen, bei
+                   denen das realloc nur den Speicherbereich ver-
+                   keinerte, trat kein Fehler auf; bei anderen wurde
+                   der Buffer jedoch verschoben, und wenn das Anwender-
+                   programm den Buffer dann freigeben wollte, stürzte
+                   es natürlich ab (besonders gern bei den CPAN Tests).
+
 
 
 ##############################################################################

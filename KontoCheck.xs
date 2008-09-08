@@ -1,4 +1,4 @@
-#line 63 "KontoCheck.lx"
+#line 64 "KontoCheck.lx"
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
@@ -28,7 +28,7 @@ MODULE = Business::KontoCheck		PACKAGE = Business::KontoCheck
 #if 0
 
 BOOT:
-#line 93 "KontoCheck.lx"
+#line 94 "KontoCheck.lx"
 {
     MY_CXT_INIT;
     /* If any of the fields in the my_cxt_t struct need
@@ -41,7 +41,6 @@ BOOT:
 PROTOTYPES: ENABLE
 
 # Aufrufe der konto_check Bibliothek
-
 int
 kto_check(pz_or_blz,kto,lut_name)
    char *pz_or_blz;

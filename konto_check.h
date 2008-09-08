@@ -86,32 +86,34 @@
  * ######################################################################
  */
 
-#if USE_CDECL
-#  if BUILD_DLL /* DLL kompilieren */
-#    define DLL_EXPORT __declspec (dllexport)
-#    define DLL_EXPORT_V __declspec (dllexport)
-#  elif USE_DLL /* DLL in einem anderen Programm benutzen */
-#    define DLL_EXPORT __declspec (dllimport)
-#    define DLL_EXPORT_V __declspec (dllimport)
-#  else /* kein DLL-Krempel erforderlich */
-#    define DLL_EXPORT
-#    define DLL_EXPORT_V
-#  endif
-#else
-#   if BUILD_DLL /* DLL kompilieren */
-#    define DLL_EXPORT __declspec (dllexport) __stdcall 
-#    define DLL_EXPORT_V __declspec (dllexport)
-#  elif USE_DLL /* DLL in einem anderen Programm benutzen */
-#    define DLL_EXPORT __declspec (dllimport) __stdcall 
-#    define DLL_EXPORT_V __declspec (dllimport)
-#  else /* kein DLL-Krempel erforderlich */
-#    define DLL_EXPORT
-#    define DLL_EXPORT_V
-#  endif
-#endif
-
 #ifdef _WIN32
-#define localtime_r(timep,result) localtime(timep)
+#  if USE_CDECL
+#    if BUILD_DLL /* DLL kompilieren */
+#      define DLL_EXPORT __declspec (dllexport)
+#      define DLL_EXPORT_V __declspec (dllexport)
+#    elif USE_DLL /* DLL in einem anderen Programm benutzen */
+#      define DLL_EXPORT __declspec (dllimport)
+#      define DLL_EXPORT_V __declspec (dllimport)
+#    else /* kein DLL-Krempel erforderlich */
+#      define DLL_EXPORT
+#      define DLL_EXPORT_V
+#    endif
+#  else
+#     if BUILD_DLL /* DLL kompilieren */
+#      define DLL_EXPORT __declspec (dllexport) __stdcall 
+#      define DLL_EXPORT_V __declspec (dllexport)
+#    elif USE_DLL /* DLL in einem anderen Programm benutzen */
+#      define DLL_EXPORT __declspec (dllimport) __stdcall 
+#      define DLL_EXPORT_V __declspec (dllimport)
+#    else /* kein DLL-Krempel erforderlich */
+#      define DLL_EXPORT
+#      define DLL_EXPORT_V
+#    endif
+#  endif
+#  define localtime_r(timep,result) localtime(timep)
+#else
+#  define DLL_EXPORT
+#  define DLL_EXPORT_V
 #endif
 
 /*
@@ -265,7 +267,7 @@
 #define LUT2_NO_VALID_DATE                       5
 #define LUT1_SET_LOADED                          6
 #define LUT1_FILE_GENERATED                      7
-#line 161 "konto_check_h.lx"
+#line 163 "konto_check_h.lx"
 
 #define MAX_BLZ_CNT 30000  /* maximale Anzahl BLZ's in generate_lut() */
 

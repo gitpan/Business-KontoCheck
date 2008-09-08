@@ -9,5 +9,5 @@ static: libz.a
 	@ $(CC) -Izlib $(CFLAGS) $(LDFLAGS) test_zlib.c libz.a -o test_zlib
 
 libz.a:
-	@ tar xzf zlib.tar.gz ; cd zlib ; ./configure ; $(MAKE) libz.a ; cp libz.a .. ; make clean
+	@ gunzip -c < zlib.tar.gz | tar xf - ; cd zlib ; ./configure ; $(MAKE) libz.a ; cp libz.a .. ; make clean
 
