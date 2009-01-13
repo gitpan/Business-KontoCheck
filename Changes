@@ -4,6 +4,11 @@ Revision history for Perl extension Business::KontoCheck.
 The complete history can be found in 0_history.txt (in german). The perl
 version starts with 2.1; all previous versions are C only libraries.
 
+2.95 Tue Jan 13, 2009
+   (nearly the syme as 2.94)
+      - fixed a minor bug in the test suite; two banks are invalid with the
+        new hash file.
+
 2.94 Tue Jan 13, 2009
    (maybe the last beta before 3.0)
       - fixed a bug in read_lut_block_int() which caused an error on most 64 bit machines

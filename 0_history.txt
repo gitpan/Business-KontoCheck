@@ -6,7 +6,7 @@ vim:set tw=70; set ft=text; set ai
 ########################################################################
 #                                                                      #
 # Autor             : Michael Plugge <m.plugge@hs-mannheim.de>         #
-# Version           : 2.94                                             #
+# Version           : 2.95                                             #
 # Datum             : 13.01.2009                                       #
 ########################################################################
 
@@ -463,6 +463,10 @@ Versionen der deutschen Bibliothek:
                    Der Code wurde insgesamt noch etwas überarbeitet, um diverse
                    Compiler-Warnungen (bzw. -Fehler) zu beseitigen.                   
 
+   13.01.09 Version 2.95
+                   Diese Version behebt einen Fehler in den Testroutinen (es
+                   waren zwei Bankleitzahlen ungültig geworden); der Code ist
+                   unverändert.
 
 ##############################################################################
 #          PRÜFZIFFERBERECHNUNG VON ÖSTERREICHISCHEN KONTONUMMERN            #

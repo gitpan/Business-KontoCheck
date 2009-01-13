@@ -1,3 +1,8 @@
+
+############################################################
+### dies ist eine generierte Datei - nicht editieren!!!  ###
+############################################################
+
 # This is a little makefile to check if the zlib development package is
 # installed; if not, a static version is build and the konto_check library
 # is linked against this version.
