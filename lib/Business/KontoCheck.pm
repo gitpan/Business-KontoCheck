@@ -15,15 +15,15 @@ our @EXPORT_OK = qw( kto_check kto_check_str kto_check_blz
    lut_init kto_check_init copy_lutfile lut_multiple lut_filialen
    lut_name lut_name_kurz lut_plz lut_ort lut_pan lut_bic lut_pz
    lut_aenderung lut_loeschung lut_nachfolge_blz lut_info iban2bic
-   iban_gen check_iban ipi_check ipi_gen kto_check_retval2txt
-   kto_check_retval2txt_short kto_check_retval2utf8
+   iban_gen check_iban ipi_check ipi_gen set_verbose_debug
+   kto_check_retval2txt kto_check_retval2txt_short kto_check_retval2utf8
    kto_check_retval2html dump_lutfile kto_check_retval2dos
    konto_check_at kto_check_at_str generate_lut_at %kto_retval
    %kto_retval_kurz );
 
 our @EXPORT = qw( kto_check lut_init kto_check_blz kto_check_at %kto_retval );
 
-our $VERSION = '2.93';
+our $VERSION = '2.94';
 
 require XSLoader;
 XSLoader::load('Business::KontoCheck', $VERSION);

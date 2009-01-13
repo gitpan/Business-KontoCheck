@@ -44,6 +44,9 @@
 #ifndef KONTO_CHECK_H_INCLUDED
 #define KONTO_CHECK_H_INCLUDED
 
+/* neue Berechnungsmethode für C6, gültig ab 9.3.2009 */
+#define METHODE_C6_NEU 0
+
 /*
  * ##########################################################################
  * # Fallls das Makro DEBUG auf 1 gesetzt wird, werden zwei- und drei-      #
@@ -124,7 +127,7 @@
 
 #define DEFAULT_LUT_NAME "blz.lut","blz.lut2","blz.lut1"
 
-#if _WIN32
+#if _WIN32>0
 #define DEFAULT_LUT_PATH ".","C:","C:\\Programme\\konto_check"
 #else
 #define DEFAULT_LUT_PATH ".","/usr/local/etc","/etc","/usr/local/bin","/opt/konto_check"
@@ -267,7 +270,7 @@
 #define LUT2_NO_VALID_DATE                       5
 #define LUT1_SET_LOADED                          6
 #define LUT1_FILE_GENERATED                      7
-#line 163 "konto_check_h.lx"
+#line 166 "konto_check_h.lx"
 
 #define MAX_BLZ_CNT 30000  /* maximale Anzahl BLZ's in generate_lut() */
 
@@ -376,7 +379,7 @@ DLL_EXPORT char *kto_check_str_t(char *x_blz,char *kto,char *lut_name,KTO_CHK_CT
  */
 
 DLL_EXPORT int kto_check_blz(char *blz,char *kto);
-#if DEBUG
+#if DEBUG>0
 DLL_EXPORT int kto_check_blz_dbg(char *blz,char *kto,RETVAL *retvals);
 #endif
 
@@ -398,7 +401,7 @@ DLL_EXPORT int kto_check_blz_dbg(char *blz,char *kto,RETVAL *retvals);
  */
 
 DLL_EXPORT int kto_check_pz(char *pz,char *kto,char *blz);
-#if DEBUG
+#if DEBUG>0
 DLL_EXPORT int kto_check_pz_dbg(char *pz,char *kto,char *blz,RETVAL *retvals);
 #endif
 
@@ -482,7 +485,7 @@ DLL_EXPORT int get_lut_info_t(char **info,char *lut_name,KTO_CHK_CTX *ctx);
  */
 DLL_EXPORT char *get_kto_check_version(void);
 
-#if DEBUG
+#if DEBUG>0
 /* ###########################################################################
  * # Die Funktion kto_check_test_vars() macht nichts anderes, als die beiden #
  * # übergebenen Variablen txt und i auszugeben und als String zurückzugeben.#
@@ -497,6 +500,7 @@ DLL_EXPORT char *get_kto_check_version(void);
  */
 
 DLL_EXPORT char *kto_check_test_vars(char *txt,UINT4 i);
+DLL_EXPORT int set_verbose_debug(int mode);
 #endif
 
 /*
@@ -513,15 +517,15 @@ DLL_EXPORT int read_lut_block(char *lutname, UINT4 typ,UINT4 *blocklen,char **da
 DLL_EXPORT int read_lut_slot(char *lutname,int slot,UINT4 *blocklen,char **data);
 DLL_EXPORT int lut_dir_dump(char *lutname,char *outputname);
 DLL_EXPORT int generate_lut2_p(char *inputname,char *outputname,char *user_info,char *gueltigkeit,
-      UINT4 felder,UINT4 filialen,int slots,int lut_version,UINT4 set);
+      UINT4 felder,UINT4 filialen,int slots,int lut_version,int set);
 DLL_EXPORT int generate_lut2(char *inputname,char *outputname,char *user_info,
       char *gueltigkeit,UINT4 *felder,UINT4 slots,UINT4 lut_version,UINT4 set);
 DLL_EXPORT int copy_lutfile(char *old_name,char *new_name,int new_slots);
-DLL_EXPORT int lut_init(char *lut_name,UINT4 required,UINT4 set);
-DLL_EXPORT int kto_check_init(char *lut_name,UINT4 *required,int **status,UINT4 set,UINT4 incremental);
+DLL_EXPORT int lut_init(char *lut_name,int required,int set);
+DLL_EXPORT int kto_check_init(char *lut_name,int *required,int **status,int set,int incremental);
 DLL_EXPORT int kto_check_init2(char *lut_name);
 DLL_EXPORT int *lut2_status(void);
-DLL_EXPORT int kto_check_init_p(char *lut_name,UINT4 required,UINT4 set,UINT4 incremental);
+DLL_EXPORT int kto_check_init_p(char *lut_name,int required,int set,int incremental);
 DLL_EXPORT int lut_info(char *lut_name,char **info1,char **info2,int *valid1,int *valid2);
 DLL_EXPORT int lut_valid(void);
 DLL_EXPORT int get_lut_info2(char *lut_name,int *version_p,char **prolog_p,char **info_p,char **user_info_p);
@@ -574,7 +578,7 @@ DLL_EXPORT char *kto_check_retval2dos(int retval);
  */
 
 #ifndef KONTO_CHECK_VARS
-#if DEBUG
+#if DEBUG>0
    /* "aktuelles" Datum für die Testumgebung (um einen Datumswechsel zu simulieren) */
 DLL_EXPORT_V extern UINT4 current_date;
 #endif
@@ -588,11 +592,11 @@ DLL_EXPORT_V extern UINT4 current_date;
  * ######################################################################
  */
 
-#if INCLUDE_DUMMY_GLOBALS
+#if INCLUDE_DUMMY_GLOBALS>0
 DLL_EXPORT_V extern const char *kto_check_msg;   /* globaler char-ptr mit Klartext-Ergebnis des Tests */
 DLL_EXPORT_V extern const char pz_str[];         /* benutzte Prüfziffer-Methode und -Untermethode (als String) */
 DLL_EXPORT_V extern int pz_methode; /* pz_methode: benutzte Prüfziffer-Methode (numerisch) */
-#if DEBUG
+#if DEBUG>0
 DLL_EXPORT_V extern int pz;                /* Prüfziffer (bei DEBUG als globale Variable für Testzwecke) */
 #endif   /* DEBUG */
 #endif   /* INCLUDE_DUMMY_GLOBALS */

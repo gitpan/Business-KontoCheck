@@ -1,12 +1,13 @@
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl Business-KontoCheck.t'
 
-use Test::More tests => 1033;
+use Test::More tests => 1063;
 
 BEGIN { use_ok('Business::KontoCheck') };
 
 $ok_cnt=$nok_cnt=0;
-$retval=lut_init("blz.lut");
+# initialization with init level set to 0 is sufficient for these tests (should work always)
+$retval=lut_init("blz.lut",0);
 $ret_txt=$kto_retval{$retval};
 if($retval>0){$ok_cnt++;}else{$nok_cnt++;}
 ok($retval gt 0,"init: $retval => $ret_txt (ok: $ok_cnt, nok: $nok_cnt)");
@@ -1054,3 +1055,33 @@ __DATA__
 0 D1 2000005018
 0 D1 5000064015
 0 D1 7400041011
+1 D21 189912137
+1 D21 235308215
+1 D22 4455667784
+1 D22 1234567897
+1 D23 51181008
+1 D23 71214205
+0 D21 4455667784
+0 D21 1234567897
+0 D21 51181008
+0 D21 71214205
+0 D21 6414241
+0 D21 179751314
+0 D22 51181008
+0 D22 71214205
+0 D22 6414241
+0 D22 179751314
+0 D23 6414241
+0 D23 179751314
+1 D31 1600169591
+1 D31 1600189151
+1 D31 1800084079
+1 D32 6019937007
+1 D32 6021354007
+1 D32 6030642006
+0 D31 1600166307
+0 D31 1600176485
+0 D31 1600201934
+0 D32 6025017009
+0 D32 6028267003
+0 D32 6019835001

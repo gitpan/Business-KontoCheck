@@ -7,7 +7,9 @@ MANIFEST
 ppport.h
 README
 README.zlib
+read_test.dat
 t/austrian.t
+t/base.t
 t/iban.t
 t/ipi.t
 t/lut2.t
@@ -28,4 +30,6 @@ testkonten-at.txt
 lgpl.txt
 zlib.tar.gz
 makefile.zlib
+makefile.zlib-gcc
+makefile.zlib-icc
 META.yml                                 Module meta-data (added by MakeMaker)

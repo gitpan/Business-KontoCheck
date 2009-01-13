@@ -40,9 +40,13 @@ EOD
 close(OUT);
 
 $retval=system("make dynamic -f makefile.zlib 2> /dev/null");
+if($retval){$retval=system("make dynamic -f makefile.zlib-gcc 2> /dev/null");}
+if($retval){$retval=system("make dynamic -f makefile.zlib-icc 2> /dev/null");}
 if($retval){   # zlib.h not found, or linking failed
-   print "no zlib development package found\ntry to build a static version of the zlib library\n";
+   print "not found\ntry to build a static version of the zlib library\n";
    $retval=system("make static -f makefile.zlib 2> /dev/null");
+   if($retval){$retval=system("make static -f makefile.zlib-gcc 2> /dev/null");}
+   if($retval){$retval=system("make static -f makefile.zlib-icc 2> /dev/null");}
    if(!$retval){  # build of static library successfull
       $zlib_dir=" -I$zlib";
       $zlib_version="static";
@@ -64,7 +68,7 @@ unlink("test_zlib.c");
 unlink("test_zlib");
 print "use $zlib_version version of zlib\n";
 
-$define="-Wno-uninitialized";
+$define="";
 
 if($use_austrian){
    $define.=" -DINCLUDE_KONTO_CHECK_AT=1 ";
@@ -92,18 +96,21 @@ WriteMakefile(
     DEFINE            => $define,
     INC               => "-I.$zlib_dir", # e.g., '-I. -I/usr/include/other'
     OBJECT            => '$(O_FILES)', # link all the C files too
+    COMPRESS          => 'gzip --best --force', 
 
 # the following dependencies are for my private build tool lx2l (a little esoteric ;-) )
     ($use_lx2l==1 ?
     (depend            => {'konto_check-cfg.lx' => "konto_check-cfg.lxx\n\tlx2l -x \$<",
                           'lib/Business/KontoCheck.pm' => "pm.lxx konto_check-cfg.lx\n\tlx2l -x \$<",
-                          'konto_check.h'    => "konto_check_h.lx konto_check-cfg.lx\n\tlx2l \$<",
-                          'konto_check.c'    => "konto_check.lx konto_check-cfg.lx\n\tlx2l \$<",
-                          'konto_check-at.c' => "konto_check-at.lxx konto_check-cfg.lx\n\tlx2l -x \$<",
-                          'konto_check-at.h' => "konto_check-at.lxx konto_check-cfg.lx\n\tlx2l -x \$< -uh",
-                          'KontoCheck.xs'    => "KontoCheck.lx konto_check-cfg.lx\n\tlx2l \$<",
-                          'Makefile.PL'      => "makefile.lx makefile.zlib konto_check-cfg.lx\n\tlx2l \$< -um",
-                          'makefile.zlib'    => "makefile.lx konto_check-cfg.lx\n\tlx2l \$< -um1"
+                          'konto_check.h'    	=> "konto_check_h.lx konto_check-cfg.lx\n\tlx2l \$<",
+                          'konto_check.c'    	=> "konto_check.lx konto_check-cfg.lx\n\tlx2l \$<",
+                          'konto_check-at.c' 	=> "konto_check-at.lxx konto_check-cfg.lx\n\tlx2l -x \$<",
+                          'konto_check-at.h' 	=> "konto_check-at.lxx konto_check-cfg.lx\n\tlx2l -x \$< -uh",
+                          'KontoCheck.xs'    	=> "KontoCheck.lx konto_check-cfg.lx\n\tlx2l \$<",
+                          'Makefile.PL'      	=> "makefile.lx makefile.zlib makefile.zlib-gcc makefile.zlib-icc konto_check-cfg.lx\n\tlx2l \$< -um",
+                          'makefile.zlib'    	=> "makefile.lx konto_check-cfg.lx\n\tlx2l \$< -um1",
+                          'makefile.zlib-gcc'   => "makefile.lx konto_check-cfg.lx\n\tlx2l \$< -um2",
+                          'makefile.zlib-icc'   => "makefile.lx konto_check-cfg.lx\n\tlx2l \$< -um3"
                          })
                          :())
 

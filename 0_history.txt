@@ -2,12 +2,12 @@ vim:set tw=70; set ft=text; set ai
 
 ########################################################################
 #          PRÜFZIFFERBERECHNUNG VON DEUTSCHEN KONTONUMMERN             #
-#                           C-/Perl-Bibliothek                         #
+#                           C-/Perl/PHP-Bibliothek                     #
 ########################################################################
 #                                                                      #
 # Autor             : Michael Plugge <m.plugge@hs-mannheim.de>         #
-# Version           : 2.7                                              #
-# Datum             : 23.08.2008                                       #
+# Version           : 2.94                                             #
+# Datum             : 13.01.2009                                       #
 ########################################################################
 
 Versionen der deutschen Bibliothek:
@@ -383,7 +383,7 @@ Versionen der deutschen Bibliothek:
                    Verzeichnissen die Defaultnamen probiert; falls eine
                    passende Datei gefunden wird, wird diese genommen.
                    Die Default-Namen und -Pfade können in konto_check.h
-                   definiert werden (es sind dieMakros DEFAULT_LUT_NAME
+                   definiert werden (es sind die Makros DEFAULT_LUT_NAME
                    und  DEFAULT_LUT_PATH).
 
                  - Die Funktion lut_init() ist jetzt nicht mehr eine
@@ -441,6 +441,27 @@ Versionen der deutschen Bibliothek:
                    programm den Buffer dann freigeben wollte, stürzte
                    es natürlich ab (besonders gern bei den CPAN Tests).
 
+   13.01.09 Version 2.94
+                   Diese Version behebt einen Fehler in der Funktion
+                   read_lut_block_int(), der auf 64 Bit-Rechnern die
+                   Initialisierung fehlschlagen ließ. Die Variable len
+                   war als UINT4 (4 Byte Integer) deklariert; sie wurde
+                   **by reference** an die Funktion uncompress() (aus zlib)
+                   übergeben, die an der Stelle allerdings eine long-Variable
+                   (auf 64 Bit Maschinen üblicherweise mit 8 Byte) erwartete.
+                   Dadurch schlug die Initialisierung auf diesen Maschinen
+                   üblicherweise fehl, während sie auf 32 Bit Rechnern keine
+                   Probleme machte.
+
+                   Außerdem wurden noch die Prüfziffermethoden D2 und D3 und
+                   für die Prüfziffermethode C6 die neue Version (gültig ab
+                   9.3.2009) implementiert, in Methode 28 ein kleiner Fehler
+                   beseitigt (falls eine Unterkontonummer weggelassen wurde
+                   (=> 8stellige Kontonummer) ist der Test nochmal mit der
+                   gedachten Unterkontonummer 00 zu wiederholen).
+
+                   Der Code wurde insgesamt noch etwas überarbeitet, um diverse
+                   Compiler-Warnungen (bzw. -Fehler) zu beseitigen.                   
 
 
 ##############################################################################

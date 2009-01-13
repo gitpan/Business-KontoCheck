@@ -1,13 +1,29 @@
+vim:si
 Revision history for Perl extension Business::KontoCheck.
 
 The complete history can be found in 0_history.txt (in german). The perl
 version starts with 2.1; all previous versions are C only libraries.
 
+2.94 Tue Jan 13, 2009
+   (maybe the last beta before 3.0)
+      - fixed a bug in read_lut_block_int() which caused an error on most 64 bit machines
+      - fixed a bug in check method 28
+      - implemented new check methods D2 and D3
+      - change in check method C6, valid from 2009-03-09
+      - some minor changes to avoid compiler errors/warnings
+
+2.93 Mon Aug 8, 2008
+   third beta for 3.0
+      - fixed a bug in get_lut_info2()
+
 2.92 Sat Aug 23, 2008
    second beta for 3.0
       - fixed some bugs in check methods 53, 57 and B6
       - newly defined check methods D0 and D1 implemented
-      - 
+      - DEFAULT_LUT_NAME and DEFAULT_LUT_PATH may contain
+        multiple names/paths now
+      - new functions kto_check_retval2utf8()
+      - new test routines for perl
 
 2.91 Wed April 23, 2008
         This is the first beta for the new 3.0 release. This release
