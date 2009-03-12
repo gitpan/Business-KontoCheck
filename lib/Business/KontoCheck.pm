@@ -23,7 +23,7 @@ our @EXPORT_OK = qw( kto_check kto_check_str kto_check_blz
 
 our @EXPORT = qw( kto_check lut_init kto_check_blz kto_check_at %kto_retval );
 
-our $VERSION = '2.95';
+our $VERSION = '2.97';
 
 require XSLoader;
 XSLoader::load('Business::KontoCheck', $VERSION);
@@ -278,7 +278,7 @@ sub lut_nachfolge_blz
  -75 => 'für ein LUT-Set sind nur die Werte 0, 1 oder 2 möglich',
  -74 => 'Ein Konto kann kann nur für deutsche Banken geprüft werden',
  -73 => 'Der zu validierende strukturierete Verwendungszweck muß genau 20 Zeichen enthalten',
- -72 => 'Im strukturierten Verwendungszweck dürfen nur alphanumerische Zeichen vorkommen',
+ -72 => 'Im strukturierten Verwendungszweck dürfen nur alphanumerische Zeichen vorkommen (keine Blanks, Umlaute...)',
  -71 => 'Die Länge des IPI-Verwendungszwecks darf maximal 18 Byte sein',
  -70 => 'Es wurde eine LUT-Datei im Format 1.0/1.1 geladen',
  -69 => 'Bei der Kontoprüfung fehlt ein notwendiger Parameter (BLZ oder Konto)',
@@ -357,12 +357,12 @@ sub lut_nachfolge_blz
    4 => 'Der Datensatz ist aktuell gültig',
    5 => 'Der Datensatz enthält kein Gültigkeitsdatum',
    6 => 'Die Datei ist im alten LUT-Format (1.0/1.1)',
-   7 => 'OK; es wurde allerdings eine LUT-Datei im alten Format (1.0/1.1) generiert (version<3)',
+   7 => 'ok; es wurde allerdings eine LUT-Datei im alten Format (1.0/1.1) generiert',
 
 'INVALID_SET'                            => 'für ein LUT-Set sind nur die Werte 0, 1 oder 2 möglich',
 'NO_GERMAN_BIC'                          => 'Ein Konto kann kann nur für deutsche Banken geprüft werden',
 'IPI_CHECK_INVALID_LENGTH'               => 'Der zu validierende strukturierete Verwendungszweck muß genau 20 Zeichen enthalten',
-'IPI_INVALID_CHARACTER'                  => 'Im strukturierten Verwendungszweck dürfen nur alphanumerische Zeichen vorkommen',
+'IPI_INVALID_CHARACTER'                  => 'Im strukturierten Verwendungszweck dürfen nur alphanumerische Zeichen vorkommen (keine Blanks, Umlaute...)',
 'IPI_INVALID_LENGTH'                     => 'Die Länge des IPI-Verwendungszwecks darf maximal 18 Byte sein',
 'LUT1_FILE_USED'                         => 'Es wurde eine LUT-Datei im Format 1.0/1.1 geladen',
 'MISSING_PARAMETER'                      => 'Bei der Kontoprüfung fehlt ein notwendiger Parameter (BLZ oder Konto)',
@@ -441,7 +441,7 @@ sub lut_nachfolge_blz
 'LUT2_VALID'                             => 'Der Datensatz ist aktuell gültig',
 'LUT2_NO_VALID_DATE'                     => 'Der Datensatz enthält kein Gültigkeitsdatum',
 'LUT1_SET_LOADED'                        => 'Die Datei ist im alten LUT-Format (1.0/1.1)',
-'LUT1_FILE_GENERATED'                    => 'OK; es wurde allerdings eine LUT-Datei im alten Format (1.0/1.1) generiert (version<3)',
+'LUT1_FILE_GENERATED'                    => 'ok; es wurde allerdings eine LUT-Datei im alten Format (1.0/1.1) generiert',
 );
 
 %Business::KontoCheck::kto_retval_kurz = (

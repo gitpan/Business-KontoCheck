@@ -1,8 +1,3 @@
-
-############################################################
-### dies ist eine generierte Datei - nicht editieren!!!  ###
-############################################################
-
 use 5.006000;
 use ExtUtils::MakeMaker;
 
@@ -96,17 +91,19 @@ WriteMakefile(
     ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
       (ABSTRACT_FROM  => 'lib/Business/KontoCheck.pm', # retrieve abstract from module
        AUTHOR         => 'Michael Plugge <m.plugge@hs-mannheim.de>') : ()),
-    LIBS              => ['-L. -lz'], # e.g., '-lm'
+    LIBS              => ['-L. -lz'],
     LDFLAGS           => '-L.',
     DEFINE            => $define,
     INC               => "-I.$zlib_dir", # e.g., '-I. -I/usr/include/other'
     OBJECT            => '$(O_FILES)', # link all the C files too
     COMPRESS          => 'gzip --best --force', 
+    NO_META           => 1,				# META.yml is manually generated
 
 # the following dependencies are for my private build tool lx2l (a little esoteric ;-) )
     ($use_lx2l==1 ?
     (depend            => {'konto_check-cfg.lx' => "konto_check-cfg.lxx\n\tlx2l -x \$<",
                           'lib/Business/KontoCheck.pm' => "pm.lxx konto_check-cfg.lx\n\tlx2l -x \$<",
+                          'META.yml'    			=> "META.lx konto_check-cfg.lx\n\tlx2l \$<",
                           'konto_check.h'    	=> "konto_check_h.lx konto_check-cfg.lx\n\tlx2l \$<",
                           'konto_check.c'    	=> "konto_check.lx konto_check-cfg.lx\n\tlx2l \$<",
                           'konto_check-at.c' 	=> "konto_check-at.lxx konto_check-cfg.lx\n\tlx2l -x \$<",

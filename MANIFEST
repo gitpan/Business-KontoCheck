@@ -1,4 +1,5 @@
 00liesmich.txt
+00liesmich.pdf
 0_history.txt
 Changes
 KontoCheck.xs
@@ -8,6 +9,11 @@ ppport.h
 README
 README.zlib
 read_test.dat
+examples/konten.pl
+examples/test1.pl
+examples/test2.pl
+examples/testkonten.blz
+examples/testkonten.txt
 t/austrian.t
 t/base.t
 t/iban.t
@@ -32,4 +38,4 @@ zlib.tar.gz
 makefile.zlib
 makefile.zlib-gcc
 makefile.zlib-icc
-META.yml                                 Module meta-data (added by MakeMaker)
+META.yml

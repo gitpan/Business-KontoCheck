@@ -6,8 +6,8 @@ vim:tw=80:ft=text:ai
 ########################################################################
 #                                                                      #
 # Autor             : Michael Plugge <m.plugge@hs-mannheim.de>         #
-# Version           : 2.94 (3.0 Beta 4)                                #
-# Datum             : 13.01.2009                                       #
+# Version           : 2.96 (3.0 Beta 5)                                #
+# Datum             : 02.03.2009                                       #
 #                                                                      #
 ########################################################################
 
@@ -33,6 +33,7 @@ identisch.
 
 0_history.txt               : Versionsgeschichte
 00liesmich.txt              : diese Datei
+00liesmich.pdf              : etwas Dokumentation (aus der C-Version)
 Changes                     : Versionsgeschichte/Perl
 README                      : kurzes README für CPAN
 MANIFEST                    : Dateiliste (von Perl benötigt)
@@ -88,7 +89,7 @@ Bundesbank:
 http://www.bundesbank.de/zahlungsverkehr/zahlungsverkehr_bankleitzahlen_download.php
 
 Dabei ist die Datei blz_*.zip herunterzuladen und auszupacken (aktuell z.B.
-blz_20070604.zip). Die Aktualisierung erfolgt alle 3 Monate. Diese Datei kann
+blz_20081208.zip). Die Aktualisierung erfolgt alle 3 Monate. Diese Datei kann
 mittels der Funktion generate_lut() in das LUT-Format für die Bibliothek
 konvertiert werden.
 

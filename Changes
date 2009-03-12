@@ -17,7 +17,7 @@ version starts with 2.1; all previous versions are C only libraries.
       - change in check method C6, valid from 2009-03-09
       - some minor changes to avoid compiler errors/warnings
 
-2.93 Mon Aug 8, 2008
+2.93 Mon Sep 8, 2008
    third beta for 3.0
       - fixed a bug in get_lut_info2()
 
@@ -25,8 +25,7 @@ version starts with 2.1; all previous versions are C only libraries.
    second beta for 3.0
       - fixed some bugs in check methods 53, 57 and B6
       - newly defined check methods D0 and D1 implemented
-      - DEFAULT_LUT_NAME and DEFAULT_LUT_PATH may contain
-        multiple names/paths now
+      - DEFAULT_LUT_NAME and DEFAULT_LUT_PATH may contain multiple names/paths now
       - new functions kto_check_retval2utf8()
       - new test routines for perl
 
@@ -41,7 +40,7 @@ version starts with 2.1; all previous versions are C only libraries.
       - fixed some bugs in check methods 53, 57 and B6
       - newly defined check methods D0 and D1 implemented
       - removed PHP module for the 2.7 series (due to various problems).
-        The PHP port is available for the 3.x releases (also for 2.92)
+        The PHP port is available for the 3.x releases (also for 2.92 and later)
 
 2.6 Thu April 10, 2008
       - bug fixes for check methods 50b and 74b
@@ -64,5 +63,5 @@ version starts with 2.1; all previous versions are C only libraries.
       - cleanup of old (unused) code and prototypes
 
 2.1  Sat May 26, 2007
-	- original version; created by h2xs 1.23 with options
+	- first perl version; created by h2xs 1.23 with options
 		-A -n Business::KontoCheck -v 2.1 -g

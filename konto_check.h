@@ -45,7 +45,7 @@
 #define KONTO_CHECK_H_INCLUDED
 
 /* neue Berechnungsmethode für C6, gültig ab 9.3.2009 */
-#define METHODE_C6_NEU 0
+#define METHODE_C6_NEU 1
 
 /*
  * ##########################################################################
@@ -57,6 +57,17 @@
 #ifndef DEBUG
 #define DEBUG 1
 #endif
+
+/*
+ * ##########################################################################
+ * # falls das folgende Makro auf 1 gesetzt wird, werden für das PHP-Modul  #
+ * # symbolische Konstanten definiert (analog zu den #define's aus der      #
+ * # C Bibliothek. Der Wert false ist in PHP allerdings schon belegt und    #
+ * # kann nicht verwendet werden; stattdessen wird NOT_OK definiert.        #
+ * # gesamte Datei nach BLZs sortiert wird).                                #
+ * ##########################################################################
+ */
+#define SYMBOLIC_RETVALS 1
 
 /*
  * ##########################################################################
@@ -147,6 +158,7 @@
 #define DEFAULT_LUT_VERSION      3
 #define DEFAULT_SLOTS            26
 #define DEFAULT_INIT_LEVEL       5
+#define LAST_LUT_BLOCK           100
 
 #define LUT2_BLZ                      1
 #define LUT2_FILIALEN                 2
@@ -179,6 +191,30 @@
 #define LUT2_2_NACHFOLGE_BLZ        113
 #define LUT2_2_NAME_NAME_KURZ       114
 #define LUT2_2_INFO                 115
+
+#ifdef KONTO_CHECK_VARS
+char *lut2_feld_namen[LAST_LUT_BLOCK]={
+   "",
+   "BLZ",              /* 1 */
+   "FILIALEN",         /* 2 */
+   "NAME",             /* 3 */
+   "PLZ",              /* 4 */
+   "ORT",              /* 5 */
+   "NAME_KURZ",        /* 6 */
+   "PAN",              /* 7 */
+   "BIC",              /* 8 */
+   "PZ",               /* 9 */
+   "NR",               /* 10 */
+   "AENDERUNG",        /* 11 */
+   "LOESCHUNG",        /* 12 */
+   "NACHFOLGE_BLZ",    /* 13 */
+   "NAME_NAME_KURZ",   /* 14 */
+   "INFO",             /* 15 */
+   NULL
+};
+#else
+char *lut2_feld_namen[LAST_LUT_BLOCK];
+#endif
 
 /*
  * ######################################################################
@@ -270,12 +306,42 @@
 #define LUT2_NO_VALID_DATE                       5
 #define LUT1_SET_LOADED                          6
 #define LUT1_FILE_GENERATED                      7
-#line 166 "konto_check_h.lx"
+#line 178 "konto_check_h.lx"
 
 #define MAX_BLZ_CNT 30000  /* maximale Anzahl BLZ's in generate_lut() */
 
-/*
- * ######################################################################
+#ifndef INT4_DEFINED
+#define INT4_DEFINED
+#include <limits.h>
+#if INT_MAX==2147483647
+typedef int INT4;
+typedef unsigned int UINT4;
+#elif LONG_MAX==2147483647
+typedef long INT4;
+typedef unsigned long UINT4;
+#else  /* Notausstieg, kann 4 Byte Integer nicht bestimmen */
+#error "Typedef für 4 Byte Integer nicht definiert"
+#endif
+#endif
+
+   /* in den alten Versionen war reserved als 'void *reserved[5]' definiert;
+    * es ist allerdings geschickter, einen Teil davon als char-Array zu
+    * definieren.  Dieses kann dann flexibler verwendet werden (auch
+    * byteweise). Die Größe der Struktur wird auf diese Weise nicht verändert.
+    *
+    * Als erstes neues Element wird pz_pos (Position der Prüfziffer) eingeführt.
+    */
+typedef struct{
+   char *methode;
+   INT4 pz_methode;
+   INT4 pz;
+   signed char pz_pos;
+   char reserved_chr[3*sizeof(void*)-1];
+   void *reserved_ptr[2];
+} RETVAL;
+
+
+/* ######################################################################
  * # Dies ist der alte Kommentar zu KTO_CHK_CTX; die Struktur ist ab    #
  * # Version 3.0 obsolet und wird nicht mehr verwendet. Die Deklaration #
  * # ist allerdings noch in der Headerdatei enthalten, um Abwärtskompa- #
@@ -300,20 +366,6 @@
  * # in konto_check.c.                                                  #
  * ######################################################################
  */
-#ifndef INT4_DEFINED
-#define INT4_DEFINED
-#include <limits.h>
-#if INT_MAX==2147483647
-typedef int INT4;
-typedef unsigned int UINT4;
-#elif LONG_MAX==2147483647
-typedef long INT4;
-typedef unsigned long UINT4;
-#else  /* Notausstieg, kann 4 Byte Integer nicht bestimmen */
-#error "Typedef für 4 Byte Integer nicht definiert"
-#endif
-#endif
-
 typedef struct{
    char *kto_check_msg,pz_str[4];
    int pz_methode;
@@ -323,8 +375,6 @@ typedef struct{
    UINT4 b1[256],b2[256],b3[256],b4[256],b5[256],b6[256],b7[256],b8[256];
    int c2,d2,a5,p,konto[11];
 } KTO_CHK_CTX;
-
-typedef struct{char *methode; INT4 pz_methode; INT4 pz; void *reserved[5];} RETVAL;
 
 /*
  * ######################################################################
@@ -549,6 +599,7 @@ DLL_EXPORT int lut_plz(char *b,int zweigstelle,int *retval);
 DLL_EXPORT char *lut_ort(char *b,int zweigstelle,int *retval);
 DLL_EXPORT int lut_pan(char *b,int zweigstelle,int *retval);
 DLL_EXPORT char *lut_bic(char *b,int zweigstelle,int *retval);
+DLL_EXPORT int lut_nr(char *b,int zweigstelle,int *retval);
 DLL_EXPORT int lut_pz(char *b,int zweigstelle,int *retval);
 DLL_EXPORT int lut_aenderung(char *b,int zweigstelle,int *retval);
 DLL_EXPORT int lut_loeschung(char *b,int zweigstelle,int *retval);

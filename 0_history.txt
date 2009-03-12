@@ -461,12 +461,24 @@ Versionen der deutschen Bibliothek:
                    gedachten Unterkontonummer 00 zu wiederholen).
 
                    Der Code wurde insgesamt noch etwas überarbeitet, um diverse
-                   Compiler-Warnungen (bzw. -Fehler) zu beseitigen.                   
+                   Compiler-Warnungen (bzw. -Fehler) zu beseitigen.
 
    13.01.09 Version 2.95
                    Diese Version behebt einen Fehler in den Testroutinen (es
                    waren zwei Bankleitzahlen ungültig geworden); der Code ist
                    unverändert.
+
+   02.03.09 Version 2.96
+                 - Der PHP-Port wurde sehr stark überarbeitet; es gibt jetzt
+                   ein neues PHP API, das alte ist allerdings ebenfalls
+                   noch verfügbar.
+
+                 - Neue Dokumentation in 00liesmich.pdf (noch nicht
+                   komplett, aber ein Anfang ist gemacht :-) )
+
+                 - Diverse kleinere Änderungen und Bugfixes
+
+
 
 ##############################################################################
 #          PRÜFZIFFERBERECHNUNG VON ÖSTERREICHISCHEN KONTONUMMERN            #

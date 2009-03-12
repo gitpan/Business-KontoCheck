@@ -1,10 +1,17 @@
-# http://module-build.sourceforge.net/META-spec.html
-#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
+--- #YAML:1.0
 name:         Business-KontoCheck
-version:      2.95
-version_from: lib/Business/KontoCheck.pm
-installdirs:  site
-requires:
-
+abstract:     check german and austrian bank account numbers
+version:      2.96
+author:
+   - Michael Plugge <m.plugge@hs-mannheim.de>
+license:      lgpl
 distribution_type: module
+installdirs:  site
+resources:
+    homepage: http://sourceforge.net/projects/kontocheck/
+    bugtracker: http://sourceforge.net/tracker/?group_id=199719
+    MailingList: http://sourceforge.net/mail/?group_id=199719
+meta-spec:
+   version: 1.3
+   url: http://module-build.sourceforge.net/META-spec-v1.3.html
 generated_by: ExtUtils::MakeMaker version 6.30
