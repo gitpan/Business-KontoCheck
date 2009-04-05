@@ -156,9 +156,24 @@
 #define DEFAULT_LUT_FIELDS_NUM   5
 #define DEFAULT_LUT_FIELDS       lut_set_5
 #define DEFAULT_LUT_VERSION      3
-#define DEFAULT_SLOTS            26
+#define DEFAULT_SLOTS            40
 #define DEFAULT_INIT_LEVEL       5
 #define LAST_LUT_BLOCK           100
+
+   /* Das folgende Makro bestimmt das Verhalten, wenn zu einer LUT-Datei Blocks
+    * hinzugefügt werden sollen und bereits (mindestens) ein Block mit
+    * demselben Typ in der Datei enthalten ist. Falls das Makro 1 ist, wird für
+    * den neuen Block der alte Slots der LUT-Datei benutzt; bei 0 wird ein
+    * neuer Slot allokiert.
+    *
+    * Falls das Makro 0 ist, kann man auch später noch auf alte Blocks
+    * zugreifen (falls das einmal notwendig sein sollte); allerdings läßt sich
+    * das LUT-Verzeichnis nicht vergrößern, so daß u.U. nach mehreren Updates
+    * alle Slots belegt sind und daher keine neuen Blocks mehr geschrieben
+    * werden können.
+    */
+
+#define REPLACE_LUT_DIR_ENTRIES 1
 
 #define LUT2_BLZ                      1
 #define LUT2_FILIALEN                 2
@@ -213,7 +228,7 @@ char *lut2_feld_namen[LAST_LUT_BLOCK]={
    NULL
 };
 #else
-char *lut2_feld_namen[LAST_LUT_BLOCK];
+extern char *lut2_feld_namen[LAST_LUT_BLOCK];
 #endif
 
 /*
@@ -223,6 +238,7 @@ char *lut2_feld_namen[LAST_LUT_BLOCK];
  */
 
 #undef FALSE
+#define LUT2_NO_USER_BLOCK                     -76
 #define INVALID_SET                            -75
 #define NO_GERMAN_BIC                          -74
 #define IPI_CHECK_INVALID_LENGTH               -73
@@ -306,7 +322,7 @@ char *lut2_feld_namen[LAST_LUT_BLOCK];
 #define LUT2_NO_VALID_DATE                       5
 #define LUT1_SET_LOADED                          6
 #define LUT1_FILE_GENERATED                      7
-#line 178 "konto_check_h.lx"
+#line 193 "konto_check_h.lx"
 
 #define MAX_BLZ_CNT 30000  /* maximale Anzahl BLZ's in generate_lut() */
 

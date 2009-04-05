@@ -468,7 +468,7 @@ Versionen der deutschen Bibliothek:
                    waren zwei Bankleitzahlen ungültig geworden); der Code ist
                    unverändert.
 
-   02.03.09 Version 2.96
+   02.03.09 Version 2.97
                  - Der PHP-Port wurde sehr stark überarbeitet; es gibt jetzt
                    ein neues PHP API, das alte ist allerdings ebenfalls
                    noch verfügbar.
@@ -478,6 +478,14 @@ Versionen der deutschen Bibliothek:
 
                  - Diverse kleinere Änderungen und Bugfixes
 
+   04.04.09 Version 2.98
+                 - Fehler in Prüfziffermethoden 16,74,79,97 berichtigt
+                 - write_lut(): directory slots können wiederverwendet werden
+                 - einige bug fixes in write_lut_block() und lut_info()
+                 - bug fix in konto_check-at.c der die smoke tests auf S-390-linux*
+                   komplett fehlschlagen ließ (auf dieser Plattform ist der
+                   Datentyp char defaultmäßig unsigned; das führte zu Fehlern in adler32().
+                   Oliver Paukstadt hat kräftig mitgeholfen, den Fehler zu finden :-).
 
 
 ##############################################################################

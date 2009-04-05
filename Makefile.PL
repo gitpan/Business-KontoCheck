@@ -54,8 +54,11 @@ if($retval){   # zlib.h not found, or linking failed
    else{ # build of static library failed; exit with error message
       print "\nThis package requires the zlib development package; the package was\n"
          . "not found on this system, and I was not able to build a static version.\n"
-         . "Please install this package first and then try again.\n\n";
-      exit(1);
+         . "Please install this package first and then try again.\n\n"
+			. "Proceed, with fingers crossed...\n";
+#      exit(1);
+		$zlib_dir="";
+		$zlib_version="dynamic";
    }
 }
 else{
@@ -91,7 +94,7 @@ WriteMakefile(
     ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
       (ABSTRACT_FROM  => 'lib/Business/KontoCheck.pm', # retrieve abstract from module
        AUTHOR         => 'Michael Plugge <m.plugge@hs-mannheim.de>') : ()),
-    LIBS              => ['-L. -lz'],
+    LIBS              => ['-L.','-lz'],
     LDFLAGS           => '-L.',
     DEFINE            => $define,
     INC               => "-I.$zlib_dir", # e.g., '-I. -I/usr/include/other'

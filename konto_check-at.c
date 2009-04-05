@@ -202,9 +202,9 @@ static int init_globals(char *lut_name);
 static int read_lut(char *lut_name);
 static int cmp_blz(const void *ap,const void *bp);
 static int search_blz(int such_blz);
-static UINT4 adler32(UINT4 adler,const char *buf,unsigned int len);
+static UINT4 adler32(UINT4 adler,const signed char *buf,unsigned int len);
 
-static char tabelle[MAX_TABLE_CNT_AT][80],loesch_datum[MAX_BLZ_CNT_AT][12],hauptstelle[MAX_BLZ_CNT_AT],
+static signed char tabelle[MAX_TABLE_CNT_AT][80],loesch_datum[MAX_BLZ_CNT_AT][12],hauptstelle[MAX_BLZ_CNT_AT],
             blz_tabelle[100000],geloeschte_blz[100000];
 static int blz[MAX_BLZ_CNT_AT],blz2[MAX_BLZ_CNT_AT],blz_idx[MAX_BLZ_CNT_AT],pruef_tabelle[MAX_BLZ_CNT_AT],
            ident[MAX_BLZ_CNT_AT],tabelle_name[MAX_BLZ_CNT_AT],blz_anzahl,loesch_datum_num[MAX_BLZ_CNT_AT];
@@ -297,9 +297,14 @@ parameter_valid[]={16,22,22,22,22,22,22,22,22,6,6,6,0,0,0,0,0,
  *      adler = adler32(adler, buffer, length);
  *    }
  *    if (adler != original_adler) error();
+ *
+ * das "signed char *buf" ist eigentlich falsch; in der alten Version stand nur
+ * "const char *buf", aber das gibt dann bei Plattformen, die defaultmäßig
+ * "unsigned char" für den Datentyp char haben, einen Fehler. Daher wird hier
+ * eine inkorrekte Implementierung des adler32 Algorithmus benutzt; diese hat
+ * jedoch den Vorteil, kompatibel zur alten konto_check-at Version zu sein.
  */
-
-static UINT4 adler32(UINT4 adler,const char *buf,unsigned int len)
+static UINT4 adler32(UINT4 adler,const signed char *buf,unsigned int len)
 {
    UINT4 s1=adler&0xffff;
    UINT4 s2=(adler>>16)&0xffff;
@@ -367,9 +372,9 @@ static int cmp_blz(const void *ap,const void *bp)
 
    a=*((int *)ap);
    b=*((int *)bp);
-   if(retval=blz[a]-blz[b])
+   if((retval=blz[a]-blz[b]))
       return retval;
-   else if(retval=pruef_tabelle[a]-pruef_tabelle[b])
+   else if((retval=pruef_tabelle[a]-pruef_tabelle[b]))
       return retval;
    ld1=loesch_datum_num[a];
    ld2=loesch_datum_num[b] ;  
@@ -406,7 +411,7 @@ static int cmp_blz(const void *ap,const void *bp)
 
 static int search_blz_idx(int such_blz)
 {
-   int unten,oben,chk,b1,diff;
+   int unten,oben,chk,b1=0,diff;
 
    oben=blz_anzahl;
    for(unten=0,chk=oben/2;oben!=unten;){
@@ -584,7 +589,7 @@ DLL_EXPORT int generate_lut_at(char *inputname,char *outputname,char *plain_name
    }
 
       /* Eingabedatei lesen +§§§2 */
-   strcpy(tabelle[0],"0000000");
+   strcpy((char *)tabelle[0],"0000000");
    for(i=0;i<MAX_TABLE_CNT_AT;i++)table_idx[i]=0;
    for(file_version=idx=t_idx=0;idx<MAX_BLZ_CNT_AT;){
       if(!fgets(buffer,4096,in) || feof(in))break;
@@ -678,15 +683,15 @@ DLL_EXPORT int generate_lut_at(char *inputname,char *outputname,char *plain_name
             t_idx++;
             EXTRACT_NUM(tabelle_name[t_idx],3,5);
             table_idx[tabelle_name[t_idx]]=t_idx;
-            EXTRACT(tabelle[t_idx],9,64);
-            for(ptr=tabelle[t_idx]+63;*ptr==' ';ptr--)*ptr=0;
+            EXTRACT((char *)tabelle[t_idx],9,64);
+            for(ptr=(char *)tabelle[t_idx]+63;*ptr==' ';ptr--)*ptr=0;
          }
          else if(file_version==2){ /* neues Dateiformat */
             t_idx++;
             EXTRACT_NUM(tabelle_name[t_idx],3,5);
             table_idx[tabelle_name[t_idx]]=t_idx;
-            EXTRACT(tabelle[t_idx],9,70); /* es sind bis zu 10 Prüfverfahren möglich */
-            for(ptr=tabelle[t_idx]+69;*ptr==' ';ptr--)*ptr=0;
+            EXTRACT((char *)tabelle[t_idx],9,70); /* es sind bis zu 10 Prüfverfahren möglich */
+            for(ptr=(char *)tabelle[t_idx]+69;*ptr==' ';ptr--)*ptr=0;
          }
       }
    }
@@ -694,7 +699,7 @@ DLL_EXPORT int generate_lut_at(char *inputname,char *outputname,char *plain_name
    qsort(blz_idx,idx,sizeof(int),cmp_blz);
    blz_anzahl=idx;
 
-#define ADLER_FPRINTF fprintf(out,"%s",buffer); adler=adler32(adler,buffer,strlen(buffer))
+#define ADLER_FPRINTF fprintf(out,"%s",buffer); adler=adler32(adler,(signed char *)buffer,strlen(buffer))
 
       /* Ausgabedatei schreiben: Kopfdaten (beide Dateiformate) +§§§2 */
    adler=adler32(0,NULL,0);
@@ -736,7 +741,7 @@ DLL_EXPORT int generate_lut_at(char *inputname,char *outputname,char *plain_name
       j=blz_idx[i];
       if(blz[j]!=last_blz || pruef_tabelle[j]!=last_table){
          UM2C(blz[j]);
-         if(ld=loesch_datum_num[j]){
+         if((ld=loesch_datum_num[j])){
             *uptr++=0xff;
 
                /* das Löschdatum wird etwas reduziert, damit es in drei Byte
@@ -774,13 +779,13 @@ DLL_EXPORT int generate_lut_at(char *inputname,char *outputname,char *plain_name
          last_table=pruef_tabelle[j];
          if(uptr>eptr){
             cnt=fwrite(buffer,1,(uptr-(unsigned char *)buffer)+1,out);
-            adler=adler32(adler,buffer,(uptr-(unsigned char *)buffer)+1);
+            adler=adler32(adler,(signed char *)buffer,(uptr-(unsigned char *)buffer)+1);
             uptr=UCP buffer;
          }
       }
    }
    cnt=fwrite(buffer,1,(uptr-(unsigned char *)buffer)+1,out);
-   adler=adler32(adler,buffer,(uptr-(unsigned char *)buffer)+1);
+   adler=adler32(adler,(signed char *)buffer,(uptr-(unsigned char *)buffer)+1);
    fseek(out,adler_pos,SEEK_SET);
    fprintf(out,"%08lx\n",(unsigned long)adler);
    fclose(in);
@@ -962,7 +967,7 @@ static int read_lut(char *lut_name)
             /* für die Berechnung muß die Prüfsumme in buffer auf 0 gesetzt werden */
          for(dptr=ptr+7,i=0;i<8;i++)*dptr++='0';
          adler=adler32(0,NULL,0);
-         adler=adler32(adler,buffer,size);
+         adler=adler32(adler,(signed char *)buffer,size);
          if(adler!=adler_file)return LUT_CRC_ERROR;
       }
    }
@@ -971,7 +976,7 @@ static int read_lut(char *lut_name)
    for(i=0;i<2;)if(*ptr++=='\n')i++;
    for(idx=1;;){
       if(*ptr=='T'){ /* eine Tabelle einlesen */
-         for(dptr=tabelle[idx];(*dptr= *++ptr)!='\n';dptr++)
+         for(dptr=(char *)tabelle[idx];(*dptr= *++ptr)!='\n';dptr++)
             if(*dptr==' ')*dptr=0;  /* Tabellennamen nullterminieren */
          *dptr=0;
          idx++;
@@ -984,7 +989,7 @@ static int read_lut(char *lut_name)
          ptr++;
    }
    adler=adler32(0,NULL,0);
-   adler=adler32(adler,buffer,(ptr-buffer));
+   adler=adler32(adler,(signed char *)buffer,(ptr-buffer));
 
       /* Arrays mit den Prüfmethoden und Löschflags initialisieren */
    memset(blz_tabelle,-1,100000);
@@ -1077,7 +1082,7 @@ DLL_EXPORT int dump_lutfile_at(char *inputname, char *outputname)
 
 static int search_blz(int such_blz)
 {
-   int unten,oben,chk,b1,diff;
+   int unten,oben,chk,b1=0,diff;
 
    for(unten=0,oben=blz_anzahl,chk=oben/2;oben!=unten;){
       if((b1=blz[chk])<such_blz){
@@ -1421,6 +1426,13 @@ DLL_EXPORT char *kto_check_retval2html(int retval)
 
    }
 }
+
+   /* dummy function for perl */
+int lut_cleanup(void)
+{
+   return OK;
+}
+
 #endif /* INCLUDE_KONTO_CHECK_DE */
 
 /* Funktion kto_check_at() +§§§1 */
@@ -1460,6 +1472,10 @@ DLL_EXPORT int kto_check_at(char *blz1,char *kto1,char *lut_name)
 
       /* Initialisierung etc. +§§§3
        */
+      ok=OK;
+      ok_no_chk=OK_NO_CHK;
+      false_retval=FALSE;
+
       /* globale Variablen initialisieren, falls noch nicht geschehen */
    if(global_vars_initialized!=E_L){
       if(!lut_name)   /* NULL für die LUT-Datei angegeben; lut-Datei nicht lesen */
@@ -1480,12 +1496,8 @@ DLL_EXPORT int kto_check_at(char *blz1,char *kto1,char *lut_name)
       ignore_loeschdatum=0;
    if(*blz1=='p'){
       liste=blz1+1;
-      ok=OK;
-      ok_no_chk=OK_NO_CHK;
-      false_retval=FALSE;
    }
    else{
-
       for(ptr=blz1;*ptr<'0' || *ptr>'9';ptr++); /* Blanks etc. am Anfang überspringen */
       for(ptr1=ptr;*ptr1>='0' && *ptr1<='9';ptr1++); /* Ende der BLZ suchen */
       i=(ptr1-ptr);
@@ -1507,7 +1519,7 @@ DLL_EXPORT int kto_check_at(char *blz1,char *kto1,char *lut_name)
          }
          else{
             ok=OK;
-            ok=OK_NO_CHK;
+            ok_no_chk=OK_NO_CHK;
             false_retval=FALSE;
          }
       }

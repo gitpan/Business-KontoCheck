@@ -3396,18 +3396,22 @@ DLL_EXPORT int lut_cleanup(void)
    FREE(current_info);
    FREE(own_buffer);
    for(i=0;i<400;i++)lut2_block_status[i]=0;
+
    if(init_status&8){
 
-         /* da ist wohl eine Initialisierung dazwischengekommen (sollte
-          * eigentlich nicht passieren); daher nochmal (endg¸ltig) aufr‰umen :-)
+         /* bei init_status&8 ist wohl eine Initialisierung dazwischengekommen (sollte
+          * eigentlich nicht passieren); daher nur eine Fehlermeldung zur¸ckgeben.
           */
-      INITIALIZE_WAIT;
-      lut_cleanup();
+      usleep(50000); /* etwas abwarten */
+      lut_cleanup(); /* neuer Versuch, aufzur‰umen */
+      return INIT_FATAL_ERROR;
    }
+
    init_status&=1;
    init_in_progress=0;
    return OK;
 }
+
 /* Funktion generate_lut() +ßßß1 */
 /* ###########################################################################
  * # Die Funktion generate_lut() generiert aus der BLZ-Datei der deutschen   #
@@ -4356,7 +4360,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
 #if DEBUG>0
             if(retvals){
                retvals->pz_pos=9;
-               retvals->pz=*(kto+9)-'0';
+               retvals->pz=*(kto+8)-'0';
             }
 #endif
             if(*(kto+8)== *(kto+9))
@@ -7743,7 +7747,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
  */
       case 74:
          if(kto[0]=='0' && kto[1]=='0' && kto[2]=='0' && kto[3]=='0' && kto[4]=='0'
-               && kto[5]=='0' && kto[6]=='0' && kto[7]=='0')return INVALID_KTO;
+               && kto[5]=='0' && kto[6]=='0' && kto[7]=='0' && kto[8]=='0')return INVALID_KTO;
 #if DEBUG>0
       case 1074:
          if(retvals){
@@ -8114,7 +8118,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=79;
          }
 #endif
-         if(*kto==0)return INVALID_KTO;
+         if(*kto=='0')return INVALID_KTO;
          if(*kto=='1' || *kto=='2' || *kto=='9'){
 #ifdef __ALPHA
          pz =  (kto[0]-'0')
@@ -10009,6 +10013,9 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=97;
          }
 #endif
+         if(kto[0]=='0' && kto[1]=='0' && kto[2]=='0' && kto[3]=='0' && kto[4]=='0'
+               && kto[5]=='0')return INVALID_KTO;
+
          p1= *(kto+9);
          *(kto+9)=0;    /* Pr¸fziffer (tempor‰r) lˆschen */
          pz=atoi(kto)%11;
@@ -13670,7 +13677,7 @@ DLL_EXPORT char *kto_check_retval2txt(int retval)
       case NOT_DEFINED: return "die Methode ist nicht definiert";
       case FALSE: return "falsch";
       case OK: return "ok";
-      case EE: if(eep)return eep; else return "";
+      case EE: if(eep)return (char *)eep; else return "";
       case OK_NO_CHK: return "ok, ohne Pr¸fung";
       case OK_TEST_BLZ_USED: return "ok; f¸r den Test wurde eine Test-BLZ verwendet";
       case LUT2_VALID: return "Der Datensatz ist aktuell g¸ltig";
@@ -13770,7 +13777,7 @@ DLL_EXPORT char *kto_check_retval2dos(int retval)
       case NOT_DEFINED: return "die Methode ist nicht definiert";
       case FALSE: return "falsch";
       case OK: return "ok";
-      case EE: if(eep)return eep; else return "";
+      case EE: if(eep)return (char *)eep; else return "";
       case OK_NO_CHK: return "ok, ohne PrÅfung";
       case OK_TEST_BLZ_USED: return "ok; fÅr den Test wurde eine Test-BLZ verwendet";
       case LUT2_VALID: return "Der Datensatz ist aktuell gÅltig";
@@ -13870,7 +13877,7 @@ DLL_EXPORT char *kto_check_retval2html(int retval)
       case NOT_DEFINED: return "die Methode ist nicht definiert";
       case FALSE: return "falsch";
       case OK: return "ok";
-      case EE: if(eeh)return eeh; else return "";
+      case EE: if(eeh)return (char *)eeh; else return "";
       case OK_NO_CHK: return "ok, ohne Pr&uuml;fung";
       case OK_TEST_BLZ_USED: return "ok; f&uuml;r den Test wurde eine Test-BLZ verwendet";
       case LUT2_VALID: return "Der Datensatz ist aktuell g&uuml;ltig";
@@ -13970,7 +13977,7 @@ DLL_EXPORT char *kto_check_retval2utf8(int retval)
       case NOT_DEFINED: return "die Methode ist nicht definiert";
       case FALSE: return "falsch";
       case OK: return "ok";
-      case EE: if(eep)return eep; else return "";
+      case EE: if(eep)return (char *)eep; else return "";
       case OK_NO_CHK: return "ok, ohne Pr√ºfung";
       case OK_TEST_BLZ_USED: return "ok; f√ºr den Test wurde eine Test-BLZ verwendet";
       case LUT2_VALID: return "Der Datensatz ist aktuell g√ºltig";
@@ -14958,7 +14965,7 @@ DLL_EXPORT char *kto_check_test_vars(char *txt,UINT4 i)
 #define EXCLUDED_S {return "EXCLUDED_AT_COMPILETIME";}
 #define XI DLL_EXPORT int
 #define XV DLL_EXPORT void
-#define XCP DLL_EXPORT char *
+#define XC DLL_EXPORT char *
 
 XI kto_check_blz(char *blz,char *kto)EXCLUDED
 XI kto_check_pz(char *pz,char *kto,char *blz)EXCLUDED
@@ -14977,14 +14984,14 @@ XI get_lut_info2(char *lut_name,int *version_p,char **prolog_p,char **info_p,cha
 XI get_lut_id(char *lut_name,int set,char *id)EXCLUDED
 XC get_kto_check_version(void)EXCLUDED_S
 XI create_lutfile(char *name, char *prolog, int slots)EXCLUDED
-XI write_lut_block(FILE *lut, int typ,UINT4 len,char *data)EXCLUDED
-XI read_lut_block(FILE *lut, UINT4 typ,UINT4 *blocklen,char **data)EXCLUDED
-XI read_lut_slot(FILE *lut, int slot,UINT4 *blocklen,char **data)EXCLUDED
-XI lut_dir_dump(char *filename,FILE *out)EXCLUDED
+XI write_lut_block(char *lutname, UINT4 typ,UINT4 len,char *data)EXCLUDED
+XI read_lut_block(char *lutname, UINT4 typ,UINT4 *blocklen,char **data)EXCLUDED
+XI read_lut_slot(char *lutname, int slot,UINT4 *blocklen,char **data)EXCLUDED
+XI lut_dir_dump(char *filename,char *outputname)EXCLUDED
 XI generate_lut2_p(char *inputname,char *outputname,char *user_info,char *gueltigkeit,
       UINT4 felder,UINT4 filialen,int slots,int lut_version,int set)EXCLUDED
 XI generate_lut2(char *inputname,char *outputname,char *user_info,char *gueltigkeit,
-      UINT4 *felder,int slots,int lut_version,UINT4 set)EXCLUDED
+      UINT4 *felder,UINT4 slots,UINT4 lut_version,UINT4 set)EXCLUDED
 XI copy_lutfile(char *old_name,char *new_name,int new_slots)EXCLUDED
 XI lut_init(char *lut_name,int required,int set)EXCLUDED
 XI kto_check_init(char *lut_name,int *required,int **status,int set,int incremental)EXCLUDED
@@ -15008,7 +15015,7 @@ XI lut_pz(char *b,int zweigstelle,int *retval)EXCLUDED
 XI lut_aenderung(char *b,int zweigstelle,int *retval)EXCLUDED
 XI lut_loeschung(char *b,int zweigstelle,int *retval)EXCLUDED
 XI lut_nachfolge_blz(char *b,int zweigstelle,int *retval)EXCLUDED
-XI lut_cleanup(void){}
+XI lut_cleanup(void)EXCLUDED
 XC kto_check_retval2txt(int retval)EXCLUDED_S
 XC kto_check_retval2txt_short(int retval)EXCLUDED_S
 XC kto_check_retval2html(int retval)EXCLUDED_S
@@ -15016,11 +15023,12 @@ XC kto_check_retval2dos(int retval)EXCLUDED_S
 XC kto_check_retval2utf8(int retval)EXCLUDED_S
 XI rebuild_blzfile(char *inputname,char *outputname,UINT4 set)EXCLUDED
 XI iban_check(char *iban,int *retval)EXCLUDED
-XC iban2bic(char *iban,int *retval)EXCLUDED_S
+XC iban2bic(char *iban,int *retval,char *blz,char *kto)EXCLUDED_S
 XC iban_gen(char *kto,char *blz,int *retval)EXCLUDED_S
 XI ipi_gen(char *zweck,char *dst,char *papier)EXCLUDED
 XI ipi_check(char *zweck)EXCLUDED
 XI kto_check_blz_dbg(char *blz,char *kto,RETVAL *retvals)EXCLUDED
 XI kto_check_pz_dbg(char *pz,char *kto,char *blz,RETVAL *retvals)EXCLUDED
 XC kto_check_test_vars(char *txt,UINT4 i)EXCLUDED_S
+XI set_verbose_debug(int mode)EXCLUDED
 #endif
