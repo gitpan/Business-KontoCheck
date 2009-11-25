@@ -108,14 +108,14 @@ WriteMakefile(
                           'lib/Business/KontoCheck.pm' => "pm.lxx konto_check-cfg.lx\n\tlx2l -x \$<",
                           'META.yml'    			=> "META.lx konto_check-cfg.lx\n\tlx2l \$<",
                           'konto_check.h'    	=> "konto_check_h.lx konto_check-cfg.lx\n\tlx2l \$<",
-                          'konto_check.c'    	=> "konto_check.lx konto_check-cfg.lx\n\tlx2l \$<",
+                          'konto_check.c'    	=> "konto_check.lxx konto_check-cfg.lx lib/Business/KontoCheck.pm\n\tlx2l -x \$< -ua1",
                           'konto_check-at.c' 	=> "konto_check-at.lxx konto_check-cfg.lx\n\tlx2l -x \$<",
                           'konto_check-at.h' 	=> "konto_check-at.lxx konto_check-cfg.lx\n\tlx2l -x \$< -uh",
-                          'KontoCheck.xs'    	=> "KontoCheck.lx konto_check-cfg.lx\n\tlx2l \$<",
-                          'Makefile.PL'      	=> "makefile.lx makefile.zlib makefile.zlib-gcc makefile.zlib-icc konto_check-cfg.lx\n\tlx2l \$< -um",
-                          'makefile.zlib'    	=> "makefile.lx konto_check-cfg.lx\n\tlx2l \$< -um1",
-                          'makefile.zlib-gcc'   => "makefile.lx konto_check-cfg.lx\n\tlx2l \$< -um2",
-                          'makefile.zlib-icc'   => "makefile.lx konto_check-cfg.lx\n\tlx2l \$< -um3"
+                          'KontoCheck.xs'    	=> "KontoCheck.lx lib/Business/KontoCheck.pm konto_check-cfg.lx\n\tlx2l \$<",
+                          'Makefile.PL'      	=> "makefile.lx lib/Business/KontoCheck.pm makefile.zlib makefile.zlib-gcc makefile.zlib-icc konto_check-cfg.lx\n\tlx2l \$< -um",
+                          'makefile.zlib'    	=> "makefile.lx lib/Business/KontoCheck.pm konto_check-cfg.lx\n\tlx2l \$< -um1",
+                          'makefile.zlib-gcc'   => "makefile.lx lib/Business/KontoCheck.pm konto_check-cfg.lx\n\tlx2l \$< -um2",
+                          'makefile.zlib-icc'   => "makefile.lx lib/Business/KontoCheck.pm konto_check-cfg.lx\n\tlx2l \$< -um3"
                          })
                          :())
 

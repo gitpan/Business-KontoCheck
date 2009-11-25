@@ -4,6 +4,9 @@ Revision history for Perl extension Business::KontoCheck.
 The complete history can be found in 0_history.txt (in german). The perl
 version starts with 2.1; all previous versions are C only libraries.
 
+3.0  Mon Nov 23, 2009
+      - for perl, this is mainly a bug fix release; a number of memory leaks were fixed.
+
 2.98 Sat Apr 4, 2009
       - fixed some bugs in check method 16,74,79,97
       - write_lut(): directory slots may be reused

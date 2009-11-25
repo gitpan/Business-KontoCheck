@@ -44,8 +44,19 @@
 #ifndef KONTO_CHECK_H_INCLUDED
 #define KONTO_CHECK_H_INCLUDED
 
-/* neue Berechnungsmethode für C6, gültig ab 9.3.2009 */
-#define METHODE_C6_NEU 1
+/* 
+ * ##########################################################################
+ * # Fallls das folgende Makro auf 1 gesetzt wird, werden unterschiedliche  #
+ * # Interpretationen der Prüfziffermethoden interpretiert wie in BAV       #
+ * # (Bank Account Validator, http://sourceforge.net/projects/bav)          #
+ * # Dieses Makro dient zum Test der beiden Pakete, damit bei den Tests     # 
+ * # nicht immer Unterschiede ausgegeben werden, wo nur (bekannte)          #
+ * # unterschiedliche Interpretationen der Berechnungsmethoden existieren.  #
+ * ##########################################################################
+ */
+#ifndef BAV_KOMPATIBEL
+#define BAV_KOMPATIBEL 0
+#endif
 
 /*
  * ##########################################################################
@@ -208,27 +219,9 @@
 #define LUT2_2_INFO                 115
 
 #ifdef KONTO_CHECK_VARS
-char *lut2_feld_namen[LAST_LUT_BLOCK]={
-   "",
-   "BLZ",              /* 1 */
-   "FILIALEN",         /* 2 */
-   "NAME",             /* 3 */
-   "PLZ",              /* 4 */
-   "ORT",              /* 5 */
-   "NAME_KURZ",        /* 6 */
-   "PAN",              /* 7 */
-   "BIC",              /* 8 */
-   "PZ",               /* 9 */
-   "NR",               /* 10 */
-   "AENDERUNG",        /* 11 */
-   "LOESCHUNG",        /* 12 */
-   "NACHFOLGE_BLZ",    /* 13 */
-   "NAME_NAME_KURZ",   /* 14 */
-   "INFO",             /* 15 */
-   NULL
-};
+char *lut2_feld_namen[256];
 #else
-extern char *lut2_feld_namen[LAST_LUT_BLOCK];
+extern char *lut2_feld_namen[256];
 #endif
 
 /*
@@ -238,6 +231,9 @@ extern char *lut2_feld_namen[LAST_LUT_BLOCK];
  */
 
 #undef FALSE
+#define INVALID_SEARCH_RANGE                   -79
+#define KEY_NOT_FOUND                          -78
+#define BAV_FALSE                              -77
 #define LUT2_NO_USER_BLOCK                     -76
 #define INVALID_SET                            -75
 #define NO_GERMAN_BIC                          -74
@@ -322,7 +318,7 @@ extern char *lut2_feld_namen[LAST_LUT_BLOCK];
 #define LUT2_NO_VALID_DATE                       5
 #define LUT1_SET_LOADED                          6
 #define LUT1_FILE_GENERATED                      7
-#line 193 "konto_check_h.lx"
+#line 204 "konto_check_h.lx"
 
 #define MAX_BLZ_CNT 30000  /* maximale Anzahl BLZ's in generate_lut() */
 
@@ -606,20 +602,45 @@ DLL_EXPORT int dump_lutfile_p(char *outputname,UINT4 felder);
 DLL_EXPORT int lut_multiple(char *b,int *cnt,int **p_blz,char  ***p_name,char ***p_name_kurz,int **p_plz,char ***p_ort,
       int **p_pan,char ***p_bic,int *p_pz,int **p_nr,char **p_aenderung,char **p_loeschung,int **p_nachfolge_blz,
       int *id,int *cnt_all,int **start_idx);
+DLL_EXPORT int lut_multiple_i(int b,int *cnt,int **p_blz,char  ***p_name,char ***p_name_kurz,
+      int **p_plz,char ***p_ort,int **p_pan,char ***p_bic,int *p_pz,int **p_nr,
+      char **p_aenderung,char **p_loeschung,int **p_nachfolge_blz,int *id,
+      int *cnt_all,int **start_idx);
 
    /* Funktionen, um einzelne Felder zu bestimmen (Rückgabe direkt) */
 DLL_EXPORT int lut_filialen(char *b,int *retval);
+DLL_EXPORT int lut_filialen_i(int b,int *retval);
 DLL_EXPORT char *lut_name(char *b,int zweigstelle,int *retval);
+DLL_EXPORT char *lut_name_i(int b,int zweigstelle,int *retval);
 DLL_EXPORT char *lut_name_kurz(char *b,int zweigstelle,int *retval);
+DLL_EXPORT char *lut_name_kurz_i(int b,int zweigstelle,int *retval);
 DLL_EXPORT int lut_plz(char *b,int zweigstelle,int *retval);
+DLL_EXPORT int lut_plz_i(int b,int zweigstelle,int *retval);
 DLL_EXPORT char *lut_ort(char *b,int zweigstelle,int *retval);
+DLL_EXPORT char *lut_ort_i(int b,int zweigstelle,int *retval);
 DLL_EXPORT int lut_pan(char *b,int zweigstelle,int *retval);
+DLL_EXPORT int lut_pan_i(int b,int zweigstelle,int *retval);
 DLL_EXPORT char *lut_bic(char *b,int zweigstelle,int *retval);
+DLL_EXPORT char *lut_bic_i(int b,int zweigstelle,int *retval);
 DLL_EXPORT int lut_nr(char *b,int zweigstelle,int *retval);
+DLL_EXPORT int lut_nr_i(int b,int zweigstelle,int *retval);
 DLL_EXPORT int lut_pz(char *b,int zweigstelle,int *retval);
+DLL_EXPORT int lut_pz_i(int b,int zweigstelle,int *retval);
 DLL_EXPORT int lut_aenderung(char *b,int zweigstelle,int *retval);
+DLL_EXPORT int lut_aenderung_i(int b,int zweigstelle,int *retval);
 DLL_EXPORT int lut_loeschung(char *b,int zweigstelle,int *retval);
+DLL_EXPORT int lut_loeschung_i(int b,int zweigstelle,int *retval);
 DLL_EXPORT int lut_nachfolge_blz(char *b,int zweigstelle,int *retval);
+DLL_EXPORT int lut_nachfolge_blz_i(int b,int zweigstelle,int *retval);
+
+   /* Suche von BLZs */
+DLL_EXPORT int lut_suche_bic(char *such_name,int *anzahl,int **start_idx,int **zweigstelle,char ***base_name,int **blz_base);
+DLL_EXPORT int lut_suche_namen(char *such_name,int *anzahl,int **start_idx,int **zweigstelle,char ***base_name,int **blz_base);
+DLL_EXPORT int lut_suche_namen_kurz(char *such_name,int *anzahl,int **start_idx,int **zweigstelle,char ***base_name,int **blz_base);
+DLL_EXPORT int lut_suche_ort(char *such_name,int *anzahl,int **start_idx,int **zweigstelle,char ***base_name,int **blz_base);
+DLL_EXPORT int lut_suche_blz(int such1,int such2,int *anzahl,int **start_idx,int **zweigstelle,int **base_name,int **blz_base);
+DLL_EXPORT int lut_suche_pz(int such1,int such2,int *anzahl,int **start_idx,int **zweigstelle,int **base_name,int **blz_base);
+DLL_EXPORT int lut_suche_plz(int such1,int such2,int *anzahl,int **start_idx,int **zweigstelle,int **base_name,int **blz_base);
 
    /* Aufräumarbeiten */
 DLL_EXPORT int lut_cleanup(void);

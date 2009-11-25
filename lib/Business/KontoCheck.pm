@@ -23,7 +23,7 @@ our @EXPORT_OK = qw( kto_check kto_check_str kto_check_blz
 
 our @EXPORT = qw( kto_check lut_init kto_check_blz kto_check_at %kto_retval );
 
-our $VERSION = '2.98';
+our $VERSION = '3.0';
 
 require XSLoader;
 XSLoader::load('Business::KontoCheck', $VERSION);
@@ -275,6 +275,9 @@ sub lut_nachfolge_blz
 
 
 %Business::KontoCheck::kto_retval = (
+ -79 => 'ungültiger Suchbereich angegeben (unten>oben)',
+ -78 => 'Die Suche lieferte kein Ergebnis',
+ -77 => 'BAV denkt, das Konto ist falsch (konto_check hält es für richtig)',
  -76 => 'User-Blocks müssen einen Typ > 1000 haben',
  -75 => 'für ein LUT-Set sind nur die Werte 0, 1 oder 2 möglich',
  -74 => 'Ein Konto kann kann nur für deutsche Banken geprüft werden',
@@ -360,6 +363,9 @@ sub lut_nachfolge_blz
    6 => 'Die Datei ist im alten LUT-Format (1.0/1.1)',
    7 => 'ok; es wurde allerdings eine LUT-Datei im alten Format (1.0/1.1) generiert',
 
+'INVALID_SEARCH_RANGE'                   => 'ungültiger Suchbereich angegeben (unten>oben)',
+'KEY_NOT_FOUND'                          => 'Die Suche lieferte kein Ergebnis',
+'BAV_FALSE'                              => 'BAV denkt, das Konto ist falsch (konto_check hält es für richtig)',
 'LUT2_NO_USER_BLOCK'                     => 'User-Blocks müssen einen Typ > 1000 haben',
 'INVALID_SET'                            => 'für ein LUT-Set sind nur die Werte 0, 1 oder 2 möglich',
 'NO_GERMAN_BIC'                          => 'Ein Konto kann kann nur für deutsche Banken geprüft werden',
@@ -447,6 +453,9 @@ sub lut_nachfolge_blz
 );
 
 %Business::KontoCheck::kto_retval_kurz = (
+ -79 => 'INVALID_SEARCH_RANGE',
+ -78 => 'KEY_NOT_FOUND',
+ -77 => 'BAV_FALSE',
  -76 => 'LUT2_NO_USER_BLOCK',
  -75 => 'INVALID_SET',
  -74 => 'NO_GERMAN_BIC',

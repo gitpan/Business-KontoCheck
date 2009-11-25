@@ -487,6 +487,15 @@ Versionen der deutschen Bibliothek:
                    Datentyp char defaultmäßig unsigned; das führte zu Fehlern in adler32().
                    Oliver Paukstadt hat kräftig mitgeholfen, den Fehler zu finden :-).
 
+   23.11.09 Version 3.00
+                 Für Perl ist dieses Release vor allem ein Bugfix-Release. Es
+                 wurden eine Reihe Speicherlecks beseitigt.
+                 
+                 Unter C und PHP sind außerdem Suchfunktionen implementiert
+                 (lut_suche_bic(), lut_suche_namen(), lut_suche_namen_kurz(),
+                 lut_suche_ort(), lut_suche_blz(), lut_suche_pz(), lut_suche_plz());
+                 diese werden bald auch unter Perl verfügbar gemacht werden.
+
 
 ##############################################################################
 #          PRÜFZIFFERBERECHNUNG VON ÖSTERREICHISCHEN KONTONUMMERN            #

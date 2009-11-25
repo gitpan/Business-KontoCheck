@@ -32,11 +32,11 @@ __DATA__
 18062678:VR Bank Lausitz, 3044 Cottbus
 20040000:Commerzbank Hamburg, 20454 Hamburg
 20050550:Haspa Hamburg, 20454 Hamburg
-20080000:Dresdner Bank Hamburg, 20349 Hamburg
+20080000:Commerzbank Hamburg, 20349 Hamburg
 21050170:Förde Sparkasse, 24103 Kiel
-21566356:Volks- u Raiffeisenbank, 24389 Süderbrarup
+21566356:Volks- u Raiffeisenbank, 24392 Süderbrarup
 25010030:Postbank Hannover, 30139 Hannover
-25020600:GE Money Bank, 30154 Hannover
+25020600:Santander Consumer Bank, 30179 Hannover
 25020700:Hanseatic Bank Hannover, 30159 Hannover
 25050180:Sparkasse Hannover, 30001 Hannover
 30050000:WestLB Düsseldorf, 40002 Düsseldorf
