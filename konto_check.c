@@ -48,9 +48,9 @@
 
 /* Definitionen und Includes  */
 #ifndef VERSION
-#define VERSION "3.0"
+#define VERSION "3.1"
 #endif
-#define VERSION_DATE "2009-10-24"
+#define VERSION_DATE "2010-05-25"
 
 #ifndef INCLUDE_KONTO_CHECK_DE
 #define INCLUDE_KONTO_CHECK_DE 1
@@ -79,6 +79,11 @@
 #if _WIN32>0
 #include <windows.h>
 #define usleep(t) Sleep(t/1000)
+#endif
+
+   /* Der AIX C Compiler hat scheinbar Probleme mit inline-Funktionen */
+#ifdef _AIX
+#define inline
 #endif
 
    /* Debugcode für malloc&Co. */
@@ -134,7 +139,7 @@ void malloc_report(int mark)
    strftime(zeitbuffer,64,"%Y-%m-%d %T",zeit);
    fprintf(stderr,f1,zeitbuffer,cnt=malloc_entry_cnt(),malloc_cnt,free_cnt);
    if(cnt){
-      fprintf(stderr,f2);
+      fprintf(stderr,"%s",f2);
       for(i=0;i<last_malloc_index;i++)if(malloc_liste[i].is_valid){
          if(mark)malloc_liste[i].reported=1;
          fprintf(stderr,f3,
@@ -153,7 +158,7 @@ void xfree(void)
       for(i=0;i<last_malloc_index;i++)if(malloc_liste[i].is_valid){
          free(malloc_liste[i].ptr);
          malloc_liste[i].is_valid=0;
-         fprintf(stderr,"Freigabe (extra): %08x: %d Byte aus Zeile %d/%d\n",(unsigned int)malloc_liste[i].ptr,malloc_liste[i].size,malloc_liste[i].zeile,malloc_liste[i].zeile2);
+         fprintf(stderr,"Freigabe (extra): %08lx: %d Byte aus Zeile %d/%d\n",(unsigned long)malloc_liste[i].ptr,malloc_liste[i].size,malloc_liste[i].zeile,malloc_liste[i].zeile2);
       }
    }
 }
@@ -172,7 +177,7 @@ char *malloc_report_string(int mark)
    sprintf(ptr=buffer,f1,zeitbuffer,cnt=malloc_entry_cnt(),malloc_cnt,free_cnt);
    while(*ptr)ptr++;
    if(cnt){
-      sprintf(ptr,f2);
+      sprintf(ptr,"%s",f2);
       for(i=0;i<last_malloc_index;i++)if(malloc_liste[i].is_valid){
          if(mark)malloc_liste[i].reported=1;
          while(*ptr && ptr<buffer+65000)ptr++;
@@ -244,7 +249,7 @@ static int add_malloc_name(char *name,void *ptr)
    int i;
 
    for(i=0;i<MALLOC_MAX_CNT && malloc_liste[i].ptr!=ptr;i++);       /* Slot suchen */
-   if(ptr==malloc_liste[i].ptr){
+   if(i<MALLOC_MAX_CNT && ptr==malloc_liste[i].ptr){
       malloc_liste[i].no_name=0;
       malloc_liste[i].name=name;
       if(last_malloc_index<i)last_malloc_index=i;
@@ -595,6 +600,14 @@ static UINT4 current_info_len,current_v1,current_v2;
 static int lut_id_status,lut_init_level;
 static char lut_id[36];
 
+   /* Speicherbereich und Variablen für den Default-Buffer */
+#define INITIAL_DEFAULT_BUFSIZE 4096   /* initiale Buffergröße (dynamisch) */
+
+static char *default_buffer,*default_ptr,*default_key[DEFAULT_CNT],*default_val[DEFAULT_CNT];
+static int default_cnt,default_bufsize,default_val_size[DEFAULT_CNT];
+
+static int kto_check_clear_default(void);
+
 #if DEBUG>0
    /* "aktuelles" Datum für die Testumgebung (um einen Datumswechsel zu simulieren) */
 DLL_EXPORT_V UINT4 current_date;
@@ -633,7 +646,7 @@ static unsigned char ee[500],*eeh,*eep,eec[]={
    0xfa,0x07,0xbf,0x56,0x85,0x6e,0x9a,0x7d,0x3a,0xab,0x76,0x0b,0xad,
    0x19,0xb2,0x9e,0xd8,0xbd,0x00,0x15,0x07,0x95,0x46,0x00
 };
-#define EE 8
+#define EE 13
 
    /* Arrays für die Felder der LUT-Datei u.a. */
 static char *lut_prolog,*lut_sys_info,*lut_user_info;
@@ -927,7 +940,7 @@ DLL_EXPORT int write_lut_block(char *lutname,UINT4 typ,UINT4 len,char *data)
    int retval;
    FILE *lut;
 
-   if(typ<=1000)return LUT2_NO_USER_BLOCK;
+   if(typ<=500)return LUT2_NO_USER_BLOCK;
    if(!(lut=fopen(lutname,"rb+")))return FILE_WRITE_ERROR;
 
       /* zunächst mal testen ob es auch eine LUT2 Datei ist */
@@ -1132,8 +1145,17 @@ static int read_lut_block_int(FILE *lut,int slot,int typ,UINT4 *blocklen,char **
          return ERROR_MALLOC;
       }
 #if CHECK_MALLOC
-      add_malloc_name(lut2_feld_namen[typ],sbuffer);
-      add_malloc_name(lut2_feld_namen[typ],dbuffer);
+      if(typ<=400){
+         add_malloc_name(lut2_feld_namen[typ],sbuffer);
+         add_malloc_name(lut2_feld_namen[typ],dbuffer);
+      }
+      else{
+         char user_name[32];
+
+         sprintf(user_name,"User-Block <%d>",typ);
+         add_malloc_name(user_name,sbuffer);
+         add_malloc_name(user_name,dbuffer);
+      }
 #endif
 
       if(fread(sbuffer,1,compressed_len,lut)<compressed_len){
@@ -1619,6 +1641,9 @@ DLL_EXPORT int generate_lut2(char *inputname,char *outputname,char *user_info,
    char *buffer,*out_buffer,*ptr,*zptr,*dptr,*testbanken;
    UINT4 bufsize,adler,g1,g2;
    int cnt,bank_cnt,i,j,retval,h,auch_filialen,prev_blz,b,diff;
+#if GENERATE_OLD_LUTFILE==0
+   int ok;
+#endif
    struct stat s_buf;
    FILE *in,*lut;
    time_t t;
@@ -1656,6 +1681,14 @@ DLL_EXPORT int generate_lut2(char *inputname,char *outputname,char *user_info,
    if(!init_status&1)init_atoi_table();
    if(!felder)felder=(UINT4 *)DEFAULT_LUT_FIELDS;
    if(!lut_version)lut_version=DEFAULT_LUT_VERSION;
+#if GENERATE_OLD_LUTFILE==0
+   if(lut_version<3){
+      lut_version=3;  /* keine alten LUT-Dateien mehr generieren */
+      ok=LUT_V2_FILE_GENERATED;
+   }
+   else
+      ok=OK;
+#endif
    if(!slots)slots=DEFAULT_SLOTS;
    if(!outputname)outputname=(char *)default_lutname[0];
    if(stat(inputname,&s_buf)==-1)return FILE_READ_ERROR;
@@ -1902,6 +1935,9 @@ fini:
    qs_hauptstelle=NULL;
    qs_zeilen=NULL;
    qs_blz=qs_plz=qs_sortidx=NULL;
+#if GENERATE_OLD_LUTFILE==0
+   if(retval==OK)retval=ok;
+#endif
    return retval;
 }
 
@@ -2069,12 +2105,13 @@ DLL_EXPORT int lut_info(char *lut_name,char **info1,char **info2,int *valid1,int
 {
    char *ptr,*ptr1,buffer[128];
    int i,j,ret;
-   UINT4 v1,v2,current,cnt;
+   UINT4 v1,v2,v2a,current,cnt;
    time_t t;
    struct tm timebuf,*timeptr;
    FILE *in;
 
    t=time(NULL);
+   v2a=0;
    timeptr=localtime_r(&t,&timebuf);
    current=(timeptr->tm_year+1900)*10000+(timeptr->tm_mon+1)*100+timeptr->tm_mday;  /* aktuelles Datum als JJJJMMTT */
 #if DEBUG>0
@@ -2166,8 +2203,10 @@ RBIX(ptr,LUT2_INFO);
             *valid1=LUT2_VALID;
          else if(current<v1)
             *valid1=LUT2_NOT_YET_VALID;
-         else if(current>v2)
+         else if(current>v2){
             *valid1=LUT2_NO_LONGER_VALID;
+            v2a=v2;
+         }
       }
       if(info1)
          *info1=ptr;
@@ -2191,7 +2230,7 @@ RBIX(ptr,LUT2_INFO);
       return ret;
    }
 
-      /* Infoblocks lesen: 1. Infoblock */
+      /* Infoblocks lesen: 2. Infoblock */
    if((ret=read_lut_block_int(in,0,LUT2_2_INFO,&cnt,&ptr))==OK){
 RBIX(ptr,LUT2_2_INFO);
       *(ptr+cnt)=0;
@@ -2210,8 +2249,15 @@ RBIX(ptr,LUT2_2_INFO);
             *valid2=LUT2_VALID;
          else if(current<v1)
             *valid2=LUT2_NOT_YET_VALID;
-         else if(current>v2)
-            *valid2=LUT2_NO_LONGER_VALID;
+         else if(current>v2){
+               /* beide Datensätze ungültig; den jüngeren der beiden als LUT2_NO_LONGER_VALID_BETTER markieren */
+            if(v2>v2a)
+               *valid2=LUT2_NO_LONGER_VALID_BETTER;
+            else{
+               *valid1=LUT2_NO_LONGER_VALID_BETTER;
+               *valid2=LUT2_NO_LONGER_VALID;
+            }
+         }
       }
       if(info2)
          *info2=ptr;
@@ -2512,7 +2558,7 @@ DLL_EXPORT int get_lut_id(char *lut_name,int set,char *id)
    }
    else
       switch(set){
-         case 0:  /* beide Sets laden, und das gültige nehmen; falls keines gültig ist, Set 1 */
+         case 0:  /* beide Sets laden, und das gültige nehmen; falls keines gültig ist, das jüngere oder Set 1 */
             ret=lut_info(lut_name,&info1,&info2,&valid1,&valid2);
             if(valid1==LUT1_SET_LOADED)return LUT1_FILE_USED;
             if(valid1==LUT2_VALID){
@@ -2526,9 +2572,23 @@ DLL_EXPORT int get_lut_id(char *lut_name,int set,char *id)
                FREE(info1);
             }
             else{
-               info=info1;
-               valid=valid1;
-               FREE(info2);
+               if(valid1==LUT2_NO_LONGER_VALID_BETTER){
+                     /* Block 1 jünger als Block 2 */
+                  info=info1;
+                  valid=valid1;
+                  FREE(info2);
+               }
+               else if(valid2==LUT2_NO_LONGER_VALID_BETTER){
+                     /* Block 2 jünger als Block 1 */
+                  info=info2;
+                  valid=valid2;
+                  FREE(info1);
+               }
+               else{
+                  info=info1;
+                  valid=valid1;
+                  FREE(info2);
+               }
             }
             break;
 
@@ -4008,6 +4068,7 @@ DLL_EXPORT int lut_cleanup(void)
    FREE(current_info);
    FREE(own_buffer);
    FREE(hash);
+   FREE(default_buffer);
    for(i=0;i<400;i++)lut2_block_status[i]=0;
 
    if(init_status&8){
@@ -4313,38 +4374,6 @@ static void init_atoi_table(void)
    lut2_feld_namen[LUT2_INFO]="LUT2_INFO";
    lut2_feld_namen[LUT2_2_INFO]="LUT2_2_INFO";
 
-   lut_block_name2[1]="1. BLZ";
-   lut_block_name2[2]="1. Anzahl Fil.";
-   lut_block_name2[3]="1. Name";
-   lut_block_name2[4]="1. Plz";
-   lut_block_name2[5]="1. Ort";
-   lut_block_name2[6]="1. Name (kurz)";
-   lut_block_name2[7]="1. PAN";
-   lut_block_name2[8]="1. BIC";
-   lut_block_name2[9]="1. Pruefziffer";
-   lut_block_name2[10]="1. Lfd. Nr.";
-   lut_block_name2[11]="1. Aenderung";
-   lut_block_name2[12]="1. Loeschung";
-   lut_block_name2[13]="1. NachfolgeBLZ";
-   lut_block_name2[14]="1. Name, Kurzn.";
-   lut_block_name2[15]="1. Infoblock";
-
-   lut_block_name2[101]="2. BLZ";
-   lut_block_name2[102]="2. Anzahl Fil.";
-   lut_block_name2[103]="2. Name";
-   lut_block_name2[104]="2. Plz";
-   lut_block_name2[105]="2. Ort";
-   lut_block_name2[106]="2. Name (kurz)";
-   lut_block_name2[107]="2. PAN";
-   lut_block_name2[108]="2. BIC";
-   lut_block_name2[109]="2. Pruefziffer";
-   lut_block_name2[110]="2. Lfd. Nr.";
-   lut_block_name2[111]="2. Aenderung";
-   lut_block_name2[112]="2. Loeschung";
-   lut_block_name2[113]="2. NachfolgeBLZ";
-   lut_block_name2[114]="2. Name, Kurzn.";
-   lut_block_name2[115]="2. Infoblock";
-
    lut_block_name1[1]="BLZ";
    lut_block_name1[2]="FILIALEN";
    lut_block_name1[3]="NAME";
@@ -4360,7 +4389,6 @@ static void init_atoi_table(void)
    lut_block_name1[13]="NACHFOLGE_BLZ";
    lut_block_name1[14]="NAME_NAME_KURZ";
    lut_block_name1[15]="INFO";
-
    lut_block_name1[101]="BLZ (2)";
    lut_block_name1[102]="FILIALEN (2)";
    lut_block_name1[103]="NAME (2)";
@@ -4376,6 +4404,37 @@ static void init_atoi_table(void)
    lut_block_name1[113]="NACHFOLGE_BLZ (2)";
    lut_block_name1[114]="NAME_NAME_KURZ (2)";
    lut_block_name1[115]="INFO (2)";
+
+   lut_block_name2[1]="1. BLZ";
+   lut_block_name2[2]="1. Anzahl Fil.";
+   lut_block_name2[3]="1. Name";
+   lut_block_name2[4]="1. Plz";
+   lut_block_name2[5]="1. Ort";
+   lut_block_name2[6]="1. Name (kurz)";
+   lut_block_name2[7]="1. PAN";
+   lut_block_name2[8]="1. BIC";
+   lut_block_name2[9]="1. Pruefziffer";
+   lut_block_name2[10]="1. Lfd. Nr.";
+   lut_block_name2[11]="1. Aenderung";
+   lut_block_name2[12]="1. Loeschung";
+   lut_block_name2[13]="1. NachfolgeBLZ";
+   lut_block_name2[14]="1. Name, Kurzn.";
+   lut_block_name2[15]="1. Infoblock";
+   lut_block_name2[101]="2. BLZ";
+   lut_block_name2[102]="2. Anzahl Fil.";
+   lut_block_name2[103]="2. Name";
+   lut_block_name2[104]="2. Plz";
+   lut_block_name2[105]="2. Ort";
+   lut_block_name2[106]="2. Name (kurz)";
+   lut_block_name2[107]="2. PAN";
+   lut_block_name2[108]="2. BIC";
+   lut_block_name2[109]="2. Pruefziffer";
+   lut_block_name2[110]="2. Lfd. Nr.";
+   lut_block_name2[111]="2. Aenderung";
+   lut_block_name2[112]="2. Loeschung";
+   lut_block_name2[113]="2. NachfolgeBLZ";
+   lut_block_name2[114]="2. Name, Kurzn.";
+   lut_block_name2[115]="2. Infoblock";
    init_status|=1;
 }
 
@@ -5479,6 +5538,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
          }
 #endif
          if(*kto=='0' && *(kto+1)=='0'){
+            /* Unterkontonummer ausgelassen */
          pz = (kto[2]-'0') * 2
             + (kto[3]-'0') * 7
             + (kto[4]-'0') * 6
@@ -6134,7 +6194,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
  * # Die Berechnung erfolgt wie bei Verfahren 00                        #
  * # Ausnahme:                                                          #
  * # Ist die 4. Stelle der Kontonummer (von links) = 9, so werden       #
- * # die Stellen 1 bis 3 nicht in die Prüfzifferberechnung ein-bezogen. #
+ * # die Stellen 1 bis 3 nicht in die Prüfzifferberechnung einbezogen.  #
  * ######################################################################
  */
       case 41:
@@ -7714,7 +7774,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
        * Stelle, nicht allgemein bei den Banken ;-) ) auftreten (vielen Dank
        * an Th. Franz für den Hinweis).
        */
-      if(*(kto+1)=='0' && *(kto+2)=='0'){ /* evl. Unterkonto weggelassen */
+      if(*(kto+1)=='0' && *(kto+2)=='0'){ /* Unterkonto weggelassen */
 #if DEBUG>0
       case 2063:
          if(retvals){
@@ -8721,7 +8781,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=2076;
          }
 #endif
-         if((p1=kto[2])=='1' || p1=='2' || p1=='3' || p1=='5'){
+         if(kto[0]!='0' || kto[1]!='0' || (p1=kto[2])=='1' || p1=='2' || p1=='3' || p1=='5'){
 #if DEBUG>0
             pz= -3;
 #endif
@@ -8948,10 +9008,6 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
  * # 7 zu dividieren. Der verbleibende Rest wird vom Divisor (7)        #
  * # subtrahiert. Das Ergebnis ist die Prüfziffer. Verbleibt nach       #
  * # der Division kein Rest, ist die Prüfziffer 0.                      #
- * #                                                                    #
- * # Ausnahme (alt, als Referenz):                                      #
- * # Sind die 3. und 4. Stelle der Kontonummer = 99, so erfolgt die     #
- * # Berechnung nach Verfahren 10.                                      #
  * #                                                                    #
  * # Ausnahme (neu ab 8.6.04):                                          #
  * # Ist nach linksbündiger Auffüllung mit Nullen auf 10 Stellen die    #
@@ -10995,17 +11051,11 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
  * # ggf. ist die Kontonummer für die Prüfzifferberechnung durch        #
  * # linksbündige Auffüllung mit Nullen 10-stellig darzustellen.        #
  * #                                                                    #
- * # Variante 1: Gewichtung und Berechnung erfolgen nach der Methode    #
- * # 00. Führt die Berechnung nach Variante 1 zu einem                  #
- * # Prüfzifferfehler, so ist nach Variante 2 zu prüfen.                #
+ * # Variante 1: Gewichtung und Berechnung erfolgen nach der Methode 00.#
+ * # Führt die Berechnung nach Variante 1 zu einem Prüfzifferfehler,    #
+ * # so ist nach Variante 2 zu prüfen.                                  #
  * #                                                                    #
- * # Testkontonummern (richtig): 3456789019, 5678901231, 6789012348     #
- * # Testkontonummer (falsch): 3456789012, 1234567890                   #
- * #                                                                    #
- * # Variante 2: Gewichtung und Berechnung erfolgen nach der Methode    #
- * # 04.                                                                #
- * # Testkontonummer (richtig): 3456789012                              #
- * # Testkontonummern (falsch): 1234567890, 0123456789                  #
+ * # Variante 2: Gewichtung und Berechnung erfolgen nach der Methode 04.#
  * ######################################################################
  */
       case 102:
@@ -11076,19 +11126,11 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
  * # ggf. ist die Kontonummer für die Prüfzifferberechnung durch        #
  * # linksbündige Auffüllung mit Nullen 10-stellig darzustellen.        #
  * #                                                                    #
- * # Variante 1: Gewichtung und Berechnung erfolgen nach der Methode    #
- * # 00. Führt die Berechnung nach Variante 1 zu einem                  #
- * # Prüfzifferfehler, so ist nach Variante 2 zu prüfen.                #
+ * # Variante 1: Gewichtung und Berechnung erfolgen nach der Methode 00.#
+ * # Führt die Berechnung nach Variante 1 zu einem Prüfzifferfehler,    #
+ * # so ist nach Variante 2 zu prüfen.                                  #
  * #                                                                    #
- * # Testkontonummern (richtig): 1234567897, 0123456782                 #
- * # Testkontonummern (falsch): 9876543210, 1234567890,                 #
- * #                            6543217890, 0543216789                  #
- * #                                                                    #
- * # Variante 2: Gewichtung und Berechnung erfolgen nach der Methode    #
- * # 10.                                                                #
- * #                                                                    #
- * # Testkontonummern (richtig): 9876543210, 1234567890, 0123456789     #
- * # Testkontonummern (falsch): 6543217890, 0543216789                  #
+ * # Variante 2: Gewichtung und Berechnung erfolgen nach der Methode 10.#
  * ######################################################################
  */
       case 103:
@@ -13261,7 +13303,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
 /* Berechnung nach der Methode C6 +§§§4 */
 /*
  * ######################################################################
- * #   Berechnung nach der Methode C6  (geändert zum 9. März 2009)      #
+ * #   Berechnung nach der Methode C6  (geändert zum 7. Juni 2010)      #
  * ######################################################################
  * # Modulus 10, Gewichtung 1, 2, 1, 2, 1, 2, 1, 2                      #
  * #                                                                    #
@@ -13271,12 +13313,11 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
  * # Prüfziffer.                                                        #
  * #                                                                    #
  * # Kontonummern, die an der 1. Stelle von links der 10-stelligen      #
- * # Kontonummer einen der Wert 3, 4, 5, 6 oder 8 beinhalten sind       #
- * # falsch.                                                            #
+ * # Kontonummer einen der Wert 4, 5, 6 oder 8 beinhalten sind falsch.  #
  * #                                                                    #
  * # Kontonummern, die an der 1. Stelle von links der 10-stelligen      #
- * # Kontonummer einen der Werte 0, 1, 2, 7 oder 9 beinhalten sind wie  #
- * # folgt zu prüfen:                                                   #
+ * # Kontonummer einen der Werte 0, 1, 2, 3, 7 oder 9 beinhalten sind   #
+ * # wie folgt zu prüfen:                                               #
  * #                                                                    #
  * # Für die Berechnung der Prüfziffer werden die Stellen 2 bis 9 der   #
  * # Kontonummer verwendet. Diese Stellen sind links um eine Zahl       #
@@ -13289,12 +13330,12 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
  * #            0          4451970                                      #
  * #            1          4451981                                      #
  * #            2          4451992                                      #
+ * #            3          4451993                                      #
  * #            7          5499570                                      #
  * #            9          5499579                                      #
  * #                                                                    #
  * # Die Berechnung und mögliche Ergebnisse entsprechen der Methode 00. #
  * ######################################################################
- * #                                                                    #
  * # Anmerkung zur Berechnung (MP): Da die Konstante immer nur einen    #
  * # festen Wert zur Berechnung beiträgt, wird diese Berechnung nicht   #
  * # gemacht, sondern gleich der Wert als Initialwert für die Quersumme #
@@ -13310,13 +13351,16 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=126;
          }
 #endif
-            /* neue Berechnungsmethode für C6, gültig ab 9.3.2009 */
+            /* neue Berechnungsmethode für C6, gültig ab 9.3.2009; Änderung zum 7.6.2010 */
          switch(kto[0]){
-            case '0': pz= 30; break;
-            case '1': pz= 33; break;
-            case '2': pz= 36; break;
-            case '7': pz= 31; break;
-            case '9': pz= 40; break;
+            case '0': pz=30; break;
+            case '1': pz=33; break;
+            case '2': pz=36; break;
+#if PZ_NEU_2010_06>0
+            case '3': pz=38; break; /* neu zum 7.6.2010 */
+#endif
+            case '7': pz=31; break;
+            case '9': pz=40; break;
             default: return INVALID_KTO;
          }
 
@@ -13624,7 +13668,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
          INVALID_PZ10;
          CHECK_PZ10;
 
-/* Berechnungsmethoden D0 bis D3 +§§§3
+/* Berechnungsmethoden D0 bis D4 +§§§3
  * Berechnung nach der Methode D0 +§§§4 */
 /*
  * ######################################################################
@@ -13695,26 +13739,31 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
 /* Berechnung nach der Methode D1 +§§§4 */
 /*
  * ######################################################################
- * #              Berechnung nach der Methode D1                        #
+ * #   Berechnung nach der Methode D1 (geändert zum 7. Juni 2010)       #
  * ######################################################################
  * # Die Kontonummer ist 10-stellig, ggf. ist die Kontonummer für die   #
  * # Prüfzifferberechnung durch linksbündige Auffüllung mit Nullen      #
- * # 10-stellig darzustellen. Die 10. Stelle der Konto- nummer ist die  #
+ * # 10-stellig darzustellen. Die 10. Stelle der Kontonummer ist die    #
  * # Prüfziffer.                                                        #
  * #                                                                    #
- * # Kontonummern, die an der 1. Stelle von links der 10-stelligen      #
- * # Kontonummer einen der Werte 0, 3 oder 9 beinhalten sind falsch.    #
- * # Kontonummern, die an der 1. Stelle von links der 10- stelligen     #
- * # Kontonummer einen der Werte 1, 2, 4, 5, 6, 7, oder 8 beinhalten,   #
- * # sind wie folgt zu prüfen:                                          #
- * #                                                                    #
- * # Modulus 10, Gewichtung 1, 2, 1, 2, 1, 2, 1, 2                      #
+ * # Die Kontonummern sind wie folgt zu prüfen:                         #
  * #                                                                    #
  * # Für die Berechnung der Prüfziffer werden die Stellen 1 bis 9 der   #
- * # Kontonummer verwendet. Diese Stellen sind links um Zahl            #
- * # (Konstante) "428259" zu ergänzen.                                  #
+ * # Kontonummer von links verwendet. Diese Stellen sind links um eine  #
+ * # Zahl (Konstante) gemäß der folgenden Tabelle zu ergänzen.          #
+ * #                                                                    #
+ * #     1. Stelle von links der                                        #
+ * #     10-stelligen Kontonummer       Zahl (Konstante)                #
+ * #                                                                    #
+ * #        0, 3, 4, 5, 9                   436338                      #
+ * #        1, 2, 6, 7, 8                   428259                      #
  * #                                                                    #
  * # Die Berechnung und mögliche Ergebnisse entsprechen der Methode 00. #
+ * ######################################################################
+ * # Anmerkung zur Berechnung (MP): die zusätzliche feste Konstante     #
+ * # wird wie in Methode C6 im voraus berechnet und als Initialwert für #
+ * # die Quersumme verwendet. Die Berechnung beginnt also erst mit der  #
+ * # zweiten Stelle der Kontonummer.                                    #
  * ######################################################################
  */
 
@@ -13725,13 +13774,32 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             retvals->pz_methode=131;
          }
 #endif
+#if PZ_NEU_2010_06>0
+         switch(*kto){
+            case '0':
+            case '3':
+            case '4':
+            case '5':
+            case '9':
+               pz=31;
+               break;
+
+            case '1':
+            case '2':
+            case '6':
+            case '7':
+            case '8':
+            default:
+               pz=29;
+               break;
+         }
+#else
          if(*kto=='0' || *kto=='3' || *kto=='9')return INVALID_KTO;
+         pz=29;
+#endif
 
 #ifdef __ALPHA
-         pz = 9  /* der Wert der Konstanten ändert sich normalerweise nicht sehr stark ;-)
-                  * Er wurde gleich modulo 10 genommen (war 29)
-                  */
-            + ((kto[0]<'5') ? (kto[0]-'0')*2 : (kto[0]-'0')*2-9)
+         pz+= ((kto[0]<'5') ? (kto[0]-'0')*2 : (kto[0]-'0')*2-9)
             +  (kto[1]-'0')
             + ((kto[2]<'5') ? (kto[2]-'0')*2 : (kto[2]-'0')*2-9)
             +  (kto[3]-'0')
@@ -13741,7 +13809,7 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
             +  (kto[7]-'0')
             + ((kto[8]<'5') ? (kto[8]-'0')*2 : (kto[8]-'0')*2-9);
 #else
-         pz=9+(kto[1]-'0')+(kto[3]-'0')+(kto[5]-'0')+(kto[7]-'0');
+         pz+=(kto[1]-'0')+(kto[3]-'0')+(kto[5]-'0')+(kto[7]-'0');
          if(kto[0]<'5')pz+=(kto[0]-'0')*2; else pz+=(kto[0]-'0')*2-9;
          if(kto[2]<'5')pz+=(kto[2]-'0')*2; else pz+=(kto[2]-'0')*2-9;
          if(kto[4]<'5')pz+=(kto[4]-'0')*2; else pz+=(kto[4]-'0')*2-9;
@@ -14017,6 +14085,80 @@ static int kto_check_int(char *x_blz,int pz_methode,char *kto)
          if(pz)pz=10-pz;
          CHECK_PZ10;
 
+/* Berechnung nach der Methode D4 +§§§4 */
+/*
+ * ######################################################################
+ * #              Berechnung nach der Methode D4                        #
+ * ######################################################################
+ * # Modulus 10, Gewichtung 1, 2, 1, 2, 1, 2, 1, 2                      #
+ * #                                                                    #
+ * # Die Kontonummer ist 10-stellig, ggf. ist die Kontonummer für die   #
+ * # Prüfzifferberechnung durch linksbündige Auffüllung mit Nullen      #
+ * # 10-stellig darzustellen. Die 10. Stelle der Kontonummer ist die    #
+ * # Prüfziffer.                                                        #
+ * #                                                                    #
+ * # Kontonummern, die an der 1. Stelle von links der 10-stelligen      #
+ * # Kontonummer einen der Werte 0, 1, 2, 6, 7 oder 8 beinhalten, sind  #
+ * # falsch.                                                            #
+ * # Kontonummern, die an der 1. Stelle von links der 10- stelligen     #
+ * # Kontonummer einen der Werte 3, 4, 5 oder 9 beinhalten, sind wie    #
+ * # folgt zu prüfen:                                                   #
+ * #                                                                    #
+ * # Für die Berechnung der Prüfziffer werden die Stellen 1 bis 9 der   #
+ * # Kontonummer von links verwendet. Diese Stellen sind links um die   #
+ * # Zahl (Konstante) "428259" zu ergänzen.                             #
+ * #                                                                    #
+ * # Die Berechnung und mögliche Ergebnisse entsprechen der Methode 00. #
+ * ######################################################################
+ */
+
+      case 134:
+#if DEBUG>0
+         if(retvals){
+            retvals->methode="D4";
+            retvals->pz_methode=134;
+         }
+#endif
+         switch(*kto){
+            case '0':
+            case '1':
+            case '2':
+            case '6':
+            case '7':
+            case '8':
+               return INVALID_KTO;
+            default:
+               pz=29;
+               break;
+         }
+
+   /* die Berechnung entspricht komplett der Methode D1 und wurde auch von da
+    * kopiert - der einzige Unterschied sind die ungültigen Kontonummern.
+    */
+
+#ifdef __ALPHA
+         pz+= ((kto[0]<'5') ? (kto[0]-'0')*2 : (kto[0]-'0')*2-9)
+            +  (kto[1]-'0')
+            + ((kto[2]<'5') ? (kto[2]-'0')*2 : (kto[2]-'0')*2-9)
+            +  (kto[3]-'0')
+            + ((kto[4]<'5') ? (kto[4]-'0')*2 : (kto[4]-'0')*2-9)
+            +  (kto[5]-'0')
+            + ((kto[6]<'5') ? (kto[6]-'0')*2 : (kto[6]-'0')*2-9)
+            +  (kto[7]-'0')
+            + ((kto[8]<'5') ? (kto[8]-'0')*2 : (kto[8]-'0')*2-9);
+#else
+         pz+=(kto[1]-'0')+(kto[3]-'0')+(kto[5]-'0')+(kto[7]-'0');
+         if(kto[0]<'5')pz+=(kto[0]-'0')*2; else pz+=(kto[0]-'0')*2-9;
+         if(kto[2]<'5')pz+=(kto[2]-'0')*2; else pz+=(kto[2]-'0')*2-9;
+         if(kto[4]<'5')pz+=(kto[4]-'0')*2; else pz+=(kto[4]-'0')*2-9;
+         if(kto[6]<'5')pz+=(kto[6]-'0')*2; else pz+=(kto[6]-'0')*2-9;
+         if(kto[8]<'5')pz+=(kto[8]-'0')*2; else pz+=(kto[8]-'0')*2-9;
+#endif
+         MOD_10_80;   /* pz%=10 */
+         if(pz)pz=10-pz;
+         CHECK_PZ10;
+
+
 /* nicht abgedeckte Fälle +§§§3 */
 /*
  * ######################################################################
@@ -14133,6 +14275,298 @@ DLL_EXPORT int kto_check_pz(char *pz,char *kto,char *blz)
 #else
    return kto_check_int(blz,pz_methode,kto);
 #endif
+}
+
+/* Funktion kto_check_blz_x() +§§§1 */
+/* ###########################################################################
+ * # Die Funktion kto_check_blz_x() ist eine Hilfsfunktion für die Funktion  #
+ * # iban_gen(). Diese Funktion bestimmt, ob für ein angegebenes Konto evl.  #
+ * # ein Unterkonto weggelassen wurde (betrifft die Methode 13, 26, 50, 63,  #
+ * # 76 und C7; ansonsten entspricht sie der FUnktion kto_check_blz().       #
+ * #                                                                         #
+ * # Parameter:                                                              #
+ * #    blz:        Bankleitzahl (immer 8-stellig)                           #
+ * #    kto:        Kontonummer                                              #
+ * #    uk_cnt:     Rückgabewert: Anzahl weggelassener Unterkontostellen     #
+ * #    retvals:    nur Dummy-Variable, nicht benutzt                        #
+ * #                                                                         #
+ * # Copyright (C) 2010 Michael Plugge <m.plugge@hs-mannheim.de>             #
+ * ###########################################################################
+ */
+
+#if DEBUG>0
+static int kto_check_blz_x(char *blz,char *kto,int *uk_cnt,RETVAL *retvals)
+#else
+static int kto_check_blz_x(char *blz,char *kto,int *uk_cnt)
+#endif
+{
+   char *ptr,*dptr,xkto[32];
+   int i,p1=0,kto_len,pz;
+   int idx,pz_methode,untermethode=0;
+
+   if(!blz || !kto)return MISSING_PARAMETER;
+   *uk_cnt=0;
+   if(init_status!=7){
+      if(init_status&24)INITIALIZE_WAIT;
+      if(init_status<7)return LUT2_NOT_INITIALIZED;
+   }
+   if((idx=lut_index(blz))<0)return idx;
+   pz_methode=pz_methoden[idx];
+
+   memset(xkto,'0',12);
+   for(ptr=kto;*ptr=='0' || *ptr==' ' || *ptr=='\t';ptr++);
+   for(kto_len=0;*ptr && *ptr!=' ' && *ptr!='\t';kto_len++,ptr++);
+   dptr=xkto+10;
+   *dptr--=0;
+   for(ptr--,i=kto_len;i-->0;*dptr--= *ptr--);
+   if(kto_len<1 || kto_len>10)return INVALID_KTO_LENGTH;
+   kto=xkto;
+
+   switch(pz_methode){
+      case 13:
+            /* Methode 13a */
+         if(kto[0]!='0' || kto[1]!='0')*uk_cnt=-1; /* Unterkonto angegeben */
+         pz =(kto[1]-'0')+(kto[3]-'0')+(kto[5]-'0');
+         if(kto[2]<'5')pz+=(kto[2]-'0')*2; else pz+=(kto[2]-'0')*2-9;
+         if(kto[4]<'5')pz+=(kto[4]-'0')*2; else pz+=(kto[4]-'0')*2-9;
+         if(kto[6]<'5')pz+=(kto[6]-'0')*2; else pz+=(kto[6]-'0')*2-9;
+         MOD_10_80;   /* pz%=10 */
+         if(pz)pz=10-pz;
+         CHECK_PZX8;
+
+            /* Methode 13b: 2-stelliges Unterkonto weggelassen */
+         *uk_cnt=2;
+         pz =(kto[3]-'0')+(kto[5]-'0')+(kto[7]-'0');
+         if(kto[4]<'5')pz+=(kto[4]-'0')*2; else pz+=(kto[4]-'0')*2-9;
+         if(kto[6]<'5')pz+=(kto[6]-'0')*2; else pz+=(kto[6]-'0')*2-9;
+         if(kto[8]<'5')pz+=(kto[8]-'0')*2; else pz+=(kto[8]-'0')*2-9;
+
+         MOD_10_80;   /* pz%=10 */
+         if(pz)pz=10-pz;
+         CHECK_PZ10;
+
+      case 26:
+         if(*kto=='0' && *(kto+1)=='0'){
+            /* Unterkontonummer ausgelassen */
+         *uk_cnt=2;
+         pz = (kto[2]-'0') * 2
+            + (kto[3]-'0') * 7
+            + (kto[4]-'0') * 6
+            + (kto[5]-'0') * 5
+            + (kto[6]-'0') * 4
+            + (kto[7]-'0') * 3
+            + (kto[8]-'0') * 2;
+
+         MOD_11_176;   /* pz%=11 */
+            if(pz<=1)
+               pz=0;
+            else
+               pz=11-pz;
+            CHECK_PZ10;
+         }
+         else{
+            *uk_cnt=-1; /* Unterkonto angegeben */
+            pz = (kto[0]-'0') * 2
+               + (kto[1]-'0') * 7
+               + (kto[2]-'0') * 6
+               + (kto[3]-'0') * 5
+               + (kto[4]-'0') * 4
+               + (kto[5]-'0') * 3
+               + (kto[6]-'0') * 2;
+
+            MOD_11_176;   /* pz%=11 */
+            if(pz<=1)
+               pz=0;
+            else
+               pz=11-pz;
+            CHECK_PZ8;
+         }
+
+      case 50:
+            /* Methode 50a */
+         pz = (kto[0]-'0') * 7
+            + (kto[1]-'0') * 6
+            + (kto[2]-'0') * 5
+            + (kto[3]-'0') * 4
+            + (kto[4]-'0') * 3
+            + (kto[5]-'0') * 2;
+
+         MOD_11_176;   /* pz%=11 */
+         if(pz<=1)
+            pz=0;
+         else
+            pz=11-pz;
+         CHECK_PZX7;
+
+            /* Methode 50b 
+             *
+             * es ist eine reale Kontonummer bekannt, bei der rechts nur eine
+             * Null weggelassen wurde; daher wird die Berechnung für die
+             * Methode 50b leicht modifiziert, so daß eine, zwei oder drei
+             * Stellen der Unterkontonummer 000 weggelassen werden können.
+             */
+         if(kto[0]=='0' && kto[1]=='0' && kto[2]=='0'){
+            *uk_cnt=3;
+            pz = (kto[3]-'0') * 7
+               + (kto[4]-'0') * 6
+               + (kto[5]-'0') * 5
+               + (kto[6]-'0') * 4
+               + (kto[7]-'0') * 3
+               + (kto[8]-'0') * 2;
+
+            MOD_11_176;   /* pz%=11 */
+            if(pz<=1)
+               pz=0;
+            else
+               pz=11-pz;
+            CHECK_PZ10;
+         }
+         else if(kto[0]=='0' && kto[1]=='0' && kto[9]=='0'){
+            *uk_cnt=2;
+            pz = (kto[2]-'0') * 7
+               + (kto[3]-'0') * 6
+               + (kto[4]-'0') * 5
+               + (kto[5]-'0') * 4
+               + (kto[6]-'0') * 3
+               + (kto[7]-'0') * 2;
+
+            MOD_11_176;   /* pz%=11 */
+            if(pz<=1)
+               pz=0;
+            else
+               pz=11-pz;
+            CHECK_PZ9;
+         }
+         else if(kto[0]=='0' && kto[8]=='0' && kto[9]=='0'){
+            *uk_cnt=1;
+            pz = (kto[1]-'0') * 7
+               + (kto[2]-'0') * 6
+               + (kto[3]-'0') * 5
+               + (kto[4]-'0') * 4
+               + (kto[5]-'0') * 3
+               + (kto[6]-'0') * 2;
+
+            MOD_11_176;   /* pz%=11 */
+            if(pz<=1)
+               pz=0;
+            else
+               pz=11-pz;
+            CHECK_PZ8;
+         }
+         return FALSE;
+
+      case 63:
+         if(*kto!='0')return INVALID_KTO;
+         if(*(kto+1)=='0' && *(kto+2)=='0'){ /* Unterkonto weggelassen */
+            *uk_cnt=2;
+            pz=(kto[3]-'0')+(kto[5]-'0')+(kto[7]-'0');
+            if(kto[4]<'5')pz+=(kto[4]-'0')*2; else pz+=(kto[4]-'0')*2-9;
+            if(kto[6]<'5')pz+=(kto[6]-'0')*2; else pz+=(kto[6]-'0')*2-9;
+            if(kto[8]<'5')pz+=(kto[8]-'0')*2; else pz+=(kto[8]-'0')*2-9;
+            MOD_10_80;   /* pz%=10 */
+            if(pz)pz=10-pz;
+            CHECK_PZ10;
+         }
+         pz=(kto[1]-'0')+(kto[3]-'0')+(kto[5]-'0');
+         if(kto[2]<'5')pz+=(kto[2]-'0')*2; else pz+=(kto[2]-'0')*2-9;
+         if(kto[4]<'5')pz+=(kto[4]-'0')*2; else pz+=(kto[4]-'0')*2-9;
+         if(kto[6]<'5')pz+=(kto[6]-'0')*2; else pz+=(kto[6]-'0')*2-9;
+         MOD_10_80;   /* pz%=10 */
+         if(pz)pz=10-pz;
+         CHECK_PZ8;
+
+      case 76:
+               /* Methode 76a */
+         if((p1= *kto)=='1' || p1=='2' || p1=='3' || p1=='5'){
+            pz= -3;
+            return INVALID_KTO;
+         }
+         pz = (kto[1]-'0') * 7
+            + (kto[2]-'0') * 6
+            + (kto[3]-'0') * 5
+            + (kto[4]-'0') * 4
+            + (kto[5]-'0') * 3
+            + (kto[6]-'0') * 2;
+
+         MOD_11_176;   /* pz%=11 */
+         CHECK_PZX8;
+
+               /* Methode 76b */
+         if(kto[0]!='0' || kto[1]!='0' || (p1=kto[2])=='1' || p1=='2' || p1=='3' || p1=='5')return INVALID_KTO;
+         *uk_cnt=2;
+         pz = (kto[3]-'0') * 7
+            + (kto[4]-'0') * 6
+            + (kto[5]-'0') * 5
+            + (kto[6]-'0') * 4
+            + (kto[7]-'0') * 3
+            + (kto[8]-'0') * 2;
+
+         MOD_11_176;   /* pz%=11 */
+         if(pz==10){
+            pz= -2;
+            return INVALID_KTO;
+         }
+         CHECK_PZ10;
+
+      case 127:
+         if(*kto=='0'){ /* bei Methode 63 sind 10-stellige Kontonummern falsch */
+            if(*(kto+1)=='0' && *(kto+2)=='0'){
+
+               /* Methode C7c */
+
+               /* evl. Unterkonto weggelassen; das kommt wohl eher vor als
+                * 7-stellige Nummern (Hinweis T.F.); stimmt auch mit
+                * http://www.kontonummern.de/check.php überein.
+               */
+               *uk_cnt=2;
+               pz=(kto[3]-'0')+(kto[5]-'0')+(kto[7]-'0');
+               if(kto[4]<'5')pz+=(kto[4]-'0')*2; else pz+=(kto[4]-'0')*2-9;
+               if(kto[6]<'5')pz+=(kto[6]-'0')*2; else pz+=(kto[6]-'0')*2-9;
+               if(kto[8]<'5')pz+=(kto[8]-'0')*2; else pz+=(kto[8]-'0')*2-9;
+               MOD_10_80;   /* pz%=10 */
+               if(pz)pz=10-pz;
+               CHECK_PZX10;
+               *uk_cnt=0; /* Bedingung nicht erfüllt, Unterkto. zurücksetzen */
+            }
+            else{
+                  /* Methode C7a */
+               pz=(kto[1]-'0')+(kto[3]-'0')+(kto[5]-'0');
+               if(kto[2]<'5')pz+=(kto[2]-'0')*2; else pz+=(kto[2]-'0')*2-9;
+               if(kto[4]<'5')pz+=(kto[4]-'0')*2; else pz+=(kto[4]-'0')*2-9;
+               if(kto[6]<'5')pz+=(kto[6]-'0')*2; else pz+=(kto[6]-'0')*2-9;
+               MOD_10_80;   /* pz%=10 */
+               if(pz)pz=10-pz;
+               CHECK_PZX8;
+            }
+         }
+
+            /* Methode C7b */
+            /* Variante 2 */
+         pz = (kto[0]-'0') * 4
+            + (kto[1]-'0') * 3
+            + (kto[2]-'0') * 2
+            + (kto[3]-'0') * 7
+            + (kto[4]-'0') * 6
+            + (kto[5]-'0') * 5
+            + (kto[6]-'0') * 4
+            + (kto[7]-'0') * 3
+            + (kto[8]-'0') * 2;
+
+         MOD_11_176;   /* pz%=11 */
+         if(pz<=1)
+            pz=0;
+         else
+            pz=11-pz;
+         CHECK_PZ10;
+
+      default:
+         *uk_cnt=-2;
+#if DEBUG>0
+         return kto_check_int(blz,pz_methode,kto,untermethode,retvals);
+#else
+         return kto_check_int(blz,pz_methode,kto);
+#endif
+   }
 }
 
 #if DEBUG>0
@@ -14379,10 +14813,41 @@ DLL_EXPORT int kto_check(char *pz_or_blz,char *kto,char *lut_name)
 DLL_EXPORT char *kto_check_retval2txt(int retval)
 {
    switch(retval){
+      case OK_UNTERKONTO_ATTACHED: return "wahrscheinlich OK; es wurde allerdings ein (weggelassenes) Unterkonto angefügt";
+      case KTO_CHECK_DEFAULT_BLOCK_INVALID: return "Ungültige Signatur im Default-Block";
+      case KTO_CHECK_DEFAULT_BLOCK_FULL: return "Die maximale Anzahl Einträge für den Default-Block wurde erreicht";
+      case KTO_CHECK_NO_DEFAULT_BLOCK: return "Es wurde noch kein Default-Block angelegt";
+      case KTO_CHECK_KEY_NOT_FOUND: return "Der angegebene Schlüssel wurde im Default-Block nicht gefunden";
+      case LUT2_NO_LONGER_VALID_BETTER: return "Der Datensatz ist nicht mehr gültig, aber jünger als der andere";
+      case DTA_SRC_KTO_DIFFERENT: return "Die Auftraggeber-Kontonummer des C-Datensatzes unterscheidet sich von der des A-Satzes";
+      case DTA_SRC_BLZ_DIFFERENT: return "Die Auftraggeber-Bankleitzahl des C-Datensatzes unterscheidet sich von der des A-Satzes";
+      case DTA_CR_LF_IN_FILE: return "Die DTA-Datei enthält (unzulässige) Zeilenvorschübe";
+      case DTA_INVALID_C_EXTENSION: return "ungültiger Typ bei einem Erweiterungsblock eines C-Datensatzes";
+      case DTA_FOUND_SET_A_NOT_C: return "Es wurde ein C-Datensatz erwartet, jedoch ein E-Satz gefunden";
+      case DTA_FOUND_SET_E_NOT_C: return "Es wurde ein C-Datensatz erwartet, jedoch ein E-Satz gefunden";
+      case DTA_FOUND_SET_C_NOT_EXTENSION: return "Es wurde ein C-Datensatzerweiterung erwartet, jedoch ein C-Satz gefunden";
+      case DTA_FOUND_SET_E_NOT_EXTENSION: return "Es wurde ein C-Datensatzerweiterung erwartet, jedoch ein E-Satz gefunden";
+      case DTA_INVALID_EXTENSION_COUNT: return "Die Anzahl Erweiterungen paßt nicht zur Blocklänge";
+      case DTA_INVALID_NUM: return "Ungültige Zeichen in numerischem Feld";
+      case DTA_INVALID_CHARS: return "Ungültige Zeichen im Textfeld";
+      case DTA_CURRENCY_NOT_EURO: return "Die Währung des DTA-Datensatzes ist nicht Euro";
+      case DTA_EMPTY_AMOUNT: return "In einem DTA-Datensatz wurde kein Betrag angegeben";
+      case DTA_INVALID_TEXT_KEY: return "Ungültiger Textschlüssel in der DTA-Datei";
+      case DTA_EMPTY_STRING: return "Für ein (alphanumerisches) Feld wurde kein Wert angegeben";
+      case DTA_MARKER_A_NOT_FOUND: return "Die Startmarkierung des A-Datensatzes wurde nicht gefunden";
+      case DTA_MARKER_C_NOT_FOUND: return "Die Startmarkierung des C-Datensatzes wurde nicht gefunden";
+      case DTA_MARKER_E_NOT_FOUND: return "Die Startmarkierung des E-Datensatzes wurde nicht gefunden";
+      case DTA_INVALID_SET_C_LEN: return "Die Satzlänge eines C-Datensatzes muß zwischen 187 und 622 Byte betragen";
+      case DTA_INVALID_SET_LEN: return "Die Satzlänge eines A- bzw. E-Satzes muß 128 Byte betragen";
+      case DTA_WAERUNG_NOT_EURO: return "als Währung in der DTA-Datei ist nicht Euro eingetragen";
+      case DTA_INVALID_ISSUE_DATE: return "das Ausführungsdatum ist zu früh oder zu spät (max. 15 Tage nach Dateierstellung)";
+      case DTA_INVALID_DATE: return "das Datum ist ungültig";
+      case DTA_FORMAT_ERROR: return "Formatfehler in der DTA-Datei";
+      case DTA_FILE_WITH_ERRORS: return "die DTA-Datei enthält Fehler";
       case INVALID_SEARCH_RANGE: return "ungültiger Suchbereich angegeben (unten>oben)";
       case KEY_NOT_FOUND: return "Die Suche lieferte kein Ergebnis";
       case BAV_FALSE: return "BAV denkt, das Konto ist falsch (konto_check hält es für richtig)";
-      case LUT2_NO_USER_BLOCK: return "User-Blocks müssen einen Typ > 1000 haben";
+      case LUT2_NO_USER_BLOCK: return "User-Blocks müssen einen Typ > 500 haben";
       case INVALID_SET: return "für ein LUT-Set sind nur die Werte 0, 1 oder 2 möglich";
       case NO_GERMAN_BIC: return "Ein Konto kann kann nur für deutsche Banken geprüft werden";
       case IPI_CHECK_INVALID_LENGTH: return "Der zu validierende strukturierete Verwendungszweck muß genau 20 Zeichen enthalten";
@@ -14467,6 +14932,11 @@ DLL_EXPORT char *kto_check_retval2txt(int retval)
       case LUT2_NO_VALID_DATE: return "Der Datensatz enthält kein Gültigkeitsdatum";
       case LUT1_SET_LOADED: return "Die Datei ist im alten LUT-Format (1.0/1.1)";
       case LUT1_FILE_GENERATED: return "ok; es wurde allerdings eine LUT-Datei im alten Format (1.0/1.1) generiert";
+      case DTA_FILE_WITH_WARNINGS: return "In der DTAUS-Datei wurden kleinere Fehler gefunden";
+      case LUT_V2_FILE_GENERATED: return "ok; es wurde allerdings eine LUT-Datei im Format 2.0 generiert (Compilerswitch)";
+      case KTO_CHECK_VALUE_REPLACED: return "ok; der Wert für den Schlüssel wurde überschrieben";
+      case OK_UNTERKONTO_POSSIBLE: return "wahrscheinlich ok; die Kontonummer kann allerdings (nicht angegebene) Unterkonten enthalten";
+      case OK_UNTERKONTO_GIVEN: return "wahrscheinlich ok; die Kontonummer enthält eine Unterkontonummer";
       default: return "ungültiger Rückgabewert";
    }
 }
@@ -14483,10 +14953,41 @@ DLL_EXPORT char *kto_check_retval2txt(int retval)
 DLL_EXPORT char *kto_check_retval2dos(int retval)
 {
    switch(retval){
+      case OK_UNTERKONTO_ATTACHED: return "wahrscheinlich OK; es wurde allerdings ein (weggelassenes) Unterkonto angefgt";
+      case KTO_CHECK_DEFAULT_BLOCK_INVALID: return "Ungltige Signatur im Default-Block";
+      case KTO_CHECK_DEFAULT_BLOCK_FULL: return "Die maximale Anzahl Eintr„ ge fr den Default-Block wurde erreicht";
+      case KTO_CHECK_NO_DEFAULT_BLOCK: return "Es wurde noch kein Default-Block angelegt";
+      case KTO_CHECK_KEY_NOT_FOUND: return "Der angegebene Schlssel wurde im Default-Block nicht gefunden";
+      case LUT2_NO_LONGER_VALID_BETTER: return "Der Datensatz ist nicht mehr gltig, aber jnger als der andere";
+      case DTA_SRC_KTO_DIFFERENT: return "Die Auftraggeber-Kontonummer des C-Datensatzes unterscheidet sich von der des A-Satzes";
+      case DTA_SRC_BLZ_DIFFERENT: return "Die Auftraggeber-Bankleitzahl des C-Datensatzes unterscheidet sich von der des A-Satzes";
+      case DTA_CR_LF_IN_FILE: return "Die DTA-Datei enth„ lt (unzul„ ssige) Zeilenvorschbe";
+      case DTA_INVALID_C_EXTENSION: return "ungltiger Typ bei einem Erweiterungsblock eines C-Datensatzes";
+      case DTA_FOUND_SET_A_NOT_C: return "Es wurde ein C-Datensatz erwartet, jedoch ein E-Satz gefunden";
+      case DTA_FOUND_SET_E_NOT_C: return "Es wurde ein C-Datensatz erwartet, jedoch ein E-Satz gefunden";
+      case DTA_FOUND_SET_C_NOT_EXTENSION: return "Es wurde ein C-Datensatzerweiterung erwartet, jedoch ein C-Satz gefunden";
+      case DTA_FOUND_SET_E_NOT_EXTENSION: return "Es wurde ein C-Datensatzerweiterung erwartet, jedoch ein E-Satz gefunden";
+      case DTA_INVALID_EXTENSION_COUNT: return "Die Anzahl Erweiterungen paát nicht zur Blockl„ nge";
+      case DTA_INVALID_NUM: return "Ungltige Zeichen in numerischem Feld";
+      case DTA_INVALID_CHARS: return "Ungltige Zeichen im Textfeld";
+      case DTA_CURRENCY_NOT_EURO: return "Die W„ hrung des DTA-Datensatzes ist nicht Euro";
+      case DTA_EMPTY_AMOUNT: return "In einem DTA-Datensatz wurde kein Betrag angegeben";
+      case DTA_INVALID_TEXT_KEY: return "Ungltiger Textschlssel in der DTA-Datei";
+      case DTA_EMPTY_STRING: return "Fr ein (alphanumerisches) Feld wurde kein Wert angegeben";
+      case DTA_MARKER_A_NOT_FOUND: return "Die Startmarkierung des A-Datensatzes wurde nicht gefunden";
+      case DTA_MARKER_C_NOT_FOUND: return "Die Startmarkierung des C-Datensatzes wurde nicht gefunden";
+      case DTA_MARKER_E_NOT_FOUND: return "Die Startmarkierung des E-Datensatzes wurde nicht gefunden";
+      case DTA_INVALID_SET_C_LEN: return "Die Satzl„ nge eines C-Datensatzes muá zwischen 187 und 622 Byte betragen";
+      case DTA_INVALID_SET_LEN: return "Die Satzl„ nge eines A- bzw. E-Satzes muá 128 Byte betragen";
+      case DTA_WAERUNG_NOT_EURO: return "als W„ hrung in der DTA-Datei ist nicht Euro eingetragen";
+      case DTA_INVALID_ISSUE_DATE: return "das Ausfhrungsdatum ist zu frh oder zu sp„ t (max. 15 Tage nach Dateierstellung)";
+      case DTA_INVALID_DATE: return "das Datum ist ungltig";
+      case DTA_FORMAT_ERROR: return "Formatfehler in der DTA-Datei";
+      case DTA_FILE_WITH_ERRORS: return "die DTA-Datei enth„ lt Fehler";
       case INVALID_SEARCH_RANGE: return "ungltiger Suchbereich angegeben (unten>oben)";
       case KEY_NOT_FOUND: return "Die Suche lieferte kein Ergebnis";
       case BAV_FALSE: return "BAV denkt, das Konto ist falsch (konto_check h„ lt es fr richtig)";
-      case LUT2_NO_USER_BLOCK: return "User-Blocks mssen einen Typ > 1000 haben";
+      case LUT2_NO_USER_BLOCK: return "User-Blocks mssen einen Typ > 500 haben";
       case INVALID_SET: return "fr ein LUT-Set sind nur die Werte 0, 1 oder 2 m”glich";
       case NO_GERMAN_BIC: return "Ein Konto kann kann nur fr deutsche Banken geprft werden";
       case IPI_CHECK_INVALID_LENGTH: return "Der zu validierende strukturierete Verwendungszweck muá genau 20 Zeichen enthalten";
@@ -14571,6 +15072,11 @@ DLL_EXPORT char *kto_check_retval2dos(int retval)
       case LUT2_NO_VALID_DATE: return "Der Datensatz enth„ lt kein Gltigkeitsdatum";
       case LUT1_SET_LOADED: return "Die Datei ist im alten LUT-Format (1.0/1.1)";
       case LUT1_FILE_GENERATED: return "ok; es wurde allerdings eine LUT-Datei im alten Format (1.0/1.1) generiert";
+      case DTA_FILE_WITH_WARNINGS: return "In der DTAUS-Datei wurden kleinere Fehler gefunden";
+      case LUT_V2_FILE_GENERATED: return "ok; es wurde allerdings eine LUT-Datei im Format 2.0 generiert (Compilerswitch)";
+      case KTO_CHECK_VALUE_REPLACED: return "ok; der Wert fr den Schlssel wurde berschrieben";
+      case OK_UNTERKONTO_POSSIBLE: return "wahrscheinlich ok; die Kontonummer kann allerdings (nicht angegebene) Unterkonten enthalten";
+      case OK_UNTERKONTO_GIVEN: return "wahrscheinlich ok; die Kontonummer enth„ lt eine Unterkontonummer";
       default: return "ungltiger Rckgabewert";
    }
 }
@@ -14587,10 +15093,41 @@ DLL_EXPORT char *kto_check_retval2dos(int retval)
 DLL_EXPORT char *kto_check_retval2html(int retval)
 {
    switch(retval){
+      case OK_UNTERKONTO_ATTACHED: return "wahrscheinlich OK; es wurde allerdings ein (weggelassenes) Unterkonto angef&uuml;gt";
+      case KTO_CHECK_DEFAULT_BLOCK_INVALID: return "Ung&uuml;ltige Signatur im Default-Block";
+      case KTO_CHECK_DEFAULT_BLOCK_FULL: return "Die maximale Anzahl Eintr&auml;ge f&uuml;r den Default-Block wurde erreicht";
+      case KTO_CHECK_NO_DEFAULT_BLOCK: return "Es wurde noch kein Default-Block angelegt";
+      case KTO_CHECK_KEY_NOT_FOUND: return "Der angegebene Schl&uuml;ssel wurde im Default-Block nicht gefunden";
+      case LUT2_NO_LONGER_VALID_BETTER: return "Der Datensatz ist nicht mehr g&uuml;ltig, aber j&uuml;nger als der andere";
+      case DTA_SRC_KTO_DIFFERENT: return "Die Auftraggeber-Kontonummer des C-Datensatzes unterscheidet sich von der des A-Satzes";
+      case DTA_SRC_BLZ_DIFFERENT: return "Die Auftraggeber-Bankleitzahl des C-Datensatzes unterscheidet sich von der des A-Satzes";
+      case DTA_CR_LF_IN_FILE: return "Die DTA-Datei enth&auml;lt (unzul&auml;ssige) Zeilenvorsch&uuml;be";
+      case DTA_INVALID_C_EXTENSION: return "ung&uuml;ltiger Typ bei einem Erweiterungsblock eines C-Datensatzes";
+      case DTA_FOUND_SET_A_NOT_C: return "Es wurde ein C-Datensatz erwartet, jedoch ein E-Satz gefunden";
+      case DTA_FOUND_SET_E_NOT_C: return "Es wurde ein C-Datensatz erwartet, jedoch ein E-Satz gefunden";
+      case DTA_FOUND_SET_C_NOT_EXTENSION: return "Es wurde ein C-Datensatzerweiterung erwartet, jedoch ein C-Satz gefunden";
+      case DTA_FOUND_SET_E_NOT_EXTENSION: return "Es wurde ein C-Datensatzerweiterung erwartet, jedoch ein E-Satz gefunden";
+      case DTA_INVALID_EXTENSION_COUNT: return "Die Anzahl Erweiterungen pa&szlig;t nicht zur Blockl&auml;nge";
+      case DTA_INVALID_NUM: return "Ung&uuml;ltige Zeichen in numerischem Feld";
+      case DTA_INVALID_CHARS: return "Ung&uuml;ltige Zeichen im Textfeld";
+      case DTA_CURRENCY_NOT_EURO: return "Die W&auml;hrung des DTA-Datensatzes ist nicht Euro";
+      case DTA_EMPTY_AMOUNT: return "In einem DTA-Datensatz wurde kein Betrag angegeben";
+      case DTA_INVALID_TEXT_KEY: return "Ung&uuml;ltiger Textschl&uuml;ssel in der DTA-Datei";
+      case DTA_EMPTY_STRING: return "F&uuml;r ein (alphanumerisches) Feld wurde kein Wert angegeben";
+      case DTA_MARKER_A_NOT_FOUND: return "Die Startmarkierung des A-Datensatzes wurde nicht gefunden";
+      case DTA_MARKER_C_NOT_FOUND: return "Die Startmarkierung des C-Datensatzes wurde nicht gefunden";
+      case DTA_MARKER_E_NOT_FOUND: return "Die Startmarkierung des E-Datensatzes wurde nicht gefunden";
+      case DTA_INVALID_SET_C_LEN: return "Die Satzl&auml;nge eines C-Datensatzes mu&szlig; zwischen 187 und 622 Byte betragen";
+      case DTA_INVALID_SET_LEN: return "Die Satzl&auml;nge eines A- bzw. E-Satzes mu&szlig; 128 Byte betragen";
+      case DTA_WAERUNG_NOT_EURO: return "als W&auml;hrung in der DTA-Datei ist nicht Euro eingetragen";
+      case DTA_INVALID_ISSUE_DATE: return "das Ausf&uuml;hrungsdatum ist zu fr&uuml;h oder zu sp&auml;t (max. 15 Tage nach Dateierstellung)";
+      case DTA_INVALID_DATE: return "das Datum ist ung&uuml;ltig";
+      case DTA_FORMAT_ERROR: return "Formatfehler in der DTA-Datei";
+      case DTA_FILE_WITH_ERRORS: return "die DTA-Datei enth&auml;lt Fehler";
       case INVALID_SEARCH_RANGE: return "ung&uuml;ltiger Suchbereich angegeben (unten&gt;oben)";
       case KEY_NOT_FOUND: return "Die Suche lieferte kein Ergebnis";
       case BAV_FALSE: return "BAV denkt, das Konto ist falsch (konto_check h&auml;lt es f&uuml;r richtig)";
-      case LUT2_NO_USER_BLOCK: return "User-Blocks m&uuml;ssen einen Typ &gt; 1000 haben";
+      case LUT2_NO_USER_BLOCK: return "User-Blocks m&uuml;ssen einen Typ &gt; 500 haben";
       case INVALID_SET: return "f&uuml;r ein LUT-Set sind nur die Werte 0, 1 oder 2 m&ouml;glich";
       case NO_GERMAN_BIC: return "Ein Konto kann kann nur f&uuml;r deutsche Banken gepr&uuml;ft werden";
       case IPI_CHECK_INVALID_LENGTH: return "Der zu validierende strukturierete Verwendungszweck mu&szlig; genau 20 Zeichen enthalten";
@@ -14675,6 +15212,11 @@ DLL_EXPORT char *kto_check_retval2html(int retval)
       case LUT2_NO_VALID_DATE: return "Der Datensatz enth&auml;lt kein G&uuml;ltigkeitsdatum";
       case LUT1_SET_LOADED: return "Die Datei ist im alten LUT-Format (1.0/1.1)";
       case LUT1_FILE_GENERATED: return "ok; es wurde allerdings eine LUT-Datei im alten Format (1.0/1.1) generiert";
+      case DTA_FILE_WITH_WARNINGS: return "In der DTAUS-Datei wurden kleinere Fehler gefunden";
+      case LUT_V2_FILE_GENERATED: return "ok; es wurde allerdings eine LUT-Datei im Format 2.0 generiert (Compilerswitch)";
+      case KTO_CHECK_VALUE_REPLACED: return "ok; der Wert f&uuml;r den Schl&uuml;ssel wurde &uuml;berschrieben";
+      case OK_UNTERKONTO_POSSIBLE: return "wahrscheinlich ok; die Kontonummer kann allerdings (nicht angegebene) Unterkonten enthalten";
+      case OK_UNTERKONTO_GIVEN: return "wahrscheinlich ok; die Kontonummer enth&auml;lt eine Unterkontonummer";
       default: return "ung&uuml;ltiger R&uuml;ckgabewert";
    }
 }
@@ -14691,10 +15233,41 @@ DLL_EXPORT char *kto_check_retval2html(int retval)
 DLL_EXPORT char *kto_check_retval2utf8(int retval)
 {
    switch(retval){
+      case OK_UNTERKONTO_ATTACHED: return "wahrscheinlich OK; es wurde allerdings ein (weggelassenes) Unterkonto angefÃ¼gt";
+      case KTO_CHECK_DEFAULT_BLOCK_INVALID: return "UngÃ¼ltige Signatur im Default-Block";
+      case KTO_CHECK_DEFAULT_BLOCK_FULL: return "Die maximale Anzahl EintrÃ¤ge fÃ¼r den Default-Block wurde erreicht";
+      case KTO_CHECK_NO_DEFAULT_BLOCK: return "Es wurde noch kein Default-Block angelegt";
+      case KTO_CHECK_KEY_NOT_FOUND: return "Der angegebene SchlÃ¼ssel wurde im Default-Block nicht gefunden";
+      case LUT2_NO_LONGER_VALID_BETTER: return "Der Datensatz ist nicht mehr gÃ¼ltig, aber jÃ¼nger als der andere";
+      case DTA_SRC_KTO_DIFFERENT: return "Die Auftraggeber-Kontonummer des C-Datensatzes unterscheidet sich von der des A-Satzes";
+      case DTA_SRC_BLZ_DIFFERENT: return "Die Auftraggeber-Bankleitzahl des C-Datensatzes unterscheidet sich von der des A-Satzes";
+      case DTA_CR_LF_IN_FILE: return "Die DTA-Datei enthÃ¤lt (unzulÃ¤ssige) ZeilenvorschÃ¼be";
+      case DTA_INVALID_C_EXTENSION: return "ungÃ¼ltiger Typ bei einem Erweiterungsblock eines C-Datensatzes";
+      case DTA_FOUND_SET_A_NOT_C: return "Es wurde ein C-Datensatz erwartet, jedoch ein E-Satz gefunden";
+      case DTA_FOUND_SET_E_NOT_C: return "Es wurde ein C-Datensatz erwartet, jedoch ein E-Satz gefunden";
+      case DTA_FOUND_SET_C_NOT_EXTENSION: return "Es wurde ein C-Datensatzerweiterung erwartet, jedoch ein C-Satz gefunden";
+      case DTA_FOUND_SET_E_NOT_EXTENSION: return "Es wurde ein C-Datensatzerweiterung erwartet, jedoch ein E-Satz gefunden";
+      case DTA_INVALID_EXTENSION_COUNT: return "Die Anzahl Erweiterungen paÃŸt nicht zur BlocklÃ¤nge";
+      case DTA_INVALID_NUM: return "UngÃ¼ltige Zeichen in numerischem Feld";
+      case DTA_INVALID_CHARS: return "UngÃ¼ltige Zeichen im Textfeld";
+      case DTA_CURRENCY_NOT_EURO: return "Die WÃ¤hrung des DTA-Datensatzes ist nicht Euro";
+      case DTA_EMPTY_AMOUNT: return "In einem DTA-Datensatz wurde kein Betrag angegeben";
+      case DTA_INVALID_TEXT_KEY: return "UngÃ¼ltiger TextschlÃ¼ssel in der DTA-Datei";
+      case DTA_EMPTY_STRING: return "FÃ¼r ein (alphanumerisches) Feld wurde kein Wert angegeben";
+      case DTA_MARKER_A_NOT_FOUND: return "Die Startmarkierung des A-Datensatzes wurde nicht gefunden";
+      case DTA_MARKER_C_NOT_FOUND: return "Die Startmarkierung des C-Datensatzes wurde nicht gefunden";
+      case DTA_MARKER_E_NOT_FOUND: return "Die Startmarkierung des E-Datensatzes wurde nicht gefunden";
+      case DTA_INVALID_SET_C_LEN: return "Die SatzlÃ¤nge eines C-Datensatzes muÃŸ zwischen 187 und 622 Byte betragen";
+      case DTA_INVALID_SET_LEN: return "Die SatzlÃ¤nge eines A- bzw. E-Satzes muÃŸ 128 Byte betragen";
+      case DTA_WAERUNG_NOT_EURO: return "als WÃ¤hrung in der DTA-Datei ist nicht Euro eingetragen";
+      case DTA_INVALID_ISSUE_DATE: return "das AusfÃ¼hrungsdatum ist zu frÃ¼h oder zu spÃ¤t (max. 15 Tage nach Dateierstellung)";
+      case DTA_INVALID_DATE: return "das Datum ist ungÃ¼ltig";
+      case DTA_FORMAT_ERROR: return "Formatfehler in der DTA-Datei";
+      case DTA_FILE_WITH_ERRORS: return "die DTA-Datei enthÃ¤lt Fehler";
       case INVALID_SEARCH_RANGE: return "ungÃ¼ltiger Suchbereich angegeben (unten>oben)";
       case KEY_NOT_FOUND: return "Die Suche lieferte kein Ergebnis";
       case BAV_FALSE: return "BAV denkt, das Konto ist falsch (konto_check hÃ¤lt es fÃ¼r richtig)";
-      case LUT2_NO_USER_BLOCK: return "User-Blocks mÃ¼ssen einen Typ > 1000 haben";
+      case LUT2_NO_USER_BLOCK: return "User-Blocks mÃ¼ssen einen Typ > 500 haben";
       case INVALID_SET: return "fÃ¼r ein LUT-Set sind nur die Werte 0, 1 oder 2 mÃ¶glich";
       case NO_GERMAN_BIC: return "Ein Konto kann kann nur fÃ¼r deutsche Banken geprÃ¼ft werden";
       case IPI_CHECK_INVALID_LENGTH: return "Der zu validierende strukturierete Verwendungszweck muÃŸ genau 20 Zeichen enthalten";
@@ -14779,6 +15352,11 @@ DLL_EXPORT char *kto_check_retval2utf8(int retval)
       case LUT2_NO_VALID_DATE: return "Der Datensatz enthÃ¤lt kein GÃ¼ltigkeitsdatum";
       case LUT1_SET_LOADED: return "Die Datei ist im alten LUT-Format (1.0/1.1)";
       case LUT1_FILE_GENERATED: return "ok; es wurde allerdings eine LUT-Datei im alten Format (1.0/1.1) generiert";
+      case DTA_FILE_WITH_WARNINGS: return "In der DTAUS-Datei wurden kleinere Fehler gefunden";
+      case LUT_V2_FILE_GENERATED: return "ok; es wurde allerdings eine LUT-Datei im Format 2.0 generiert (Compilerswitch)";
+      case KTO_CHECK_VALUE_REPLACED: return "ok; der Wert fÃ¼r den SchlÃ¼ssel wurde Ã¼berschrieben";
+      case OK_UNTERKONTO_POSSIBLE: return "wahrscheinlich ok; die Kontonummer kann allerdings (nicht angegebene) Unterkonten enthalten";
+      case OK_UNTERKONTO_GIVEN: return "wahrscheinlich ok; die Kontonummer enthÃ¤lt eine Unterkontonummer";
       default: return "ungÃ¼ltiger RÃ¼ckgabewert";
    }
 }
@@ -14795,6 +15373,37 @@ DLL_EXPORT char *kto_check_retval2utf8(int retval)
 DLL_EXPORT char *kto_check_retval2txt_short(int retval)
 {
    switch(retval){
+      case OK_UNTERKONTO_ATTACHED: return "OK_UNTERKONTO_ATTACHED";
+      case KTO_CHECK_DEFAULT_BLOCK_INVALID: return "KTO_CHECK_DEFAULT_BLOCK_INVALID";
+      case KTO_CHECK_DEFAULT_BLOCK_FULL: return "KTO_CHECK_DEFAULT_BLOCK_FULL";
+      case KTO_CHECK_NO_DEFAULT_BLOCK: return "KTO_CHECK_NO_DEFAULT_BLOCK";
+      case KTO_CHECK_KEY_NOT_FOUND: return "KTO_CHECK_KEY_NOT_FOUND";
+      case LUT2_NO_LONGER_VALID_BETTER: return "LUT2_NO_LONGER_VALID_BETTER";
+      case DTA_SRC_KTO_DIFFERENT: return "DTA_SRC_KTO_DIFFERENT";
+      case DTA_SRC_BLZ_DIFFERENT: return "DTA_SRC_BLZ_DIFFERENT";
+      case DTA_CR_LF_IN_FILE: return "DTA_CR_LF_IN_FILE";
+      case DTA_INVALID_C_EXTENSION: return "DTA_INVALID_C_EXTENSION";
+      case DTA_FOUND_SET_A_NOT_C: return "DTA_FOUND_SET_A_NOT_C";
+      case DTA_FOUND_SET_E_NOT_C: return "DTA_FOUND_SET_E_NOT_C";
+      case DTA_FOUND_SET_C_NOT_EXTENSION: return "DTA_FOUND_SET_C_NOT_EXTENSION";
+      case DTA_FOUND_SET_E_NOT_EXTENSION: return "DTA_FOUND_SET_E_NOT_EXTENSION";
+      case DTA_INVALID_EXTENSION_COUNT: return "DTA_INVALID_EXTENSION_COUNT";
+      case DTA_INVALID_NUM: return "DTA_INVALID_NUM";
+      case DTA_INVALID_CHARS: return "DTA_INVALID_CHARS";
+      case DTA_CURRENCY_NOT_EURO: return "DTA_CURRENCY_NOT_EURO";
+      case DTA_EMPTY_AMOUNT: return "DTA_EMPTY_AMOUNT";
+      case DTA_INVALID_TEXT_KEY: return "DTA_INVALID_TEXT_KEY";
+      case DTA_EMPTY_STRING: return "DTA_EMPTY_STRING";
+      case DTA_MARKER_A_NOT_FOUND: return "DTA_MARKER_A_NOT_FOUND";
+      case DTA_MARKER_C_NOT_FOUND: return "DTA_MARKER_C_NOT_FOUND";
+      case DTA_MARKER_E_NOT_FOUND: return "DTA_MARKER_E_NOT_FOUND";
+      case DTA_INVALID_SET_C_LEN: return "DTA_INVALID_SET_C_LEN";
+      case DTA_INVALID_SET_LEN: return "DTA_INVALID_SET_LEN";
+      case DTA_WAERUNG_NOT_EURO: return "DTA_WAERUNG_NOT_EURO";
+      case DTA_INVALID_ISSUE_DATE: return "DTA_INVALID_ISSUE_DATE";
+      case DTA_INVALID_DATE: return "DTA_INVALID_DATE";
+      case DTA_FORMAT_ERROR: return "DTA_FORMAT_ERROR";
+      case DTA_FILE_WITH_ERRORS: return "DTA_FILE_WITH_ERRORS";
       case INVALID_SEARCH_RANGE: return "INVALID_SEARCH_RANGE";
       case KEY_NOT_FOUND: return "KEY_NOT_FOUND";
       case BAV_FALSE: return "BAV_FALSE";
@@ -14883,6 +15492,11 @@ DLL_EXPORT char *kto_check_retval2txt_short(int retval)
       case LUT2_NO_VALID_DATE: return "LUT2_NO_VALID_DATE";
       case LUT1_SET_LOADED: return "LUT1_SET_LOADED";
       case LUT1_FILE_GENERATED: return "LUT1_FILE_GENERATED";
+      case DTA_FILE_WITH_WARNINGS: return "DTA_FILE_WITH_WARNINGS";
+      case LUT_V2_FILE_GENERATED: return "LUT_V2_FILE_GENERATED";
+      case KTO_CHECK_VALUE_REPLACED: return "KTO_CHECK_VALUE_REPLACED";
+      case OK_UNTERKONTO_POSSIBLE: return "OK_UNTERKONTO_POSSIBLE";
+      case OK_UNTERKONTO_GIVEN: return "OK_UNTERKONTO_GIVEN";
       default: return "UNDEFINED_RETVAL";
    }
 }
@@ -15434,16 +16048,45 @@ DLL_EXPORT char *iban2bic(char *iban,int *retval,char *blz,char *kto)
 
 DLL_EXPORT char *iban_gen(char *blz,char *kto,int *retval)
 {
-   char c,check[128],iban[128],*ptr,*dptr;
-   int j,ret;
+   char c,check[128],iban[128],xkto[16],*ptr,*dptr;
+   int j,ret,uk_cnt=-1;
    UINT4 zahl,rest;
+#if DEBUG
+   RETVAL retvals;
+#endif
 
       /* erstmal das Konto testen */
    if(*blz=='+')  /* kein Test */
       blz++;
-   else if((ret=kto_check_blz(blz,kto))<=0){   /* Konto fehlerhaft */
+#if DEBUG
+   else if((ret=kto_check_blz_x(blz,kto,&uk_cnt,&retvals))<=0){   /* Konto fehlerhaft */
+#else
+   else if((ret=kto_check_blz_x(blz,kto,&uk_cnt))<=0){   /* Konto fehlerhaft */
+#endif
       if(retval)*retval=ret;
       return NULL;
+   }
+   if(uk_cnt>0){
+      for(ptr=kto+uk_cnt,dptr=xkto;(*dptr=*ptr++);dptr++);
+      *dptr++='0';
+      if(uk_cnt>1)*dptr++='0';
+      if(uk_cnt>2)*dptr++='0';
+      *dptr=0;
+      kto=xkto;
+      if(retval)*retval=OK_UNTERKONTO_ATTACHED;
+      if((ret=kto_check_blz(blz,kto))<=0){   /* Konto fehlerhaft */
+         if(retval)*retval=ret;
+         return NULL;
+      }
+   }
+   else if(!uk_cnt){
+      if(retval)*retval=OK_UNTERKONTO_POSSIBLE;
+   }
+   else if(uk_cnt==-1){
+      if(retval)*retval=OK_UNTERKONTO_GIVEN;
+   }
+   else{
+      if(retval)*retval=OK;
    }
 
    sprintf(iban,"DE00%8s%10s",blz,kto);
@@ -15507,7 +16150,6 @@ DLL_EXPORT char *iban_gen(char *blz,char *kto,int *retval)
    *dptr=0;
    ptr=malloc(64);
    strcpy(ptr,check);
-   if(retval)*retval=OK;
    return ptr;
 }
 
@@ -16048,6 +16690,7 @@ static int suche_str(char *such_name,int *anzahl,int **start_idx,int **zweigstel
 DLL_EXPORT int lut_suche_bic(char *such_name,int *anzahl,int **start_idx,int **zweigstelle,
       char ***base_name,int **blz_base)
 {
+   if(anzahl)*anzahl=0;
    if((init_status&7)<7)return LUT2_NOT_INITIALIZED;
    if(lut_id_status==FALSE)return LUT1_FILE_USED;
    if(!bic)return LUT2_BIC_NOT_INITIALIZED;   
@@ -16059,6 +16702,7 @@ DLL_EXPORT int lut_suche_bic(char *such_name,int *anzahl,int **start_idx,int **z
 DLL_EXPORT int lut_suche_namen(char *such_name,int *anzahl,int **start_idx,int **zweigstelle,
       char ***base_name,int **blz_base)
 {
+   if(anzahl)*anzahl=0;
    if((init_status&7)<7)return LUT2_NOT_INITIALIZED;
    if(lut_id_status==FALSE)return LUT1_FILE_USED;
    if(!name)return LUT2_NAME_NOT_INITIALIZED;   
@@ -16070,6 +16714,7 @@ DLL_EXPORT int lut_suche_namen(char *such_name,int *anzahl,int **start_idx,int *
 DLL_EXPORT int lut_suche_namen_kurz(char *such_name,int *anzahl,int **start_idx,int **zweigstelle,
       char ***base_name,int **blz_base)
 {
+   if(anzahl)*anzahl=0;
    if((init_status&7)<7)return LUT2_NOT_INITIALIZED;
    if(lut_id_status==FALSE)return LUT1_FILE_USED;
    if(!name_kurz)return LUT2_NAME_KURZ_NOT_INITIALIZED;   
@@ -16081,6 +16726,7 @@ DLL_EXPORT int lut_suche_namen_kurz(char *such_name,int *anzahl,int **start_idx,
 DLL_EXPORT int lut_suche_ort(char *such_name,int *anzahl,int **start_idx,int **zweigstelle,
       char ***base_name,int **blz_base)
 {
+   if(anzahl)*anzahl=0;
    if((init_status&7)<7)return LUT2_NOT_INITIALIZED;
    if(lut_id_status==FALSE)return LUT1_FILE_USED;
    if(!ort)return LUT2_ORT_NOT_INITIALIZED;   
@@ -16093,6 +16739,7 @@ DLL_EXPORT int lut_suche_blz(int such1,int such2,int *anzahl,int **start_idx,int
 {
    int cnt;
 
+   if(anzahl)*anzahl=0;
    if(such2 && such1>such2)return INVALID_SEARCH_RANGE;
    if((init_status&7)<7)return LUT2_NOT_INITIALIZED;
    if(lut_id_status==FALSE)return LUT1_FILE_USED;
@@ -16112,6 +16759,7 @@ DLL_EXPORT int lut_suche_pz(int such1,int such2,int *anzahl,int **start_idx,int 
 {
    int cnt;
 
+   if(anzahl)*anzahl=0;
    if(such2 && such1>such2)return INVALID_SEARCH_RANGE;
    if((init_status&7)<7)return LUT2_NOT_INITIALIZED;
    if(lut_id_status==FALSE)return LUT1_FILE_USED;
@@ -16129,6 +16777,7 @@ DLL_EXPORT int lut_suche_pz(int such1,int such2,int *anzahl,int **start_idx,int 
 /* Funktion lut_suche_plz() +§§§2 */
 DLL_EXPORT int lut_suche_plz(int such1,int such2,int *anzahl,int **start_idx,int **zweigstelle,int **base_name,int **blz_base)
 {
+   if(anzahl)*anzahl=0;
    if(such2 && such1>such2)return INVALID_SEARCH_RANGE;
    if((init_status&7)<7)return LUT2_NOT_INITIALIZED;
    if(lut_id_status==FALSE)return LUT1_FILE_USED;
@@ -16137,6 +16786,277 @@ DLL_EXPORT int lut_suche_plz(int such1,int such2,int *anzahl,int **start_idx,int
    return suche_int2(such1,such2,anzahl,start_idx,zweigstelle,blz_base,&plz,&sort_plz,qcmp_plz);
 }
 
+
+/* Funktion kto_check_set_default() und kto_check_set_default_bin() +§§§1 */
+/* ###########################################################################
+ * # Diese Funktionen setzt einen Wert für den Default-Block der LUT-Datei.  #
+ * # Der Block ist für Konfigurationsdaten von Anwenderprogrammen gedacht    #
+ * # und soll vor allem auch ein Beispiel für die eigene Verwendung der      #
+ * # LUT-Routinen sein. Als Schlüssel sind C-Strings zugelassen (also ohne   #
+ * # eingebettete NULL-Bytes); für die Daten sind beliebige Werte erlaubt,   #
+ * # inklusive NULL-Bytes; die Funktion set_default() erwartet hier jedoch   #
+ * # auch einen C-String, benötigt dafür aber nicht den Längenparameter.     #
+ * #                                                                         #
+ * # Diese Funktion schreibt den Block nur in den internen Speicher; mit der #
+ * # Funktion kto_check_write_default wird der Block in die LUT-Datei        #
+ * # geschrieben.                                                            #
+ * #                                                                         #
+ * # Parameter:                                                              #
+ * #    key:        Schlüssel                                                #
+ * #    val:        Daten                                                    #
+ * #    size:   Größe des Datenblocks (nur bei set_default_bin() )           #
+ * #                                                                         #
+ * # Copyright (C) 2010 Michael Plugge <m.plugge@hs-mannheim.de>             #
+ * ###########################################################################
+ */
+
+DLL_EXPORT int kto_check_set_default(char *key,char *val)
+{
+   return kto_check_set_default_bin(key,val,strlen(val)+1);
+}
+
+DLL_EXPORT int kto_check_set_default_bin(char *key,char *val,int size)
+{
+   char *ptr;
+   int i,j,ret,default_rest;
+   unsigned long offset_k[DEFAULT_CNT],offset_v[DEFAULT_CNT];
+
+   if(!default_buffer && (ret=kto_check_clear_default())!=OK)return ret; /* u.U. Initialisierung */
+   if((default_rest=default_ptr-default_buffer)<size+strlen(key)+1){   /* realloc notwendig */
+      for(i=0;i<default_cnt;i++){
+         offset_k[i]=default_key[i]-default_buffer;
+         offset_v[i]=default_val[i]-default_buffer;
+      }
+      if(!(ptr=realloc(default_buffer,default_bufsize+INITIAL_DEFAULT_BUFSIZE)))return ERROR_MALLOC;
+      default_bufsize+=INITIAL_DEFAULT_BUFSIZE;
+      default_buffer=ptr;
+      for(i=0;i<default_cnt;i++){
+         default_key[i]=default_buffer+offset_k[i];
+         default_val[i]=default_buffer+offset_v[i];
+      }
+   }
+   for(j=0;j<default_cnt;j++)if(!strcmp(key,default_key[j]))break;   /* Schlüssel suchen */
+
+      /* zu viele Schlüssel angefordert; Abhilfe nur durch Neukompilieren mit
+       * größerem Wert für DEFAULT_CNT. An sich ließe sich der Wert auch
+       * dynamisch erhöhen, es ist nur die Frage, ob sich der Aufwand lohnt
+       * (der Block ist ja nur für Programmeinstellungen o.ä. gedacht, nicht
+       * als Universallösung für alles :-) ).
+       */
+   if(j==DEFAULT_CNT)return KTO_CHECK_DEFAULT_BLOCK_FULL;
+   if(j==default_cnt){
+      ret=OK;
+      default_cnt++;    /* neuer Schlüssel */
+      for(ptr=key,default_key[j]=default_ptr;(*default_ptr++=*ptr++););
+   }
+   else
+      ret=KTO_CHECK_VALUE_REPLACED;
+   for(i=0,default_val[j]=default_ptr,ptr=val;i<size;i++)*default_ptr++=*ptr++;
+   *default_ptr++=0;    /* Abgrenzung, nur zur Sicherheit */
+   default_val_size[j]=size;
+   return ret;
+}
+
+/* Funktion kto_check_clear_default() +§§§1 */
+/* ###########################################################################
+ * # Diese Funktion initialisiert die Variablen für den Default-Block und    #
+ * # löscht evl. vorhandene Werte.                                           #
+ * #                                                                         #
+ * # Copyright (C) 2010 Michael Plugge <m.plugge@hs-mannheim.de>             #
+ * ###########################################################################
+ */
+
+static int kto_check_clear_default(void)
+{
+   int i;
+
+   if(!default_buffer){ /* muß noch Speicher für den buffer allokieren */
+      if(!(default_buffer=calloc(INITIAL_DEFAULT_BUFSIZE,1))){
+         default_buffer=NULL;
+         return ERROR_MALLOC;
+      }
+      default_bufsize=INITIAL_DEFAULT_BUFSIZE;
+   }
+   default_cnt=0;
+   default_ptr=default_buffer;
+   for(i=0;i<DEFAULT_CNT;i++){
+      default_key[i]=default_val[i]=NULL;
+      default_val_size[i]=0;
+   }
+   return OK;
+}
+
+/* Funktion kto_check_init_default() +§§§1 */
+/* ###########################################################################
+ * # Diese Funktion liest den Default-Block der LUT-Datei und initialisiert  #
+ * # die internen Variablen. Falls für block_id der Wert 0 übergeben wird,   #
+ * # wird LUT2_DEFAULT benutzt. Durch Angabe eines anderen Wertes lassen     #
+ * # sich mehrere Default-Blocks (mit unterschiedlichen IDs) in einer LUT-   #
+ * # Datei unterbringen.                                                     #
+ * #                                                                         #
+ * # Parameter:                                                              #
+ * #    lut_name:   Name der LUT-Datei                                       #
+ * #    block_id:   ID in der LUT-Datei für den Block                        #
+ * #                                                                         #
+ * # Copyright (C) 2010 Michael Plugge <m.plugge@hs-mannheim.de>             #
+ * ###########################################################################
+ */
+
+DLL_EXPORT int kto_check_init_default(char *lut_name,int block_id)
+{
+   UINT4 blocklen;
+   char *ptr,*ptr1,*data,name_buffer[LUT_PATH_LEN];
+   int ret,i,j,k;
+   struct stat s_buf;
+
+      /* falls keine LUT-Datei angegeben wurde, die Suchpfade und Defaultnamen durchprobieren */
+   if(!lut_name || !*lut_name){
+      for(j=0,k=-1;j<lut_searchpath_cnt && k==-1;j++){
+         for(i=0,lut_name=name_buffer;i<lut_name_cnt;i++){
+#if _WIN32>0
+            snprintf(lut_name,LUT_PATH_LEN,"%s\\%s",lut_searchpath[j],default_lutname[i]);
+#else
+            snprintf(lut_name,LUT_PATH_LEN,"%s/%s",lut_searchpath[j],default_lutname[i]);
+#endif
+            if(!(k=stat(lut_name,&s_buf)))break;
+         }
+      }
+      if(k==-1)return NO_LUT_FILE;  /* keine Datei gefunden */
+   }
+
+      /* Variablen initialisieren */
+   if((ret=kto_check_clear_default())!=OK)return ret;
+
+      /* Default-Block lesen */
+   if(!block_id)block_id=LUT2_DEFAULT;
+   if((ret=read_lut_block(lut_name,block_id,&blocklen,&data))!=OK)return ret;
+   if(default_bufsize<blocklen){
+      if(!(ptr=realloc(default_buffer,default_bufsize+INITIAL_DEFAULT_BUFSIZE)))
+         return ERROR_MALLOC;
+      else
+         default_buffer=ptr;
+   }
+   for(ptr=data,ptr1="Default Block";*ptr1;)if(*ptr++!=*ptr1++)return KTO_CHECK_DEFAULT_BLOCK_INVALID;
+   ptr++;
+   C2UL(default_cnt,ptr);
+   if(default_cnt>DEFAULT_CNT)return KTO_CHECK_DEFAULT_BLOCK_INVALID;
+   for(i=0;i<default_cnt;i++)C2UL(default_val_size[i],ptr);
+   for(ptr1="Default Block Namen";*ptr1;)if(*ptr++!=*ptr1++)return KTO_CHECK_DEFAULT_BLOCK_INVALID;
+   ptr++;
+   for(i=0,default_ptr=default_buffer;i<default_cnt;){
+      default_key[i++]=default_ptr;
+      while((*default_ptr++=*ptr++));
+   }
+   for(ptr1="Default Block Daten";*ptr1;)if(*ptr++!=*ptr1++)return KTO_CHECK_DEFAULT_BLOCK_INVALID;
+   ptr++;
+   for(i=0;i<default_cnt;i++){
+      default_val[i]=default_ptr;
+      for(j=0;j<default_val_size[i];j++)*default_ptr++=*ptr++;
+   }
+   free(data);
+   return OK;
+}
+
+/* Funktion kto_check_get_default() +§§§1 */
+/* ###########################################################################
+ * # Diese Funktion sucht nach dem angegebenen Schlüssel und liefert den mit #
+ * # diesem Schlüssel assoziierten Wert zurück. Es dabei wird vorausgesetzt, #
+ * # daß die internen Variablen mit der Funktion kto_check_init_default()    #
+ * # initialisiert wurde. Die Variable val wird auf den internen Pointer     #
+ * # gesetzt, daher darf der übergebene Wert nicht verändert werden. Die     #
+ * # Funktion allokiert keinen neuen Speicher.                               #
+ * #                                                                         #
+ * # Falls der angegebene Schlüssel nicht gefunden wurde, wird die           #
+ * # Fehlermeldung KTO_CHECK_KEY_NOT_FOUND zurückgegeben und val auf einen   #
+ * # Leerstring gesetzt; falls die LUT-Datei keinen Defaultblock enthält,    #
+ * # ist das Funktionsergebnis LUT2_BLOCK_NOT_IN_FILE.                       #
+ * #                                                                         #
+ * # Parameter:                                                              #
+ * #    key:        Schlüssel                                                #
+ * #    val:        Wert (Rückgabe per Referenz)                             #
+ * #    size:       Größe des Datenblocks (per Referenz)                     #
+ * #                                                                         #
+ * # Copyright (C) 2010 Michael Plugge <m.plugge@hs-mannheim.de>             #
+ * ###########################################################################
+ */
+
+DLL_EXPORT int kto_check_get_default(char *key,char **val,int *size)
+{
+   int i;
+
+   for(i=0;i<default_cnt;i++)if(!strcmp(key,default_key[i]))break;
+   if(i==default_cnt){
+      *val=NULL;
+      *size=0;
+      return KTO_CHECK_KEY_NOT_FOUND;
+   }
+   *val=default_val[i];
+   *size=default_val_size[i];
+   return OK;
+}
+
+/* Funktion kto_check_default_keys() +§§§1 */
+/* ###########################################################################
+ * # Diese Funktion gibt die aktuellen Schlüssel des Default-Blocks zurück.  #
+ * # Dabei wird vorausgesetzt, daß der Block bereits initialisiert ist       #
+ * # (durch kto_check_init_default() oder kto_check_set_default() ). Es wird #
+ * # nur ein Pointer auf das interne Array zurückgegeben, daher dürfen die   #
+ * # Werte nicht verändert werden. Die Funktion allokiert keinen neuen       #
+ * # Speicher.                                                               #
+ * #                                                                         #
+ * # Parameter:                                                              #
+ * #    keys:       Array mit den Schlüsseln (Rückgabe per Referenz)         #
+ * #    cnt:        Anzahl (Rückgabe per Referenz)                           #
+ * #                                                                         #
+ * # Copyright (C) 2010 Michael Plugge <m.plugge@hs-mannheim.de>             #
+ * ###########################################################################
+ */
+
+DLL_EXPORT int kto_check_default_keys(char ***keys,int *cnt)
+{
+   if(!default_buffer)return KTO_CHECK_NO_DEFAULT_BLOCK;
+   *cnt=default_cnt;
+   *keys=default_key;
+   return OK;
+}
+
+/* Funktion kto_check_write_default() +§§§1 */
+/* ###########################################################################
+ * # Diese Funktion schreibt den Default-Block in eine LUT-Datei. Der Block  #
+ * # muß vorher mittels der Funktion kto_check_set_default() gefüllt werden; #
+ * # ansonsten wird die Fehlermeldung KTO_CHECK_NO_DEFAULT_BLOCK             #
+ * # zurückgegeben.                                                          #
+ * #                                                                         #
+ * # block_id ist die (interne) ID in der LUT-Datei. Falls 0 übergeben wird, #
+ * # wird LUT2_DEFAULT benutzt. Durch Angabe eines anderen Wertes lassen     #
+ * # sich mehrere Default-Blocks (mit unterschiedlichen IDs) in einer LUT-   #
+ * # Datei unterbringen.                                                     #
+ * #                                                                         #
+ * # Parameter:                                                              #
+ * #    lutfile:    LUT-Datei in die der Block geschrieben werden soll       #
+ * #    block_id:   ID in der LUT-Datei für den Block                        #
+ * #                                                                         #
+ * # Copyright (C) 2010 Michael Plugge <m.plugge@hs-mannheim.de>             #
+ * ###########################################################################
+ */
+
+DLL_EXPORT int kto_check_write_default(char *lutfile,int block_id)
+{
+   char *buffer,*ptr,*dptr;;
+   int i,j;
+
+   if(!(buffer=calloc(default_bufsize+default_cnt*4+58,1)))return ERROR_MALLOC;
+   for(ptr="Default Block",dptr=buffer;(*dptr++=*ptr++););  /* Signatur Block gesamt */
+   UL2C(default_cnt,dptr);
+   for(i=0;i<default_cnt;i++)UL2C(default_val_size[i],dptr);
+   for(ptr="Default Block Namen";(*dptr++=*ptr++););  /* Signatur Blocknamen */
+   for(i=0;i<default_cnt;i++)for(ptr=default_key[i];(*dptr++=*ptr++););
+   for(ptr="Default Block Daten";(*dptr++=*ptr++););  /* Signatur Blockdaten */
+   for(i=0;i<default_cnt;i++)for(ptr=default_val[i],j=0;j++<default_val_size[i];*dptr++=*ptr++);
+   if(!block_id)block_id=LUT2_DEFAULT;
+   return write_lut_block(lutfile,block_id,(dptr-buffer+1),buffer);
+   free(buffer);
+}
 
 #if DEBUG>0
 /* Funktion kto_check_test_vars() +§§§1 */
@@ -16258,4 +17178,10 @@ XI lut_suche_ort(char *such_name,int *anzahl,int **start_idx,char ***base_name,i
 XI lut_suche_blz(int a1,int a2,int *anzahl,int **start_idx,int **base_name,int **blz_base)EXCLUDED
 XI lut_suche_pz(int a1,int a2,int *anzahl,int **start_idx,int **base_name,int **blz_base)EXCLUDED
 XI lut_suche_plz(int a1,int a2,int *anzahl,int **start_idx,int **base_name,int **blz_base)EXCLUDED
+XI kto_check_init_default(char *lut_name,int block_id);
+XI kto_check_default_keys(char ***keys,int *cnt);
+XI kto_check_set_default(char *key,char *val);
+XI kto_check_set_default_bin(char *key,char *val,int size);
+XI kto_check_get_default(char *key,char **val,int *size);
+XI kto_check_write_default(char *lutfile,int block_id);
 #endif

@@ -4,11 +4,18 @@ Revision history for Perl extension Business::KontoCheck.
 The complete history can be found in 0_history.txt (in german). The perl
 version starts with 2.1; all previous versions are C only libraries.
 
+3.1  Tue May 25, 2010
+      - implemented changes for check methods C6 and D1 valid from 2010-06-07
+      - implemented new check method D4 valid from 2010-06-07
+      - some minor bug fixes
+      - new blz.lut file, valid from 2010-03-08 until 2010-06-06 and 2010-07-06 until 2010-09-05
+      - the C library contains some additional functions, which are not yet available in perl
+
 3.0  Mon Nov 23, 2009
       - for perl, this is mainly a bug fix release; a number of memory leaks were fixed.
 
 2.98 Sat Apr 4, 2009
-      - fixed some bugs in check method 16,74,79,97
+      - fixed some bugs in check methods 16,74,79,97
       - write_lut(): directory slots may be reused
       - some bug fixes in write_lut_block() and lut_info()
       - fixed a bug in konto_check-at.c that caused a fail for the smoke tests on S-390-linux*

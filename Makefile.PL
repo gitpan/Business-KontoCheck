@@ -7,13 +7,15 @@ $use_german   = 1;
 $use_austrian = 1;
 $use_lx2l     = 0;
 $zlib         = "zlib";
+$check_zlib   = 1;
 
 # first check, if the zlib development package is available. On serveral systems
 # this library was missing, resulting in a fail for automated smoke tests of CPAN testers.
 
-print "Check zlib development package... ";
-open(OUT,"> test_zlib.c") or die "can't open test_zlib.c";
-print OUT <<EOD
+if($check_zlib>0){
+	print "Check zlib development package... ";
+	open(OUT,"> test_zlib.c") or die "can't open test_zlib.c";
+	print OUT <<EOD
 #include <stdio.h>
 #include <string.h>
 #include <zlib.h>
@@ -37,39 +39,43 @@ int main(int argc,char **argv)
 }
 EOD
 ;
-close(OUT);
+	close(OUT);
 
-$retval=system("make dynamic -f makefile.zlib 2> /dev/null");
-if($retval){$retval=system("make dynamic -f makefile.zlib-gcc 2> /dev/null");}
-if($retval){$retval=system("make dynamic -f makefile.zlib-icc 2> /dev/null");}
-if($retval){   # zlib.h not found, or linking failed
-   print "not found\ntry to build a static version of the zlib library\n";
-   $retval=system("make static -f makefile.zlib 2> /dev/null");
-   if($retval){$retval=system("make static -f makefile.zlib-gcc 2> /dev/null");}
-   if($retval){$retval=system("make static -f makefile.zlib-icc 2> /dev/null");}
-   if(!$retval){  # build of static library successfull
-      $zlib_dir=" -I$zlib";
-      $zlib_version="static";
-   }
-   else{ # build of static library failed; exit with error message
-      print "\nThis package requires the zlib development package; the package was\n"
-         . "not found on this system, and I was not able to build a static version.\n"
-         . "Please install this package first and then try again.\n\n"
-			. "Proceed, with fingers crossed...\n";
+	$retval=system("make dynamic -f makefile.zlib 2> /dev/null");
+	if($retval){$retval=system("make dynamic -f makefile.zlib-gcc 2> /dev/null");}
+	if($retval){$retval=system("make dynamic -f makefile.zlib-icc 2> /dev/null");}
+	if($retval){   # zlib.h not found, or linking failed
+		print "not found\ntry to build a static version of the zlib library\n";
+		$retval=system("make static -f makefile.zlib 2> /dev/null");
+		if($retval){$retval=system("make static -f makefile.zlib-gcc 2> /dev/null");}
+		if($retval){$retval=system("make static -f makefile.zlib-icc 2> /dev/null");}
+		if(!$retval){  # build of static library successfull
+			$zlib_dir=" -I$zlib";
+			$zlib_version="static";
+		}
+		else{ # build of static library failed; exit with error message
+			print "\nThis package requires the zlib development package; the package was\n"
+				. "not found on this system, and I was not able to build a static version.\n"
+				. "Please install this package first and then try again.\n\n"
+				. "Proceed, with fingers crossed...\n";
 #      exit(1);
+			$zlib_dir="";
+			$zlib_version="dynamic";
+		}
+	}
+	else{
 		$zlib_dir="";
 		$zlib_version="dynamic";
-   }
+		print "looks good\n";
+	}
+
+	unlink("test_zlib.c");
+	unlink("test_zlib");
+	print "use $zlib_version version of zlib\n";
 }
 else{
-   $zlib_dir="";
-   $zlib_version="dynamic";
-	print "looks good\n";
+   print "zlib is not checked; must be available for compile pass\n";
 }
-
-unlink("test_zlib.c");
-unlink("test_zlib");
-print "use $zlib_version version of zlib\n";
 
 $define="";
 
@@ -108,14 +114,14 @@ WriteMakefile(
                           'lib/Business/KontoCheck.pm' => "pm.lxx konto_check-cfg.lx\n\tlx2l -x \$<",
                           'META.yml'    			=> "META.lx konto_check-cfg.lx\n\tlx2l \$<",
                           'konto_check.h'    	=> "konto_check_h.lx konto_check-cfg.lx\n\tlx2l \$<",
-                          'konto_check.c'    	=> "konto_check.lxx konto_check-cfg.lx lib/Business/KontoCheck.pm\n\tlx2l -x \$< -ua1",
+                          'konto_check.c'    	=> "konto_check.lxx konto_check-cfg.lx \n\tlx2l -x \$< -ua1",
                           'konto_check-at.c' 	=> "konto_check-at.lxx konto_check-cfg.lx\n\tlx2l -x \$<",
                           'konto_check-at.h' 	=> "konto_check-at.lxx konto_check-cfg.lx\n\tlx2l -x \$< -uh",
                           'KontoCheck.xs'    	=> "KontoCheck.lx lib/Business/KontoCheck.pm konto_check-cfg.lx\n\tlx2l \$<",
-                          'Makefile.PL'      	=> "makefile.lx lib/Business/KontoCheck.pm makefile.zlib makefile.zlib-gcc makefile.zlib-icc konto_check-cfg.lx\n\tlx2l \$< -um",
-                          'makefile.zlib'    	=> "makefile.lx lib/Business/KontoCheck.pm konto_check-cfg.lx\n\tlx2l \$< -um1",
-                          'makefile.zlib-gcc'   => "makefile.lx lib/Business/KontoCheck.pm konto_check-cfg.lx\n\tlx2l \$< -um2",
-                          'makefile.zlib-icc'   => "makefile.lx lib/Business/KontoCheck.pm konto_check-cfg.lx\n\tlx2l \$< -um3"
+                          'Makefile.PL'      	=> "makefile.lx makefile.zlib makefile.zlib-gcc makefile.zlib-icc konto_check-cfg.lx\n\tlx2l \$< -um",
+                          'makefile.zlib'    	=> "makefile.lx konto_check-cfg.lx\n\tlx2l \$< -um1",
+                          'makefile.zlib-gcc'   => "makefile.lx konto_check-cfg.lx\n\tlx2l \$< -um2",
+                          'makefile.zlib-icc'   => "makefile.lx konto_check-cfg.lx\n\tlx2l \$< -um3"
                          })
                          :())
 

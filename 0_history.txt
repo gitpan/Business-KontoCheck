@@ -684,10 +684,11 @@ Version 1.2 (11.9.06):
    cgi-Programm entdeckt).
 
  - Die Dateien mit dem INPAR Handbuch und -Vertrag werden nach Rücksprache mit
-   First Data (H. Krickel) nicht mehr in das Paket aufgenommen, sondern sollten
-   direkt bei First Data (Andreas.Krickl@firstdata.at) angefragt, bzw. von der
-   Website von First Data Austria heruntergeladen werden (näheres in der Datei
-   00liesmich unter Punkt 4. Prüfparameter).
+   First Data (H. Krickel; jetzt SIX Card Solutions) nicht mehr in das Paket
+   aufgenommen, sondern sollten direkt bei SIX Card Solutions
+   (Andreas.Krickl@six-card-solutions.at) angefragt, bzw. von der Website von
+   SIX Card Solutions Austria heruntergeladen werden (näheres in der Datei
+   00liesmich unter Punkt 5. Prüfparameter).
 
 Version 2.1 (4.6.07):
 =======================

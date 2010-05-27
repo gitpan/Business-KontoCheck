@@ -1,4 +1,3 @@
-#line 6 "konto_check_h.lx"
 /*
  * ##########################################################################
  * #  Dies ist konto_check, ein Programm zum Testen der Prüfziffern         #
@@ -7,7 +6,7 @@
  * #  Verwendung in anderen Programmen bzw. Programmiersprachen benutzt     #
  * #  werden.                                                               #
  * #                                                                        #
- * #  Copyright (C) 2002-2007 Michael Plugge <m.plugge@hs-mannheim.de>      #
+ * #  Copyright (C) 2002-2009 Michael Plugge <m.plugge@hs-mannheim.de>      #
  * #                                                                        #
  * #  Dieses Programm ist freie Software; Sie dürfen es unter den           #
  * #  Bedingungen der GNU Lesser General Public License, wie von der Free   #
@@ -44,6 +43,16 @@
 #ifndef KONTO_CHECK_H_INCLUDED
 #define KONTO_CHECK_H_INCLUDED
 
+/*
+ * ##########################################################################
+ * # Zum 7. Juni 2010 wird die Prüfzifferberechnung der Methoden C6 und     #
+ * # D1 erweitert; mit dem folgenden Compilerschalter werden die Änderungen #
+ * # aktiviert.                                                             #
+ * ##########################################################################
+ */
+
+#define PZ_NEU_2010_06 1
+
 /* 
  * ##########################################################################
  * # Fallls das folgende Makro auf 1 gesetzt wird, werden unterschiedliche  #
@@ -61,8 +70,8 @@
 /*
  * ##########################################################################
  * # Fallls das Makro DEBUG auf 1 gesetzt wird, werden zwei- und drei-      #
- * # stellige Methoden (Methode + evl. Untermethode) akzeptiert.            #
- * # Außerdem wird die Prüfziffer (pz) als globale Variable deklariert.     #
+ * # stellige Methoden (Methode + evl. Untermethode) akzeptiert, sowie noch #
+ * # diverser Debug-Code mit eingebaut.                                     #
  * ##########################################################################
  */
 #ifndef DEBUG
@@ -75,7 +84,6 @@
  * # symbolische Konstanten definiert (analog zu den #define's aus der      #
  * # C Bibliothek. Der Wert false ist in PHP allerdings schon belegt und    #
  * # kann nicht verwendet werden; stattdessen wird NOT_OK definiert.        #
- * # gesamte Datei nach BLZs sortiert wird).                                #
  * ##########################################################################
  */
 #define SYMBOLIC_RETVALS 1
@@ -147,7 +155,7 @@
  * ######################################################################
  */
 
-#define DEFAULT_LUT_NAME "blz.lut","blz.lut2","blz.lut1"
+#define DEFAULT_LUT_NAME "blz.lut","blz.lut2f","blz.lut2"
 
 #if _WIN32>0
 #define DEFAULT_LUT_PATH ".","C:","C:\\Programme\\konto_check"
@@ -170,6 +178,12 @@
 #define DEFAULT_SLOTS            40
 #define DEFAULT_INIT_LEVEL       5
 #define LAST_LUT_BLOCK           100
+
+   /* falls das nächste Makro auf 0 gesetzt wird, werden von generate_lut2() immer
+    * LUT-Dateien im neuen Format generieret; falls für lut_version ein Wert <3 angegeben
+    * wurde, wird er auf 3 gesetzt.
+    */
+#define GENERATE_OLD_LUTFILE     0
 
    /* Das folgende Makro bestimmt das Verhalten, wenn zu einer LUT-Datei Blocks
     * hinzugefügt werden sollen und bereits (mindestens) ein Block mit
@@ -218,6 +232,8 @@
 #define LUT2_2_NAME_NAME_KURZ       114
 #define LUT2_2_INFO                 115
 
+#define LUT2_DEFAULT                501
+
 #ifdef KONTO_CHECK_VARS
 char *lut2_feld_namen[256];
 #else
@@ -231,6 +247,37 @@ extern char *lut2_feld_namen[256];
  */
 
 #undef FALSE
+#define OK_UNTERKONTO_ATTACHED                -110
+#define KTO_CHECK_DEFAULT_BLOCK_INVALID       -109
+#define KTO_CHECK_DEFAULT_BLOCK_FULL          -108
+#define KTO_CHECK_NO_DEFAULT_BLOCK            -107
+#define KTO_CHECK_KEY_NOT_FOUND               -106
+#define LUT2_NO_LONGER_VALID_BETTER           -105
+#define DTA_SRC_KTO_DIFFERENT                 -104
+#define DTA_SRC_BLZ_DIFFERENT                 -103
+#define DTA_CR_LF_IN_FILE                     -102
+#define DTA_INVALID_C_EXTENSION               -101
+#define DTA_FOUND_SET_A_NOT_C                 -100
+#define DTA_FOUND_SET_E_NOT_C                  -99
+#define DTA_FOUND_SET_C_NOT_EXTENSION          -98
+#define DTA_FOUND_SET_E_NOT_EXTENSION          -97
+#define DTA_INVALID_EXTENSION_COUNT            -96
+#define DTA_INVALID_NUM                        -95
+#define DTA_INVALID_CHARS                      -94
+#define DTA_CURRENCY_NOT_EURO                  -93
+#define DTA_EMPTY_AMOUNT                       -92
+#define DTA_INVALID_TEXT_KEY                   -91
+#define DTA_EMPTY_STRING                       -90
+#define DTA_MARKER_A_NOT_FOUND                 -89
+#define DTA_MARKER_C_NOT_FOUND                 -88
+#define DTA_MARKER_E_NOT_FOUND                 -87
+#define DTA_INVALID_SET_C_LEN                  -86
+#define DTA_INVALID_SET_LEN                    -85
+#define DTA_WAERUNG_NOT_EURO                   -84
+#define DTA_INVALID_ISSUE_DATE                 -83
+#define DTA_INVALID_DATE                       -82
+#define DTA_FORMAT_ERROR                       -81
+#define DTA_FILE_WITH_ERRORS                   -80
 #define INVALID_SEARCH_RANGE                   -79
 #define KEY_NOT_FOUND                          -78
 #define BAV_FALSE                              -77
@@ -318,7 +365,11 @@ extern char *lut2_feld_namen[256];
 #define LUT2_NO_VALID_DATE                       5
 #define LUT1_SET_LOADED                          6
 #define LUT1_FILE_GENERATED                      7
-#line 204 "konto_check_h.lx"
+#define DTA_FILE_WITH_WARNINGS                   8
+#define LUT_V2_FILE_GENERATED                    9
+#define KTO_CHECK_VALUE_REPLACED                10
+#define OK_UNTERKONTO_POSSIBLE                  11
+#define OK_UNTERKONTO_GIVEN                     12
 
 #define MAX_BLZ_CNT 30000  /* maximale Anzahl BLZ's in generate_lut() */
 
@@ -599,10 +650,10 @@ DLL_EXPORT int dump_lutfile(char *outputname,UINT4 *required);
 DLL_EXPORT int dump_lutfile_p(char *outputname,UINT4 felder);
 
    /* Universalfunktion, die Pointer auf die internen Variablen zurückliefert (von Haupt- und Nebenstellen) */
-DLL_EXPORT int lut_multiple(char *b,int *cnt,int **p_blz,char  ***p_name,char ***p_name_kurz,int **p_plz,char ***p_ort,
+DLL_EXPORT int lut_multiple(char *b,int *cnt,int **p_blz,char ***p_name,char ***p_name_kurz,int **p_plz,char ***p_ort,
       int **p_pan,char ***p_bic,int *p_pz,int **p_nr,char **p_aenderung,char **p_loeschung,int **p_nachfolge_blz,
       int *id,int *cnt_all,int **start_idx);
-DLL_EXPORT int lut_multiple_i(int b,int *cnt,int **p_blz,char  ***p_name,char ***p_name_kurz,
+DLL_EXPORT int lut_multiple_i(int b,int *cnt,int **p_blz,char ***p_name,char ***p_name_kurz,
       int **p_plz,char ***p_ort,int **p_pan,char ***p_bic,int *p_pz,int **p_nr,
       char **p_aenderung,char **p_loeschung,int **p_nachfolge_blz,int *id,
       int *cnt_all,int **start_idx);
@@ -641,6 +692,16 @@ DLL_EXPORT int lut_suche_ort(char *such_name,int *anzahl,int **start_idx,int **z
 DLL_EXPORT int lut_suche_blz(int such1,int such2,int *anzahl,int **start_idx,int **zweigstelle,int **base_name,int **blz_base);
 DLL_EXPORT int lut_suche_pz(int such1,int such2,int *anzahl,int **start_idx,int **zweigstelle,int **base_name,int **blz_base);
 DLL_EXPORT int lut_suche_plz(int such1,int such2,int *anzahl,int **start_idx,int **zweigstelle,int **base_name,int **blz_base);
+
+   /* (Benutzerdefinierte) Default-Werte in der LUT-Datei lesen und schreiben */
+#define DEFAULT_CNT 50                 /* Anzahl Einträge (fest) */
+
+DLL_EXPORT int kto_check_init_default(char *lut_name,int block_id);
+DLL_EXPORT int kto_check_default_keys(char ***keys,int *cnt);
+DLL_EXPORT int kto_check_set_default(char *key,char *val);
+DLL_EXPORT int kto_check_set_default_bin(char *key,char *val,int size);
+DLL_EXPORT int kto_check_get_default(char *key,char **val,int *size);
+DLL_EXPORT int kto_check_write_default(char *lutfile,int block_id);
 
    /* Aufräumarbeiten */
 DLL_EXPORT int lut_cleanup(void);
@@ -681,11 +742,11 @@ DLL_EXPORT_V extern UINT4 current_date;
  */
 
 #if INCLUDE_DUMMY_GLOBALS>0
-DLL_EXPORT_V extern const char *kto_check_msg;   /* globaler char-ptr mit Klartext-Ergebnis des Tests */
-DLL_EXPORT_V extern const char pz_str[];         /* benutzte Prüfziffer-Methode und -Untermethode (als String) */
-DLL_EXPORT_V extern int pz_methode; /* pz_methode: benutzte Prüfziffer-Methode (numerisch) */
+DLL_EXPORT_V extern const char *kto_check_msg;  /* globaler char-ptr mit Klartext-Ergebnis des Tests */
+DLL_EXPORT_V extern const char pz_str[];        /* benutzte Prüfziffer-Methode und -Untermethode (als String) */
+DLL_EXPORT_V extern int pz_methode;             /* pz_methode: benutzte Prüfziffer-Methode (numerisch) */
 #if DEBUG>0
-DLL_EXPORT_V extern int pz;                /* Prüfziffer (bei DEBUG als globale Variable für Testzwecke) */
+DLL_EXPORT_V extern int pz;                     /* Prüfziffer (bei DEBUG als globale Variable für Testzwecke) */
 #endif   /* DEBUG */
 #endif   /* INCLUDE_DUMMY_GLOBALS */
 #endif   /* KONTO_CHECK_VARS */

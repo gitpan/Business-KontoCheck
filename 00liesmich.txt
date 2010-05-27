@@ -25,7 +25,8 @@ kostspielige Rückbuchungen.
 Diese Datei bezieht sich vor allem auf die Perlversion der Bibliothek; in der
 C-Version gibt es kleine Unterschiede, besonders in der Paketliste und
 Installation. Die eigentliche Funktionalität ist in beiden Versionen natürlich
-identisch.
+identisch; aufgrund der unterschiedlichen Sprachstruktur gibt es allerdings
+Unterschiede in der Aufrufsyntax, sowohl für Parameter als auch Rückgabewerte.
 
 
 2. Paketliste von Business::KontoCheck (Perl-Bibliothek)
@@ -104,17 +105,14 @@ unter http://www.bdb.de/verband/Intern.htm
 
 5.2 Österreichische Banken 
 --------------------------
+Anders als bei der deutschen Version sind die aktuellen Prüfparameter sind nicht
+frei verfügbar; sie können von der Firma SIX Card Solutions Austria GmbH, Wien
+(http://www.six-card-solutions.at) käuflich bezogen werden. Interessenten wenden
+sich bitte an Andreas.Krickl@six-card-solutions.at.
 
-Die aktuellen Prüfparameter sind nicht frei verfügbar; sie können von der Firma
-First Data Austria, Wien (http://www.firstdata.at) käuflich bezogen werden. Das
-Handbuch zu INPAR (mit der Spezifikation des Dateiformats) ist auf Anfrage
-ebenfalls von First Data Austria erhältlich. Interessenten wenden sich bitte an
-Andreas.Krickl@firstdata.at. Die Spezifikation findet sich auch unter
-
-http://www.firstdata.at/de/service/downloads.htm
-
-im Abschnitt "Downloads INPAR" -> "Handbuch PDF" (aktuell (10.4.08) ist die
-Version 2.3).
+Das Handbuch zu INPAR mit der Spezifikation des Dateiformats ist ebenfalls von
+SIX Card Solutions Austria unter der Internet-Adresse
+http://www.six-card-solutions.at/downloads.asp erhältlich. 
 
 Diesem Paket liegt eine Datei inpar.dat.gz bei; sie dient als Referenz für das
 Dateiformat der INPAR-Daten. Die Datei ist ebenfalls unter der oben angegebenen
@@ -129,7 +127,6 @@ haben sich teilweise geändert
 Momentan sind keine Fehler in den Prüfziffermethoden bekannt. Falls Sie einen
 Fehler finden, würde ich mich sehr freuen, davon zu hören ;-))).
 
-Dies ist die zweite Betaversion der neuen Version (2.92, bzw. 3.0 Beta 2).
 Eine genauere Übersicht zu dieser Version findet sich in der Datei 00liesmich
 der C-Distribution.
 

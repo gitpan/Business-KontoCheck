@@ -18,12 +18,19 @@ our @EXPORT_OK = qw( kto_check kto_check_str kto_check_blz
    iban_gen check_iban ipi_check ipi_gen set_verbose_debug
    kto_check_retval2txt kto_check_retval2txt_short kto_check_retval2utf8
    kto_check_retval2html dump_lutfile kto_check_retval2dos
+   lut_suche_blz lut_suche_pz lut_suche_plz lut_suche_bic
+   lut_suche_namen lut_suche_namen_kurz lut_suche_ort
+   lut_suche_blz_idx lut_suche_pz_idx lut_suche_plz_idx
+   lut_suche_bic_idx lut_suche_namen_idx lut_suche_namen_kurz_idx
+   lut_suche_ort_idx lut_suche_blz_blz lut_suche_pz_blz
+   lut_suche_plz_blz lut_suche_bic_blz lut_suche_namen_blz
+   lut_suche_namen_kurz_blz lut_suche_ort_blz
    konto_check_at kto_check_at_str generate_lut_at %kto_retval
-   %kto_retval_kurz );
+   %kto_retval_kurz  lut_suche_namen_idx lut_suche_namen_blz );
 
 our @EXPORT = qw( kto_check lut_init kto_check_blz kto_check_at %kto_retval );
 
-our $VERSION = '3.0';
+our $VERSION = '3.1';
 
 require XSLoader;
 XSLoader::load('Business::KontoCheck', $VERSION);
@@ -132,6 +139,217 @@ sub lut_filialen
       return $v;
    }
 }
+
+sub lut_suche_bic
+{
+   if(wantarray()){
+      return lut_suche_c(1,1,@_);
+   }
+   else{
+      return lut_suche_c(0,1,@_);
+   }
+}
+
+sub lut_suche_bic_blz
+{
+   if(wantarray()){
+      return lut_suche_c(3,1,@_);
+   }
+   else{
+      return lut_suche_c(2,1,@_);
+   }
+}
+
+sub lut_suche_bic_idx
+{
+   if(wantarray()){
+      return lut_suche_c(5,1,@_);
+   }
+   else{
+      return lut_suche_c(4,1,@_);
+   }
+}
+
+sub lut_suche_namen
+{
+   if(wantarray()){
+      return lut_suche_c(1,2,@_);
+   }
+   else{
+      return lut_suche_c(0,2,@_);
+   }
+}
+
+sub lut_suche_namen_blz
+{
+   if(wantarray()){
+      return lut_suche_c(3,2,@_);
+   }
+   else{
+      return lut_suche_c(2,2,@_);
+   }
+}
+
+sub lut_suche_namen_idx
+{
+   if(wantarray()){
+      return lut_suche_c(5,2,@_);
+   }
+   else{
+      return lut_suche_c(4,2,@_);
+   }
+}
+
+sub lut_suche_namen_kurz
+{
+   if(wantarray()){
+      return lut_suche_c(1,3,@_);
+   }
+   else{
+      return lut_suche_c(0,3,@_);
+   }
+}
+
+sub lut_suche_namen_kurz_blz
+{
+   if(wantarray()){
+      return lut_suche_c(3,3,@_);
+   }
+   else{
+      return lut_suche_c(2,3,@_);
+   }
+}
+
+sub lut_suche_namen_kurz_idx
+{
+   if(wantarray()){
+      return lut_suche_c(5,3,@_);
+   }
+   else{
+      return lut_suche_c(4,3,@_);
+   }
+}
+
+sub lut_suche_ort
+{
+   if(wantarray()){
+      return lut_suche_c(1,4,@_);
+   }
+   else{
+      return lut_suche_c(0,4,@_);
+   }
+}
+
+sub lut_suche_ort_blz
+{
+   if(wantarray()){
+      return lut_suche_c(3,4,@_);
+   }
+   else{
+      return lut_suche_c(2,4,@_);
+   }
+}
+
+sub lut_suche_ort_idx
+{
+   if(wantarray()){
+      return lut_suche_c(5,4,@_);
+   }
+   else{
+      return lut_suche_c(4,4,@_);
+   }
+}
+
+sub lut_suche_blz
+{
+   if(wantarray()){
+      return lut_suche_i(1,1,@_);
+   }
+   else{
+      return lut_suche_i(0,1,@_);
+   }
+}
+
+sub lut_suche_blz_blz
+{
+   if(wantarray()){
+      return lut_suche_i(3,1,@_);
+   }
+   else{
+      return lut_suche_i(2,1,@_);
+   }
+}
+
+sub lut_suche_blz_idx
+{
+   if(wantarray()){
+      return lut_suche_i(5,1,@_);
+   }
+   else{
+      return lut_suche_i(4,1,@_);
+   }
+}
+
+sub lut_suche_pz
+{
+   if(wantarray()){
+      return lut_suche_i(1,2,@_);
+   }
+   else{
+      return lut_suche_i(0,2,@_);
+   }
+}
+
+sub lut_suche_pz_blz
+{
+   if(wantarray()){
+      return lut_suche_i(3,2,@_);
+   }
+   else{
+      return lut_suche_i(2,2,@_);
+   }
+}
+
+sub lut_suche_pz_idx
+{
+   if(wantarray()){
+      return lut_suche_i(5,2,@_);
+   }
+   else{
+      return lut_suche_i(4,2,@_);
+   }
+}
+
+sub lut_suche_plz
+{
+   if(wantarray()){
+      return lut_suche_i(1,3,@_);
+   }
+   else{
+      return lut_suche_i(0,3,@_);
+   }
+}
+
+sub lut_suche_plz_blz
+{
+   if(wantarray()){
+      return lut_suche_i(3,3,@_);
+   }
+   else{
+      return lut_suche_i(2,3,@_);
+   }
+}
+
+sub lut_suche_plz_idx
+{
+   if(wantarray()){
+      return lut_suche_i(5,3,@_);
+   }
+   else{
+      return lut_suche_i(4,3,@_);
+   }
+}
+
 
 sub lut_name
 {
@@ -275,10 +493,41 @@ sub lut_nachfolge_blz
 
 
 %Business::KontoCheck::kto_retval = (
+-110 => 'wahrscheinlich OK; es wurde allerdings ein (weggelassenes) Unterkonto angefügt',
+-109 => 'Ungültige Signatur im Default-Block',
+-108 => 'Die maximale Anzahl Einträge für den Default-Block wurde erreicht',
+-107 => 'Es wurde noch kein Default-Block angelegt',
+-106 => 'Der angegebene Schlüssel wurde im Default-Block nicht gefunden',
+-105 => 'Der Datensatz ist nicht mehr gültig, aber jünger als der andere',
+-104 => 'Die Auftraggeber-Kontonummer des C-Datensatzes unterscheidet sich von der des A-Satzes',
+-103 => 'Die Auftraggeber-Bankleitzahl des C-Datensatzes unterscheidet sich von der des A-Satzes',
+-102 => 'Die DTA-Datei enthält (unzulässige) Zeilenvorschübe',
+-101 => 'ungültiger Typ bei einem Erweiterungsblock eines C-Datensatzes',
+-100 => 'Es wurde ein C-Datensatz erwartet, jedoch ein E-Satz gefunden',
+ -99 => 'Es wurde ein C-Datensatz erwartet, jedoch ein E-Satz gefunden',
+ -98 => 'Es wurde ein C-Datensatzerweiterung erwartet, jedoch ein C-Satz gefunden',
+ -97 => 'Es wurde ein C-Datensatzerweiterung erwartet, jedoch ein E-Satz gefunden',
+ -96 => 'Die Anzahl Erweiterungen paßt nicht zur Blocklänge',
+ -95 => 'Ungültige Zeichen in numerischem Feld',
+ -94 => 'Ungültige Zeichen im Textfeld',
+ -93 => 'Die Währung des DTA-Datensatzes ist nicht Euro',
+ -92 => 'In einem DTA-Datensatz wurde kein Betrag angegeben',
+ -91 => 'Ungültiger Textschlüssel in der DTA-Datei',
+ -90 => 'Für ein (alphanumerisches) Feld wurde kein Wert angegeben',
+ -89 => 'Die Startmarkierung des A-Datensatzes wurde nicht gefunden',
+ -88 => 'Die Startmarkierung des C-Datensatzes wurde nicht gefunden',
+ -87 => 'Die Startmarkierung des E-Datensatzes wurde nicht gefunden',
+ -86 => 'Die Satzlänge eines C-Datensatzes muß zwischen 187 und 622 Byte betragen',
+ -85 => 'Die Satzlänge eines A- bzw. E-Satzes muß 128 Byte betragen',
+ -84 => 'als Währung in der DTA-Datei ist nicht Euro eingetragen',
+ -83 => 'das Ausführungsdatum ist zu früh oder zu spät (max. 15 Tage nach Dateierstellung)',
+ -82 => 'das Datum ist ungültig',
+ -81 => 'Formatfehler in der DTA-Datei',
+ -80 => 'die DTA-Datei enthält Fehler',
  -79 => 'ungültiger Suchbereich angegeben (unten>oben)',
  -78 => 'Die Suche lieferte kein Ergebnis',
  -77 => 'BAV denkt, das Konto ist falsch (konto_check hält es für richtig)',
- -76 => 'User-Blocks müssen einen Typ > 1000 haben',
+ -76 => 'User-Blocks müssen einen Typ > 500 haben',
  -75 => 'für ein LUT-Set sind nur die Werte 0, 1 oder 2 möglich',
  -74 => 'Ein Konto kann kann nur für deutsche Banken geprüft werden',
  -73 => 'Der zu validierende strukturierete Verwendungszweck muß genau 20 Zeichen enthalten',
@@ -362,11 +611,47 @@ sub lut_nachfolge_blz
    5 => 'Der Datensatz enthält kein Gültigkeitsdatum',
    6 => 'Die Datei ist im alten LUT-Format (1.0/1.1)',
    7 => 'ok; es wurde allerdings eine LUT-Datei im alten Format (1.0/1.1) generiert',
+   8 => 'In der DTAUS-Datei wurden kleinere Fehler gefunden',
+   9 => 'ok; es wurde allerdings eine LUT-Datei im Format 2.0 generiert (Compilerswitch)',
+  10 => 'ok; der Wert für den Schlüssel wurde überschrieben',
+  11 => 'wahrscheinlich ok; die Kontonummer kann allerdings (nicht angegebene) Unterkonten enthalten',
+  12 => 'wahrscheinlich ok; die Kontonummer enthält eine Unterkontonummer',
 
+'OK_UNTERKONTO_ATTACHED'                 => 'wahrscheinlich OK; es wurde allerdings ein (weggelassenes) Unterkonto angefügt',
+'KTO_CHECK_DEFAULT_BLOCK_INVALID'        => 'Ungültige Signatur im Default-Block',
+'KTO_CHECK_DEFAULT_BLOCK_FULL'           => 'Die maximale Anzahl Einträge für den Default-Block wurde erreicht',
+'KTO_CHECK_NO_DEFAULT_BLOCK'             => 'Es wurde noch kein Default-Block angelegt',
+'KTO_CHECK_KEY_NOT_FOUND'                => 'Der angegebene Schlüssel wurde im Default-Block nicht gefunden',
+'LUT2_NO_LONGER_VALID_BETTER'            => 'Der Datensatz ist nicht mehr gültig, aber jünger als der andere',
+'DTA_SRC_KTO_DIFFERENT'                  => 'Die Auftraggeber-Kontonummer des C-Datensatzes unterscheidet sich von der des A-Satzes',
+'DTA_SRC_BLZ_DIFFERENT'                  => 'Die Auftraggeber-Bankleitzahl des C-Datensatzes unterscheidet sich von der des A-Satzes',
+'DTA_CR_LF_IN_FILE'                      => 'Die DTA-Datei enthält (unzulässige) Zeilenvorschübe',
+'DTA_INVALID_C_EXTENSION'                => 'ungültiger Typ bei einem Erweiterungsblock eines C-Datensatzes',
+'DTA_FOUND_SET_A_NOT_C'                  => 'Es wurde ein C-Datensatz erwartet, jedoch ein E-Satz gefunden',
+'DTA_FOUND_SET_E_NOT_C'                  => 'Es wurde ein C-Datensatz erwartet, jedoch ein E-Satz gefunden',
+'DTA_FOUND_SET_C_NOT_EXTENSION'          => 'Es wurde ein C-Datensatzerweiterung erwartet, jedoch ein C-Satz gefunden',
+'DTA_FOUND_SET_E_NOT_EXTENSION'          => 'Es wurde ein C-Datensatzerweiterung erwartet, jedoch ein E-Satz gefunden',
+'DTA_INVALID_EXTENSION_COUNT'            => 'Die Anzahl Erweiterungen paßt nicht zur Blocklänge',
+'DTA_INVALID_NUM'                        => 'Ungültige Zeichen in numerischem Feld',
+'DTA_INVALID_CHARS'                      => 'Ungültige Zeichen im Textfeld',
+'DTA_CURRENCY_NOT_EURO'                  => 'Die Währung des DTA-Datensatzes ist nicht Euro',
+'DTA_EMPTY_AMOUNT'                       => 'In einem DTA-Datensatz wurde kein Betrag angegeben',
+'DTA_INVALID_TEXT_KEY'                   => 'Ungültiger Textschlüssel in der DTA-Datei',
+'DTA_EMPTY_STRING'                       => 'Für ein (alphanumerisches) Feld wurde kein Wert angegeben',
+'DTA_MARKER_A_NOT_FOUND'                 => 'Die Startmarkierung des A-Datensatzes wurde nicht gefunden',
+'DTA_MARKER_C_NOT_FOUND'                 => 'Die Startmarkierung des C-Datensatzes wurde nicht gefunden',
+'DTA_MARKER_E_NOT_FOUND'                 => 'Die Startmarkierung des E-Datensatzes wurde nicht gefunden',
+'DTA_INVALID_SET_C_LEN'                  => 'Die Satzlänge eines C-Datensatzes muß zwischen 187 und 622 Byte betragen',
+'DTA_INVALID_SET_LEN'                    => 'Die Satzlänge eines A- bzw. E-Satzes muß 128 Byte betragen',
+'DTA_WAERUNG_NOT_EURO'                   => 'als Währung in der DTA-Datei ist nicht Euro eingetragen',
+'DTA_INVALID_ISSUE_DATE'                 => 'das Ausführungsdatum ist zu früh oder zu spät (max. 15 Tage nach Dateierstellung)',
+'DTA_INVALID_DATE'                       => 'das Datum ist ungültig',
+'DTA_FORMAT_ERROR'                       => 'Formatfehler in der DTA-Datei',
+'DTA_FILE_WITH_ERRORS'                   => 'die DTA-Datei enthält Fehler',
 'INVALID_SEARCH_RANGE'                   => 'ungültiger Suchbereich angegeben (unten>oben)',
 'KEY_NOT_FOUND'                          => 'Die Suche lieferte kein Ergebnis',
 'BAV_FALSE'                              => 'BAV denkt, das Konto ist falsch (konto_check hält es für richtig)',
-'LUT2_NO_USER_BLOCK'                     => 'User-Blocks müssen einen Typ > 1000 haben',
+'LUT2_NO_USER_BLOCK'                     => 'User-Blocks müssen einen Typ > 500 haben',
 'INVALID_SET'                            => 'für ein LUT-Set sind nur die Werte 0, 1 oder 2 möglich',
 'NO_GERMAN_BIC'                          => 'Ein Konto kann kann nur für deutsche Banken geprüft werden',
 'IPI_CHECK_INVALID_LENGTH'               => 'Der zu validierende strukturierete Verwendungszweck muß genau 20 Zeichen enthalten',
@@ -450,9 +735,45 @@ sub lut_nachfolge_blz
 'LUT2_NO_VALID_DATE'                     => 'Der Datensatz enthält kein Gültigkeitsdatum',
 'LUT1_SET_LOADED'                        => 'Die Datei ist im alten LUT-Format (1.0/1.1)',
 'LUT1_FILE_GENERATED'                    => 'ok; es wurde allerdings eine LUT-Datei im alten Format (1.0/1.1) generiert',
+'DTA_FILE_WITH_WARNINGS'                 => 'In der DTAUS-Datei wurden kleinere Fehler gefunden',
+'LUT_V2_FILE_GENERATED'                  => 'ok; es wurde allerdings eine LUT-Datei im Format 2.0 generiert (Compilerswitch)',
+'KTO_CHECK_VALUE_REPLACED'               => 'ok; der Wert für den Schlüssel wurde überschrieben',
+'OK_UNTERKONTO_POSSIBLE'                 => 'wahrscheinlich ok; die Kontonummer kann allerdings (nicht angegebene) Unterkonten enthalten',
+'OK_UNTERKONTO_GIVEN'                    => 'wahrscheinlich ok; die Kontonummer enthält eine Unterkontonummer',
 );
 
 %Business::KontoCheck::kto_retval_kurz = (
+-110 => 'OK_UNTERKONTO_ATTACHED',
+-109 => 'KTO_CHECK_DEFAULT_BLOCK_INVALID',
+-108 => 'KTO_CHECK_DEFAULT_BLOCK_FULL',
+-107 => 'KTO_CHECK_NO_DEFAULT_BLOCK',
+-106 => 'KTO_CHECK_KEY_NOT_FOUND',
+-105 => 'LUT2_NO_LONGER_VALID_BETTER',
+-104 => 'DTA_SRC_KTO_DIFFERENT',
+-103 => 'DTA_SRC_BLZ_DIFFERENT',
+-102 => 'DTA_CR_LF_IN_FILE',
+-101 => 'DTA_INVALID_C_EXTENSION',
+-100 => 'DTA_FOUND_SET_A_NOT_C',
+ -99 => 'DTA_FOUND_SET_E_NOT_C',
+ -98 => 'DTA_FOUND_SET_C_NOT_EXTENSION',
+ -97 => 'DTA_FOUND_SET_E_NOT_EXTENSION',
+ -96 => 'DTA_INVALID_EXTENSION_COUNT',
+ -95 => 'DTA_INVALID_NUM',
+ -94 => 'DTA_INVALID_CHARS',
+ -93 => 'DTA_CURRENCY_NOT_EURO',
+ -92 => 'DTA_EMPTY_AMOUNT',
+ -91 => 'DTA_INVALID_TEXT_KEY',
+ -90 => 'DTA_EMPTY_STRING',
+ -89 => 'DTA_MARKER_A_NOT_FOUND',
+ -88 => 'DTA_MARKER_C_NOT_FOUND',
+ -87 => 'DTA_MARKER_E_NOT_FOUND',
+ -86 => 'DTA_INVALID_SET_C_LEN',
+ -85 => 'DTA_INVALID_SET_LEN',
+ -84 => 'DTA_WAERUNG_NOT_EURO',
+ -83 => 'DTA_INVALID_ISSUE_DATE',
+ -82 => 'DTA_INVALID_DATE',
+ -81 => 'DTA_FORMAT_ERROR',
+ -80 => 'DTA_FILE_WITH_ERRORS',
  -79 => 'INVALID_SEARCH_RANGE',
  -78 => 'KEY_NOT_FOUND',
  -77 => 'BAV_FALSE',
@@ -540,6 +861,11 @@ sub lut_nachfolge_blz
    5 => 'LUT2_NO_VALID_DATE',
    6 => 'LUT1_SET_LOADED',
    7 => 'LUT1_FILE_GENERATED',
+   8 => 'DTA_FILE_WITH_WARNINGS',
+   9 => 'LUT_V2_FILE_GENERATED',
+  10 => 'KTO_CHECK_VALUE_REPLACED',
+  11 => 'OK_UNTERKONTO_POSSIBLE',
+  12 => 'OK_UNTERKONTO_GIVEN',
 );
 
 END{ lut_cleanup(); }
@@ -572,18 +898,27 @@ language is german too.
    $retval=generate_lut2($inputname,$outputname[,$user_info[,$gueltigkeit[,$felder[,$filialen[,$slots[,$lut_version[,$set]]]]]]]);
 
    $retval=lut_valid()
-   @retval=lut_info($lut_name)
-   $retval=lut_filialen($blz[,$offset])
-   $retval=lut_name($blz[,$offset])
-   $retval=lut_name_kurz($blz[,$offset])
-   $retval=lut_plz($blz[,$offset])
-   $retval=lut_ort($blz[,$offset])
-   $retval=lut_pan($blz[,$offset])
-   $retval=lut_bic($blz[,$offset])
-   $retval=lut_pz($blz[,$offset])
-   $retval=lut_aenderung($blz[,$offset])
-   $retval=lut_loeschung($blz[,$offset])
-   $retval=lut_nachfolge_blz($blz[,$offset])
+   [$@]retval=lut_info($lut_name)
+   [$@]retval=lut_filialen($blz[,$offset])
+   [$@]retval=lut_name($blz[,$offset])
+   [$@]retval=lut_name_kurz($blz[,$offset])
+   [$@]retval=lut_plz($blz[,$offset])
+   [$@]retval=lut_ort($blz[,$offset])
+   [$@]retval=lut_pan($blz[,$offset])
+   [$@]retval=lut_bic($blz[,$offset])
+   [$@]retval=lut_pz($blz[,$offset])
+   [$@]retval=lut_aenderung($blz[,$offset])
+   [$@]retval=lut_loeschung($blz[,$offset])
+   [$@]retval=lut_nachfolge_blz($blz[,$offset])
+
+   [$@]bic=lut_suche_bic($bic[,$retval[,$zweigstelle[,$blz]]])
+   [$@]namen=lut_suche_namen($namen[,$retval[,$zweigstelle[,$blz]]])
+   [$@]namen_kurz=lut_suche_namen_kurz($namen_kurz[,$retval[,$zweigstelle[,$blz]]])
+   [$@]ort=lut_suche_ort($ort[,$retval[,$zweigstelle[,$blz]]])
+   [$@]blz=lut_suche_blz($blz1[,$blz2[,$retval[,$zweigstelle[,$blz]]]])
+   [$@]pz=lut_suche_pz($pz1[,$pz2[,$retval[,$zweigstelle[,$blz]]]])
+   [$@]plz=lut_suche_plz($plz1[,$plz2[,$retval[,$zweigstelle[,$blz]]]])
+
    $retval=copy_lutfile($old_name,$new_name,$new_slots)
    $retval=dump_lutfile($outputname,$felder)
    $retval=lut_cleanup()
@@ -620,9 +955,8 @@ Es werden defaultmäßig die Funkionen kto_check und kto_check_str,
 dem österreichischen Modul) sowie die Variable %kto_retval (für
 beide Module) exportiert.
 
-Optional können auch die Funktionen generate_lut, sowie
-generate_lut_at exportiert werden; in diesem Fall sind die gewünschten
-Funktionen in der use Klausel anzugeben.
+Optional können auch eine Reihe weiterer Funktionen exportiert werden;
+diese müssen dann in der use Klausel anzugeben werden.
 
 =head1 DESCRIPTION
 
@@ -762,6 +1096,56 @@ Funktionen in der use Klausel anzugeben.
    @ret=lut_name("660908") liefert ein Array mit den Werten
    @ret=("",-5,"die Bankleitzahl ist nicht achtstellig","INVALID_BLZ_LENGTH")
 
+
+-------------------------------------------------------------------------
+
+  Funktion:  lut_suche_bic()
+             lut_suche_namen()
+             lut_suche_namen_kurz()
+             lut_suche_ort()
+             lut_suche_blz()
+             lut_suche_pz()
+             lut_suche_plz()
+
+  Aufgabe:  Suche von Banken (nach Feldern der BLZ-Datei)
+
+  Aufruf:    [$@]ret=lut_suche_bic($bic[,$retval[,$zweigstelle[,$blz]]])
+             [$@]ret=lut_suche_namen($namen[,$retval[,$zweigstelle[,$blz]]])
+             [$@]ret=lut_suche_namen_kurz($namen_kurz[,$retval[,$zweigstelle[,$blz]]])
+             [$@]ret=lut_suche_ort($ort[,$retval[,$zweigstelle[,$blz]]])
+             [$@]ret=lut_suche_blz($blz1[,$blz2[,$retval[,$zweigstelle[,$blz]]]])
+             [$@]ret=lut_suche_pz($pz1[,$pz2[,$retval[,$zweigstelle[,$blz]]]])
+             [$@]ret=lut_suche_plz($plz1[,$plz2[,$retval[,$zweigstelle[,$blz]]]])
+
+   Mit diesen Funktionen lassen sich Banken suchen, die bestimmte Kriterien
+   erfüllen. Bei alphanumerischer Suche (BIC, Name, Kurzname, Ort) kann ein
+   vollständiger Name oder Namensanfang angegeben werden. So findet z.B. eine
+   Suche lut_suche_ort("aa") die Banken in in Aach, Aachen, Aalen und Aarbergen,
+   während eine Suche wie lut_suche_ort("aac") nur die Banken in Aach und Aachen
+   findet.
+
+   Bei numerischer Suche (BLZ, Prüfziffer oder PLZ) kann ein Bereich
+   spezifiziert werden. Falls der zweite Suchparameter nicht angegeben wird
+   (oder 0 ist), werden Banken gesucht, die genau auf den Parameter passen.
+
+   Diese Funktionen können sowohl in skalarem als auch im Listenkontext
+   aufgerufen werden. Bei Aufruf in skalarem Kontext geben sie die Anzahl Banken
+   zurück, die die spezifizierte Bedingung erfüllen; bei Aufruf in Listenkontext
+   wird ein Array zurückgegeben, das die jeweils gesuchten Felder enthält.
+
+   Die Funktionen haben eine Reihe optionaler Parameter:
+
+      $retval:       numerischer Rückgabewert der Funktion (1 bei Erfolg, oder
+                     negative Statusmeldung). Mittels des assoziativen Arrays
+                     %kto_retval{$retval} können diese Rückgabewerte in Klartext
+                     konvertiert werden.
+
+      $zweigstelle:  Referenz auf ein Array, in dem zu jeder Bank der Index der
+                     jeweiligen Zweigstelle enthalten ist; die Hauptstelle wird
+                     mit 0 gekennzeichnet.
+
+      $blz:          Referenz auf ein Array, das die Bankleitzahen der
+                     gefundenen Banken enthält.
 
 -------------------------------------------------------------------------
 

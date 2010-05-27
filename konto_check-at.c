@@ -516,7 +516,7 @@ static int search_blz_idx(int such_blz)
 /* Vorspann  +§§§2 */
 DLL_EXPORT int generate_lut_at(char *inputname,char *outputname,char *plain_name,char *plain_format)
 {
-   int i,j,k,cnt,idx,t_idx,ident1,ident2,last_blz,last_table,ld,show_all,sort_mode,file_version;
+   int i,j,k,cnt,idx,t_idx,ident1=0,ident2,last_blz,last_table,ld,show_all,sort_mode,file_version;
    int *table_idx;
    UINT4 adler;
    long adler_pos;
@@ -1013,10 +1013,10 @@ static int read_lut(char *lut_name)
             if(!j)
                loesch_datum[idx][0]=0;
             else if(j==1)
-               strcpy(loesch_datum[idx],"11.11.1111");
+               strcpy((char *)loesch_datum[idx],"11.11.1111");
             else{
                ld=j+19000000;
-               sprintf(loesch_datum[idx],"%02d.%02d.%04d",ld%100,(ld/100)%100,ld/10000);
+               sprintf((char *)loesch_datum[idx],"%02d.%02d.%04d",ld%100,(ld/100)%100,ld/10000);
             }
             blz_tabelle[bankleitzahl]=pruef_tabelle[idx]= *uptr++;
             break;
@@ -1032,10 +1032,10 @@ static int read_lut(char *lut_name)
       }
    }
    if(!blz[idx-1])idx--;   /* Anzahl korrigieren */
-   for(i=0,dptr=tabelle[0];i<13;i++)*dptr++='0';
+   for(i=0,dptr=(char *)tabelle[0];i<13;i++)*dptr++='0';
    for(i=0;i<MAX_TABLE_CNT_AT;i++){
       tabelle[i][5]=0;
-      for(ptr=&tabelle[i][63];*ptr==' ';)*ptr=0;
+      for(ptr=(char *)&tabelle[i][63];*ptr==' ';)*ptr=0;
    }
    blz_anzahl=idx;
    free(buffer);
@@ -1058,7 +1058,7 @@ DLL_EXPORT int dump_lutfile_at(char *inputname, char *outputname)
    fprintf(out," BLZ  Löschdatum Prüftabelle/-parameter\n---------------------------------------\n\n");
    for(i=0;i<blz_anzahl;i++){
       fprintf(out,"%5d %10s T%s %s\n",
-            blz[i],loesch_datum[i][0]?loesch_datum[i]:"",tabelle[pruef_tabelle[i]],
+            blz[i],loesch_datum[i][0]?(char *)loesch_datum[i]:"",tabelle[pruef_tabelle[i]],
             tabelle[pruef_tabelle[i]]+6);
    }
    fclose(out);
@@ -1192,7 +1192,7 @@ static int init_globals(char *lut_name)
 /* Funktion get_loesch_datum()  +§§§2 */
 DLL_EXPORT const char *get_loesch_datum(char *blz1)
 {
-   return loesch_datum[search_blz(atoi(blz1))];
+   return (char *)loesch_datum[search_blz(atoi(blz1))];
 }
 
 #ifndef INCLUDE_KONTO_CHECK_DE
@@ -1530,7 +1530,7 @@ DLL_EXPORT int kto_check_at(char *blz1,char *kto1,char *lut_name)
          false_retval=FALSE;
       }
          /* die ersten fünf Stellen enthalten den Namen der Tabelle */
-      liste=tabelle[i]+6;
+      liste=(char *)tabelle[i]+6;
       if(i==0)return ok_no_chk;
    }
 
