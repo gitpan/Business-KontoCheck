@@ -13,24 +13,23 @@ our @ISA = qw(Exporter);
 our @EXPORT_OK = qw( kto_check kto_check_str kto_check_blz
    kto_check_pz generate_lut generate_lut2 lut_cleanup lut_valid
    lut_init kto_check_init copy_lutfile lut_multiple lut_filialen
-   lut_name lut_name_kurz lut_plz lut_ort lut_pan lut_bic lut_pz
-   lut_aenderung lut_loeschung lut_nachfolge_blz lut_info iban2bic
+   lut_blz lut_name lut_name_kurz lut_plz lut_ort lut_pan lut_bic lut_pz
+   lut_aenderung lut_loeschung lut_nachfolge_blz
+   lut_blz1 lut_name1 lut_name_kurz1 lut_plz1 lut_ort1 lut_pan1 lut_bic1 lut_pz1
+   lut_aenderung1 lut_loeschung1 lut_nachfolge_blz1
+   lut_info iban2bic pz2str
    iban_gen check_iban ipi_check ipi_gen set_verbose_debug
+   retval2txt retval2txt_short retval2utf8 retval2html retval2dos
    kto_check_retval2txt kto_check_retval2txt_short kto_check_retval2utf8
    kto_check_retval2html dump_lutfile kto_check_retval2dos
    lut_suche_blz lut_suche_pz lut_suche_plz lut_suche_bic
    lut_suche_namen lut_suche_namen_kurz lut_suche_ort
-   lut_suche_blz_idx lut_suche_pz_idx lut_suche_plz_idx
-   lut_suche_bic_idx lut_suche_namen_idx lut_suche_namen_kurz_idx
-   lut_suche_ort_idx lut_suche_blz_blz lut_suche_pz_blz
-   lut_suche_plz_blz lut_suche_bic_blz lut_suche_namen_blz
-   lut_suche_namen_kurz_blz lut_suche_ort_blz
-   konto_check_at kto_check_at_str generate_lut_at %kto_retval
-   %kto_retval_kurz  lut_suche_namen_idx lut_suche_namen_blz );
+   konto_check_at kto_check_at_str generate_lut_at
+   %kto_retval %kto_retval_kurz );
 
-our @EXPORT = qw( kto_check lut_init kto_check_blz kto_check_at %kto_retval );
+our @EXPORT = qw( lut_init kto_check kto_check_blz kto_check_at %kto_retval );
 
-our $VERSION = '3.1';
+our $VERSION = '3.2';
 
 require XSLoader;
 XSLoader::load('Business::KontoCheck', $VERSION);
@@ -45,6 +44,7 @@ sub lut_info
    my $info2;
    my $valid1;
    my $valid2;
+   my $lut_dir;
    my $args;
 
    if(scalar(@_)==1){
@@ -56,11 +56,11 @@ sub lut_info
       $args=-2;
    }
    if(wantarray()){
-      $ret=lut_info_i($lut_name,1+$args,$info1,$valid1,$info2,$valid2);
-      return ($ret,$info1,$valid1,$info2,$valid2);
+      $ret=lut_info_i($lut_name,1+$args,$info1,$valid1,$info2,$valid2,$lut_dir);
+      return ($ret,$info1,$valid1,$info2,$valid2,$lut_dir);
    }
    else{
-      $ret=lut_info_i($lut_name,$args,$info1,$valid1,$info2,$valid2);
+      $ret=lut_info_i($lut_name,$args,$info1,$valid1,$info2,$valid2,$lut_dir);
       return $ret;
    }
 }
@@ -150,25 +150,6 @@ sub lut_suche_bic
    }
 }
 
-sub lut_suche_bic_blz
-{
-   if(wantarray()){
-      return lut_suche_c(3,1,@_);
-   }
-   else{
-      return lut_suche_c(2,1,@_);
-   }
-}
-
-sub lut_suche_bic_idx
-{
-   if(wantarray()){
-      return lut_suche_c(5,1,@_);
-   }
-   else{
-      return lut_suche_c(4,1,@_);
-   }
-}
 
 sub lut_suche_namen
 {
@@ -180,25 +161,6 @@ sub lut_suche_namen
    }
 }
 
-sub lut_suche_namen_blz
-{
-   if(wantarray()){
-      return lut_suche_c(3,2,@_);
-   }
-   else{
-      return lut_suche_c(2,2,@_);
-   }
-}
-
-sub lut_suche_namen_idx
-{
-   if(wantarray()){
-      return lut_suche_c(5,2,@_);
-   }
-   else{
-      return lut_suche_c(4,2,@_);
-   }
-}
 
 sub lut_suche_namen_kurz
 {
@@ -210,25 +172,6 @@ sub lut_suche_namen_kurz
    }
 }
 
-sub lut_suche_namen_kurz_blz
-{
-   if(wantarray()){
-      return lut_suche_c(3,3,@_);
-   }
-   else{
-      return lut_suche_c(2,3,@_);
-   }
-}
-
-sub lut_suche_namen_kurz_idx
-{
-   if(wantarray()){
-      return lut_suche_c(5,3,@_);
-   }
-   else{
-      return lut_suche_c(4,3,@_);
-   }
-}
 
 sub lut_suche_ort
 {
@@ -240,25 +183,6 @@ sub lut_suche_ort
    }
 }
 
-sub lut_suche_ort_blz
-{
-   if(wantarray()){
-      return lut_suche_c(3,4,@_);
-   }
-   else{
-      return lut_suche_c(2,4,@_);
-   }
-}
-
-sub lut_suche_ort_idx
-{
-   if(wantarray()){
-      return lut_suche_c(5,4,@_);
-   }
-   else{
-      return lut_suche_c(4,4,@_);
-   }
-}
 
 sub lut_suche_blz
 {
@@ -270,25 +194,6 @@ sub lut_suche_blz
    }
 }
 
-sub lut_suche_blz_blz
-{
-   if(wantarray()){
-      return lut_suche_i(3,1,@_);
-   }
-   else{
-      return lut_suche_i(2,1,@_);
-   }
-}
-
-sub lut_suche_blz_idx
-{
-   if(wantarray()){
-      return lut_suche_i(5,1,@_);
-   }
-   else{
-      return lut_suche_i(4,1,@_);
-   }
-}
 
 sub lut_suche_pz
 {
@@ -300,25 +205,6 @@ sub lut_suche_pz
    }
 }
 
-sub lut_suche_pz_blz
-{
-   if(wantarray()){
-      return lut_suche_i(3,2,@_);
-   }
-   else{
-      return lut_suche_i(2,2,@_);
-   }
-}
-
-sub lut_suche_pz_idx
-{
-   if(wantarray()){
-      return lut_suche_i(5,2,@_);
-   }
-   else{
-      return lut_suche_i(4,2,@_);
-   }
-}
 
 sub lut_suche_plz
 {
@@ -330,26 +216,25 @@ sub lut_suche_plz
    }
 }
 
-sub lut_suche_plz_blz
+
+
+sub lut_blz
 {
+   my $r;
+
+   $r=lut_blz_i(@_);
    if(wantarray()){
-      return lut_suche_i(3,3,@_);
+      return ($r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
    }
    else{
-      return lut_suche_i(2,3,@_);
+      return $r;
    }
 }
 
-sub lut_suche_plz_idx
+sub lut_blz1
 {
-   if(wantarray()){
-      return lut_suche_i(5,3,@_);
-   }
-   else{
-      return lut_suche_i(4,3,@_);
-   }
+   return lut_blz_i(@_);
 }
-
 
 sub lut_name
 {
@@ -363,6 +248,13 @@ sub lut_name
    else{
       return $v;
    }
+}
+
+sub lut_name1
+{
+   my $r=1;
+
+   return lut_name_i($r,@_);
 }
 
 sub lut_name_kurz
@@ -379,6 +271,13 @@ sub lut_name_kurz
    }
 }
 
+sub lut_name_kurz1
+{
+   my $r=1;
+
+   return lut_name_kurz_i($r,@_);
+}
+
 sub lut_plz
 {
    my $r=1;
@@ -391,6 +290,13 @@ sub lut_plz
    else{
       return $v;
    }
+}
+
+sub lut_plz1
+{
+   my $r=1;
+
+   return lut_plz_i($r,@_);
 }
 
 sub lut_ort
@@ -407,6 +313,13 @@ sub lut_ort
    }
 }
 
+sub lut_ort1
+{
+   my $r=1;
+
+   return lut_ort_i($r,@_);
+}
+
 sub lut_pan
 {
    my $r=1;
@@ -419,6 +332,13 @@ sub lut_pan
    else{
       return $v;
    }
+}
+
+sub lut_pan1
+{
+   my $r=1;
+
+   return lut_pan_i($r,@_);
 }
 
 sub lut_bic
@@ -435,6 +355,13 @@ sub lut_bic
    }
 }
 
+sub lut_bic1
+{
+   my $r=1;
+
+   return lut_bic_i($r,@_);
+}
+
 sub lut_pz
 {
    my $r=1;
@@ -447,6 +374,13 @@ sub lut_pz
    else{
       return $v;
    }
+}
+
+sub lut_pz1
+{
+   my $r=1;
+
+   return lut_pz_i($r,@_);
 }
 
 sub lut_aenderung
@@ -463,6 +397,13 @@ sub lut_aenderung
    }
 }
 
+sub lut_aenderung1
+{
+   my $r=1;
+
+   return lut_aenderung_i($r,@_);
+}
+
 sub lut_loeschung
 {
    my $r=1;
@@ -477,6 +418,13 @@ sub lut_loeschung
    }
 }
 
+sub lut_loeschung1
+{
+   my $r=1;
+
+   return lut_loeschung_i($r,@_);
+}
+
 sub lut_nachfolge_blz
 {
    my $r=1;
@@ -489,6 +437,13 @@ sub lut_nachfolge_blz
    else{
       return $v;
    }
+}
+
+sub lut_nachfolge_blz1
+{
+   my $r=1;
+
+   return lut_nachfolge_blz_i($r,@_);
 }
 
 
@@ -887,7 +842,7 @@ language is german too.
    use Business::KontoCheck;
    use Business::KontoCheck qw( kto_check lut_name lut_blz lut_ort %kto_retval [...] );
 
-   $retval=lut_init([$lut_name[,$required[,$set]]);
+   $retval=lut_init([$lut_name[,$required[,$set]]]);
    $retval=kto_check_init($lut_name[,$required[,$set[,$incremental]]]);
    $retval=kto_check($blz,$kto,$lut_name);
    $retval=kto_check_str($blz,$kto,$lut_name);
@@ -897,7 +852,7 @@ language is german too.
    $retval=generate_lut($inputname,$outputname,$user_info,$lut_version);
    $retval=generate_lut2($inputname,$outputname[,$user_info[,$gueltigkeit[,$felder[,$filialen[,$slots[,$lut_version[,$set]]]]]]]);
 
-   $retval=lut_valid()
+   [$@]retval=lut_blz($blz[,$offset])
    [$@]retval=lut_info($lut_name)
    [$@]retval=lut_filialen($blz[,$offset])
    [$@]retval=lut_name($blz[,$offset])
@@ -911,13 +866,16 @@ language is german too.
    [$@]retval=lut_loeschung($blz[,$offset])
    [$@]retval=lut_nachfolge_blz($blz[,$offset])
 
-   [$@]bic=lut_suche_bic($bic[,$retval[,$zweigstelle[,$blz]]])
-   [$@]namen=lut_suche_namen($namen[,$retval[,$zweigstelle[,$blz]]])
-   [$@]namen_kurz=lut_suche_namen_kurz($namen_kurz[,$retval[,$zweigstelle[,$blz]]])
-   [$@]ort=lut_suche_ort($ort[,$retval[,$zweigstelle[,$blz]]])
-   [$@]blz=lut_suche_blz($blz1[,$blz2[,$retval[,$zweigstelle[,$blz]]]])
-   [$@]pz=lut_suche_pz($pz1[,$pz2[,$retval[,$zweigstelle[,$blz]]]])
-   [$@]plz=lut_suche_plz($plz1[,$plz2[,$retval[,$zweigstelle[,$blz]]]])
+   $retval=lut_valid()
+   $ret=pz2str($pz[,$ret])
+
+   [$@]bic=lut_suche_bic($bic[,$retval])
+   [$@]namen=lut_suche_namen($namen[,$retval])
+   [$@]namen_kurz=lut_suche_namen_kurz($namen_kurz])
+   [$@]ort=lut_suche_ort($ort[,$retval])
+   [$@]blz=lut_suche_blz($blz1[,$blz2[,$retval]])
+   [$@]pz=lut_suche_pz($pz1[,$pz2[,$retval]])
+   [$@]plz=lut_suche_plz($plz1[,$plz2[,$retval]])
 
    $retval=copy_lutfile($old_name,$new_name,$new_slots)
    $retval=dump_lutfile($outputname,$felder)
@@ -932,6 +890,11 @@ language is german too.
    $retval=retval2html($retval)
    $retval=retval2utf8($retval)
    $retval=retval2dos($retval)
+   $retval=kto_check_retval2txt($retval)
+   $retval=kto_check_retval2txt_short($retval)
+   $retval=kto_check_retval2html($retval)
+   $retval=kto_check_retval2utf8($retval)
+   $retval=kto_check_retval2dos($retval)
    $retval_txt=$kto_retval{$retval};
 
    $retval=kto_check_at($blz,$kto,$lut_name);
@@ -940,13 +903,9 @@ language is german too.
 
 =head1 DESCRIPTION
 
-Dies ist Business::KontoCheck, ein Programm zum Testen der
-Prüfziffern von deutschen und österreichischen Bankkonten. Es war
-ursprünglich für die Benutzung mit dem dtaus-Paket von Martin
-Schulze <joey@infodrom.org> und dem lx2l Präprozessor gedacht;
-es läßt sich jedoch auch mit beliebigen anderen Programmen
-verwenden. Dies ist die Perl-Version der C-Library (als XSUB
-Modul).
+Dies ist Business::KontoCheck, ein Programm zum Testen der Prüfziffern
+von deutschen und österreichischen Bankkonten. Dies ist die
+Perl-Version der C-Library (als XSUB Modul).
 
 =head1 EXPORT
 
@@ -986,19 +945,19 @@ diese müssen dann in der use Klausel anzugeben werden.
                 werden.
 
   Rückgabewerte:
-     Die Funktion kto_check gibt einen numerischen Wert zurück, während die
-     Funktion kto_check_str einen kurzen String zurückgibt.
-     Werte sind definiert3
+     Die Funktion kto_check gibt einen numerischen Wert zurück,
+     während die Funktion kto_check_str einen kurzen String
+     zurückgibt.
 
-     Mittels des assoziativen Arrays %kto_retval lassen sich die numerischen
-     und kurzen Rückgabewerte in einen etwas ausführlicheren Rückgabetext
-     umwandeln:
+     Mittels des assoziativen Arrays %kto_retval lassen sich die
+     numerischen Rückgabewerte in einen etwas ausführlicheren
+     Rückgabetext umwandeln:
 
      $retval_txt=$kto_retval{$retval};
 
 -------------------------------------------------------------------------
 
-  Funktion:  generate_lut()      (LUT-Version 1.0 oder 1.1)
+  Funktion:  generate_lut()      (LUT-Version 1.0 oder 1.1; obsolet)
              generate_lut2()     (LUT-Version 1.0, 1.1 oder 2.0)
 
   Aufgabe:   LUT-Datei generieren
@@ -1050,7 +1009,8 @@ diese müssen dann in der use Klausel anzugeben werden.
 
 -------------------------------------------------------------------------
 
-  Funktion:  lut_filialen()
+  Funktion:  lut_blz()
+             lut_filialen()
              lut_name()
              lut_name_kurz()
              lut_plz()
@@ -1064,16 +1024,18 @@ diese müssen dann in der use Klausel anzugeben werden.
 
   Aufgabe:   Bestimmung von Feldern der BLZ-Datei
 
-  Aufruf:    [$@]ret=lut_name($blz[,$filiale])
-             [$@]ret=lut_name_kurz($blz[,$filiale])
-             [$@]ret=lut_plz($blz[,$filiale])
-             [$@]ret=lut_ort($blz[,$filiale])
-             [$@]ret=lut_pan($blz[,$filiale])
-             [$@]ret=lut_bic($blz[,$filiale])
-             [$@]ret=lut_pz($blz[,$filiale])
-             [$@]ret=lut_aenderung($blz[,$filiale])
-             [$@]ret=lut_loeschung($blz[,$filiale])
-             [$@]ret=lut_nachfolge_blz($blz[,$filiale])
+  Aufruf:    [$@]ret=lut_blz($blz[,$filiale[,$ret]])
+             [$@]ret=lut_name($blz[,$filiale[,$ret]])
+             [$@]ret=lut_name_kurz($blz[,$filiale[,$ret]])
+             [$@]ret=lut_plz($blz[,$filiale[,$ret]])
+             [$@]ret=lut_ort($blz[,$filiale[,$ret]])
+             [$@]ret=lut_pan($blz[,$filiale[,$ret]])
+             [$@]ret=lut_bic($blz[,$filiale[,$ret]])
+             [$@]ret=lut_pz($blz[,$filiale[,$ret]])
+             [$@]ret=lut_aenderung($blz[,$filiale[,$ret]])
+             [$@]ret=lut_loeschung($blz[,$filiale[,$ret]])
+             [$@]ret=lut_nachfolge_blz($blz[,$filiale[,$ret]])
+             $ret=pz2str($pz[,$ret])
 
    Die Funktionen bestimmen die diversen Felder der BLZ-Datei zu einer
    gegebenen BLZ. Falls der optionale Parameter $filiale angegeben
@@ -1082,11 +1044,15 @@ diese müssen dann in der use Klausel anzugeben werden.
    einer BLZ läßt sich mittels der Funktion $cnt=lut_filialen($blz)
    bestimmen.
 
-   Alle Funktionen lassen sich sowohl im skalaren als auch im Array-
-   Kontext aufrufen. Bei Aufruf in skalarem Kontext wird der jeweilige
-   Wert zurückgegeben; bei Aufruf im Array-Kontext wird außerdem noch
-   der Rückgabestatus der Funktion als Zahl, String (lang) und String
-   (kurz) zurückgegeben. Beispiel:
+   Die Funktion pz2str() wandelt eine numerische Prüfziffermethode
+   (wie sie z.B. von lut_pz() zurückgegeben wird) in einen
+   zweistelligen String um.
+
+   Alle Funktionen (außer pz2str) lassen sich sowohl im skalaren als
+   auch im Array-Kontext aufrufen. Bei Aufruf in skalarem Kontext wird
+   der jeweilige Wert zurückgegeben; bei Aufruf im Array-Kontext wird
+   außerdem noch der Rückgabestatus der Funktion als Zahl, String
+   (lang) und String (kurz) zurückgegeben. Beispiel:
 
    $ret=lut_name("66090800") liefert für $ret den Wert "BBBank",
    @ret=lut_name("66090800") liefert ein Array mit den Werten
@@ -1096,56 +1062,106 @@ diese müssen dann in der use Klausel anzugeben werden.
    @ret=lut_name("660908") liefert ein Array mit den Werten
    @ret=("",-5,"die Bankleitzahl ist nicht achtstellig","INVALID_BLZ_LENGTH")
 
+   Falls der Aufruf im Array-Kontext nicht gewünscht ist, gibt es noch
+   alternative Funktionen, die nur in skalarem Kontext arbeiten: 
+
+   -------------------------------------------------------------------------
+
+  Funktion:  lut_blz1()
+             lut_filialen1()
+             lut_name1()
+             lut_name_kurz1()
+             lut_plz1()
+             lut_ort1()
+             lut_pan1()
+             lut_bic1()
+             lut_pz1()
+             lut_aenderung1()
+             lut_loeschung1()
+             lut_nachfolge_blz1()
+
+  Aufgabe:   Bestimmung von Feldern der BLZ-Datei (skalarer Kontext)
+
+  Aufruf:    $ret=lut_blz1($blz[,$filiale[,$ret]])
+             $ret=lut_name1($blz[,$filiale[,$ret]])
+             $ret=lut_name_kurz1($blz[,$filiale[,$ret]])
+             $ret=lut_plz1($blz[,$filiale[,$ret]])
+             $ret=lut_ort1($blz[,$filiale[,$ret]])
+             $ret=lut_pan1($blz[,$filiale[,$ret]])
+             $ret=lut_bic1($blz[,$filiale[,$ret]])
+             $ret=lut_pz1($blz[,$filiale[,$ret]])
+             $ret=lut_aenderung1($blz[,$filiale[,$ret]])
+             $ret=lut_loeschung1($blz[,$filiale[,$ret]])
+             $ret=lut_nachfolge_blz1($blz[,$filiale[,$ret]])
+             $ret=pz2str1($pz[,$ret])
+
+   Die Funktionen entsprechen den Funktionen ohne die angehängte "1";
+   allerdings arbeiten sie ausschließlich im skalaren Kontext. Das ist
+   z.B. vorteilhaft, wenn man den Rückgabewert der Funktion in einem
+   anderen Funktionsaufruf benutzen will. Der Rückgabewert der
+   Funktion kann mittels des optionalen Parameters $ret bestimmt
+   werden.
 
 -------------------------------------------------------------------------
 
-  Funktion:  lut_suche_bic()
+  Funktion:  lut_suche_blz()
+             lut_suche_bic()
              lut_suche_namen()
              lut_suche_namen_kurz()
              lut_suche_ort()
-             lut_suche_blz()
              lut_suche_pz()
              lut_suche_plz()
 
   Aufgabe:  Suche von Banken (nach Feldern der BLZ-Datei)
 
-  Aufruf:    [$@]ret=lut_suche_bic($bic[,$retval[,$zweigstelle[,$blz]]])
-             [$@]ret=lut_suche_namen($namen[,$retval[,$zweigstelle[,$blz]]])
-             [$@]ret=lut_suche_namen_kurz($namen_kurz[,$retval[,$zweigstelle[,$blz]]])
-             [$@]ret=lut_suche_ort($ort[,$retval[,$zweigstelle[,$blz]]])
-             [$@]ret=lut_suche_blz($blz1[,$blz2[,$retval[,$zweigstelle[,$blz]]]])
-             [$@]ret=lut_suche_pz($pz1[,$pz2[,$retval[,$zweigstelle[,$blz]]]])
-             [$@]ret=lut_suche_plz($plz1[,$plz2[,$retval[,$zweigstelle[,$blz]]]])
+  Aufruf:    [$@]ret=lut_suche_bic($bic[,$retval])
+             [$@]ret=lut_suche_namen($namen[,$retval])
+             [$@]ret=lut_suche_namen_kurz($namen_kurz[,$retval])
+             [$@]ret=lut_suche_ort($ort[,$retval])
 
-   Mit diesen Funktionen lassen sich Banken suchen, die bestimmte Kriterien
-   erfüllen. Bei alphanumerischer Suche (BIC, Name, Kurzname, Ort) kann ein
-   vollständiger Name oder Namensanfang angegeben werden. So findet z.B. eine
-   Suche lut_suche_ort("aa") die Banken in in Aach, Aachen, Aalen und Aarbergen,
-   während eine Suche wie lut_suche_ort("aac") nur die Banken in Aach und Aachen
-   findet.
+             [$@]ret=lut_suche_blz($blz1[,$blz2[,$retval]])
+             [$@]ret=lut_suche_pz($pz1[,$pz2[,$retval]])
+             [$@]ret=lut_suche_plz($plz1[,$plz2[,$retval]])
+
+   Mit diesen Funktionen lassen sich Banken suchen, die bestimmte
+   Kriterien erfüllen. Bei alphanumerischer Suche (BIC, Name,
+   Kurzname, Ort) kann ein vollständiger Name oder Namensanfang
+   angegeben werden. So findet z.B. eine Suche lut_suche_ort("aa") die
+   Banken in in Aach, Aachen, Aalen und Aarbergen, während eine Suche
+   wie lut_suche_ort("aac") nur die Banken in Aach und Aachen findet.
 
    Bei numerischer Suche (BLZ, Prüfziffer oder PLZ) kann ein Bereich
-   spezifiziert werden. Falls der zweite Suchparameter nicht angegeben wird
-   (oder 0 ist), werden Banken gesucht, die genau auf den Parameter passen.
+   spezifiziert werden. Falls der zweite Suchparameter nicht angegeben
+   wird (oder 0 ist), werden Banken gesucht, die genau auf den
+   Parameter passen.
 
-   Diese Funktionen können sowohl in skalarem als auch im Listenkontext
-   aufgerufen werden. Bei Aufruf in skalarem Kontext geben sie die Anzahl Banken
-   zurück, die die spezifizierte Bedingung erfüllen; bei Aufruf in Listenkontext
-   wird ein Array zurückgegeben, das die jeweils gesuchten Felder enthält.
+   Diese Funktionen können sowohl in skalarem als auch im
+   Listenkontext aufgerufen werden. Bei Aufruf in skalarem Kontext
+   geben sie eine Referenz auf ein Array mit Bankleitzahlen zurück,
+   die die Kriterien erfüllen; bei Aufruf im Listenkontext werden (bis
+   zu) drei Referenzen zurückgegeben. Die erste zeigt auf das Array
+   mit Bankleitzahlen, die zweite auf ein Array mit Indizes der
+   jeweiligen Zweigstellen und die dritte auf ein Array mit den
+   jeweiligen Werten des gesuchten Feldes.
 
-   Die Funktionen haben eine Reihe optionaler Parameter:
+   In dem (optionalen) Parameter $retval wird der numerischer
+   Rückgabewert der Funktion (1 bei Erfolg, oder negative
+   Statusmeldung) zurückgeliefert.. Mittels des assoziativen Arrays
+   %kto_retval{$retval} können diese Rückgabewerte in Klartext
+   konvertiert werden.
 
-      $retval:       numerischer Rückgabewert der Funktion (1 bei Erfolg, oder
-                     negative Statusmeldung). Mittels des assoziativen Arrays
-                     %kto_retval{$retval} können diese Rückgabewerte in Klartext
-                     konvertiert werden.
+   Beispiele:
+   $blz_p=lut_suche_ort("mannheim");
+   @blz=@$blz_p;     # Array mit allen Banken in Mannheim
 
-      $zweigstelle:  Referenz auf ein Array, in dem zu jeder Bank der Index der
-                     jeweiligen Zweigstelle enthalten ist; die Hauptstelle wird
-                     mit 0 gekennzeichnet.
+   ($blz_p,$idx_p)=lut_suche_ort("mannheim");
+   @blz=@$blz_p;     # Array mit allen Banken in Mannheim
+   @idx=@$idx_p;     # Array der Zweigstellen
 
-      $blz:          Referenz auf ein Array, das die Bankleitzahen der
-                     gefundenen Banken enthält.
+   ($blz_p,$idx_p,$ort_p)=lut_suche_ort("aa");
+   @blz=@$blz_p;     # Array mit Banken in Städten, die mit "aa" beginnen
+   @idx=@$idx_p;     # Array der Zweigstellen
+   @ort=@$ort_p;     # Array der jeweiligen Orte
 
 -------------------------------------------------------------------------
 
@@ -1247,35 +1263,23 @@ diese müssen dann in der use Klausel anzugeben werden.
 
 -------------------------------------------------------------------------
 
-
-=head1 BUGS der Version 2.x:
-
-Die alten Problemfälle aus Version 2.x sind ab Version 3.0 behoben:
-
- - Die Funktion generate_lut() benutzt einen eigenen Variablensatz, so
-   daß keine Interferenzen mit den Testroutinen auftreten (das git noch
-   nicht für generate_lut_at()!).
-
- - Die Bibliothek ist jetzt threadfest
-
- - Es ist möglich, die Initialisierung mehrfach aufzurufen; der vorher
-    allokierte Speicher wird dabei automatisch freigegeben. Auch eine
-    inkrementelle Initialisierung (bei der nur einige Blocks der
-    LUT-Datei nachgeladen werden) ist möglich. Falls in der LUT-Datei
-    zwei Datensätze enthalten sind (und nicht ein bestimmter
-    ausgewählt wird), erfolgt die (Neu-)Initialisierung in
-    Abhängigkeit vom aktuellen Datum.
-
-
 =head1 SEE ALSO
 
-Eine ausführliche Beschreibung der Prüfziffermethoden und das Format der
-LUT-Datei findet sich im C-Quellcode.
+Eine ausführliche Beschreibung der Prüfziffermethoden und das Format
+der LUT-Datei findet sich im C-Quellcode. Ein Link zur offiziellen
+Beschreibung der Prüfziffermethoden u.a. (von der Deutschen
+Bundesbank) findet sich auf der Webseite zu konto_check unter
+http://www.informatik.hs-mannheim.de/konto_check/konto_check.php?ausgabe=3
 
-Eine Mailingliste zu konto_check findet sich auf SourceForge.net unter
-http://sourceforge.net/mail/?group_id=199719
+Auf SourceForge.net gibt es unter http://sourceforge.net/mail/?group_id=199719
+auch eine Mailingliste. Der Traffic ist sehr gering, maximal meist ein bis zwei
+Emails/Monat.
 
-Die aktuelle Version findet sich unter http://www.informatik.hs-mannheim.de/konto_check
+Die aktuelle Version findet sich auf CPAN unter
+http://search.cpan.org/~michel/Business-KontoCheck oder auf
+Sourceforge unter http://sourceforge.net/projects/kontocheck/develop
+Dort ist auch ein SVN Repository, in dem die neuesten Versionen und
+Bugfixes zu finden sind.
 
 =head1 AUTHOR
 
@@ -1283,7 +1287,7 @@ Michael Plugge, E<lt>m.plugge@hs-mannheim.deE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2007-2008 by Michael Plugge
+Copyright (C) 2007-2010 by Michael Plugge
 
 This library is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself, either Perl version 5.8.8 or, at your option,

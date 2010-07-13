@@ -4,6 +4,19 @@ Revision history for Perl extension Business::KontoCheck.
 The complete history can be found in 0_history.txt (in german). The perl
 version starts with 2.1; all previous versions are C only libraries.
 
+3.2  Tue Jul 13, 2010
+      - complete rewrite of Makefile.PL; works now also for Windows, better recognition of zlib
+      - complete rewrite of search function lut_suche_*(); these functions got a new interface
+        (until 3.1 they were beta for perl, with many problems). All search functions were heavily
+        tested, no memory leak was left.
+      - fixed bugs in lut_info()
+      - new variable $lut_dir in function lut_info(): gives the directory of the lut-file
+      - new function lut_blz() tests the existence of a BLZ
+      - new function pz2str() to convert a numerical check method to the (official) string version
+      - new functions retval2*()
+      - new functions lut_*1(): work  always in scalar context
+      - new testfiles t/lut_info.t and t/lut_suche.t
+
 3.1  Tue May 25, 2010
       - implemented changes for check methods C6 and D1 valid from 2010-06-07
       - implemented new check method D4 valid from 2010-06-07

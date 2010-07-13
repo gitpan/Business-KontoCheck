@@ -1,3 +1,4 @@
+#line 6 "konto_check_h.lx"
 /*
  * ##########################################################################
  * #  Dies ist konto_check, ein Programm zum Testen der Prüfziffern         #
@@ -370,6 +371,7 @@ extern char *lut2_feld_namen[256];
 #define KTO_CHECK_VALUE_REPLACED                10
 #define OK_UNTERKONTO_POSSIBLE                  11
 #define OK_UNTERKONTO_GIVEN                     12
+#line 219 "konto_check_h.lx"
 
 #define MAX_BLZ_CNT 30000  /* maximale Anzahl BLZ's in generate_lut() */
 
@@ -598,6 +600,13 @@ DLL_EXPORT int get_lut_info_t(char **info,char *lut_name,KTO_CHK_CTX *ctx);
  */
 DLL_EXPORT char *get_kto_check_version(void);
 
+/*
+ * ######################################################################
+ * # kc_free(): Speicher freigeben (für das Perl-Modul)                 #
+ * ######################################################################
+ */
+DLL_EXPORT void kc_free(char *ptr);
+
 #if DEBUG>0
 /* ###########################################################################
  * # Die Funktion kto_check_test_vars() macht nichts anderes, als die beiden #
@@ -629,6 +638,7 @@ DLL_EXPORT int write_lut_block(char *lutname,UINT4 typ,UINT4 len,char *data);
 DLL_EXPORT int read_lut_block(char *lutname, UINT4 typ,UINT4 *blocklen,char **data);
 DLL_EXPORT int read_lut_slot(char *lutname,int slot,UINT4 *blocklen,char **data);
 DLL_EXPORT int lut_dir_dump(char *lutname,char *outputname);
+DLL_EXPORT int lut_dir_dump_str(char *lutname,char **dptr);
 DLL_EXPORT int generate_lut2_p(char *inputname,char *outputname,char *user_info,char *gueltigkeit,
       UINT4 felder,UINT4 filialen,int slots,int lut_version,int set);
 DLL_EXPORT int generate_lut2(char *inputname,char *outputname,char *user_info,
@@ -659,6 +669,7 @@ DLL_EXPORT int lut_multiple_i(int b,int *cnt,int **p_blz,char ***p_name,char ***
       int *cnt_all,int **start_idx);
 
    /* Funktionen, um einzelne Felder zu bestimmen (Rückgabe direkt) */
+DLL_EXPORT int lut_blz(char *b,int zweigstelle);
 DLL_EXPORT int lut_filialen(char *b,int *retval);
 DLL_EXPORT int lut_filialen_i(int b,int *retval);
 DLL_EXPORT char *lut_name(char *b,int zweigstelle,int *retval);
@@ -719,6 +730,9 @@ DLL_EXPORT char *kto_check_retval2txt_short(int retval);
 DLL_EXPORT char *kto_check_retval2html(int retval);
 DLL_EXPORT char *kto_check_retval2utf8(int retval);
 DLL_EXPORT char *kto_check_retval2dos(int retval);
+
+   /* Prüfziffer (numerisch) in String umwandeln */
+DLL_EXPORT char *pz2str(int pz,int *ret);
 
 /*
  * ######################################################################

@@ -48,16 +48,16 @@
 
 /* Definitionen und Includes  */
 #ifndef VERSION
-#define VERSION "3.1"
+#define VERSION "3.2"
 #endif
-#define VERSION_DATE "2010-05-25"
+#define VERSION_DATE "2010-07-02"
 
 #ifndef INCLUDE_KONTO_CHECK_DE
 #define INCLUDE_KONTO_CHECK_DE 1
 #endif
 
 #ifndef CHECK_MALLOC
-#define CHECK_MALLOC 1
+#define CHECK_MALLOC 0
 #endif
 
 #define COMPRESS 1   /* Blocks komprimieren */
@@ -68,7 +68,6 @@
 #include <string.h>
 #include <time.h>
 #include <errno.h>
-#include <unistd.h>
 #include <limits.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -1941,44 +1940,78 @@ fini:
    return retval;
 }
 
-/* Funktion lut_dir_dump() +§§§1 */
+/* Funktion lut_dir_dump() und lut_dir_dump_str() +§§§1 */
 /* ###########################################################################
- * # Diese Funktion liest eine LUT-Datei und schreibt Infos zu den ent-      #
- * # haltenen Blocks in die Ausgabedatei. Falls für outputname NULL oder     #
- * # ein Leerstring angegeben wird, werden die Daten nach stdout geschrieben.#
- * # Außerdem wird noch die Gesamtgröße der Daten (sowohl komprimiert als    #
- * # auch unkomprimiert) ausgegeben.                                         #
+ * # Diese Funktionen lesen eine LUT-Datei und schreiben Infos zu den ent-   #
+ * # haltenen Blocks in die Ausgabedatei (bzw. den Ausgabestring). Falls für #
+ * # outputname NULL oder ein Leerstring angegeben wird, werden die Daten    #
+ * # nach stdout geschrieben. Außerdem wird noch die Gesamtgröße der Daten   #
+ * # (sowohl komprimiert als auch unkomprimiert) ausgegeben.                 #
  * #                                                                         #
- * # Copyright (C) 2007 Michael Plugge <m.plugge@hs-mannheim.de>             #
+ * # Die Funktion lut_dir_dump_str() allokiert für die Ausgabe Speicher;     #
+ * # dieser muß von dre aufrufenden Funktion wieder freigegeben werden.      #
+ * #                                                                         #
+ * # Copyright (C) 2007-2010 Michael Plugge <m.plugge@hs-mannheim.de>        #
  * ###########################################################################
  */
 
 DLL_EXPORT int lut_dir_dump(char *lutname,char *outputname)
 {
+   char *ptr;
+   int retval;
+   FILE *out;
+
+   if((retval=lut_dir_dump_str(lutname,&ptr))<OK)return retval;
+   if(!outputname || !*outputname){
+      fprintf(stderr,"%s\n\n",ptr);
+      return OK;
+   }
+   else if(!(out=fopen(outputname,"w"))){
+      free(ptr);
+      return FILE_WRITE_ERROR;
+   }
+   fprintf(out,"%s\n\n",ptr);
+   free(ptr);
+   fclose(out);
+   return OK;
+}
+
+DLL_EXPORT int lut_dir_dump_str(char *lutname,char **dptr)
+{
+   char *ptr;
    int i,retval,len1,len2,slotdir[MAX_SLOTS];
    UINT4 slot_cnt,typ,len,compressed_len,adler;
-   FILE *lut,*out;
+   FILE *lut;
 
    if(!(lut=fopen(lutname,"rb")))return FILE_READ_ERROR;
-   if(!outputname || !*outputname)
-      out=stderr;
-   else if(!(out=fopen(outputname,"w")))
-      return FILE_WRITE_ERROR;
-   fprintf(out," Slot retval   Typ     Inhalt           Länge   kompr.  Adler32      Test\n");
+   retval=lut_dir(lut,0,&slot_cnt,NULL,NULL,NULL,NULL,slotdir);
+   if(retval!=OK)return retval;
+   if(!(ptr=malloc(slot_cnt*90+500)))return ERROR_MALLOC;
+   *dptr=ptr;
+   sprintf(ptr," Slot retval   Typ   Inhalt             Länge    kompr.   Verh.    Adler32  Test\n");
+   while(*ptr)ptr++;
    for(len1=len2=0,i=slot_cnt=1;i<=slot_cnt;i++){
       retval=lut_dir(lut,i,&slot_cnt,&typ,&len,&compressed_len,&adler,NULL);
       if(retval==LUT2_FILE_CORRUPTED)return retval;
-      fprintf(out,"%2d/%2u %3d %8d   %-15s %8u %8u  0x%08x   %s\n",
-            i,slot_cnt,retval,typ,typ<400?lut_block_name2[typ]:"(Userblock)",len,compressed_len,adler,retval==OK?"OK":"FEHLER");
+      if(typ)
+         sprintf(ptr,"%2d/%2u %3d %8d   %-15s %8u %8u%7.1f%%  0x%08x   %s\n",
+               i,slot_cnt,retval,typ,typ<400?lut_block_name2[typ]:"(Userblock)",
+               len,compressed_len,len?(double)compressed_len/len*100:0,adler,retval==OK?"OK":"FEHLER");
+      else
+         sprintf(ptr,"%2d/%2u   1        0   leer                   0        0     -    0x00000000   OK\n",i,slot_cnt);
+      while(*ptr)ptr++;
       len1+=len;
       len2+=compressed_len;
    }
-   fprintf(out,"\nGesamtgröße unkomprimiert: %d, Gesamtgröße komprimiert: %d\nKompressionsrate: %1.2f%%\n",
+   sprintf(ptr,"\nGesamtgroesse unkomprimiert: %d, Gesamtgroesse komprimiert: %d\nKompressionsrate: %1.2f%%\nSlotdir (kurz): ",
          len1,len2,100.*(double)len2/len1);
-   retval=lut_dir(lut,0,&slot_cnt,NULL,NULL,NULL,NULL,slotdir);
-   fprintf(out,"Slotdir (kurz): ");
-   for(i=0;i<slot_cnt;i++)if(slotdir[i])fprintf(out,"%d ",slotdir[i]);
-   fprintf(out,"\n\n");
+   while(*ptr)ptr++;
+   for(i=0;i<slot_cnt;i++)if(slotdir[i]){
+      sprintf(ptr,"%d ",slotdir[i]);
+      while(*ptr)ptr++;
+   }
+   *ptr++='\n';
+   *ptr=0;
    fclose(lut);
    return OK;
 }
@@ -2547,7 +2580,7 @@ DLL_EXPORT int get_lut_id(char *lut_name,int set,char *id)
    int ret,valid,valid1,valid2;
 
    *id=0;
-   info=NULL;
+   info=info1=info2=NULL;
    if(!lut_name || !*lut_name){
       if(lut_id_status==LUT1_SET_LOADED)return LUT1_FILE_USED;
       if(id)strncpy(id,lut_id,33);
@@ -2593,25 +2626,13 @@ DLL_EXPORT int get_lut_id(char *lut_name,int set,char *id)
             break;
 
          case 1:  /* nur Set 1 */
-            ret=lut_info(lut_name,&info1,NULL,&valid1,NULL);
-            if(valid1==LUT1_SET_LOADED)return LUT1_FILE_USED;
-            FREE(info2);
-            if(info1)
-               info=info1;
-            else
-               return FALSE;
-            valid=valid2;
+            ret=lut_info(lut_name,&info,NULL,&valid,NULL);
+            if(valid==LUT1_SET_LOADED)return LUT1_FILE_USED;
             break;
 
          case 2:  /* nur Set 2 */
-            ret=lut_info(lut_name,NULL,&info2,NULL,&valid2);
-            if(valid2==LUT1_SET_LOADED)return LUT1_FILE_USED;
-            FREE(info1);
-            if(info2)
-               info=info2;
-            else
-               return FALSE;
-            valid=valid2;
+            ret=lut_info(lut_name,NULL,&info,NULL,&valid);
+            if(valid==LUT1_SET_LOADED)return LUT1_FILE_USED;
             break;
 
          default: /* Fehler */
@@ -3390,6 +3411,28 @@ static int lut_index_i(int b)
  * # Copyright (C) 2007 Michael Plugge <m.plugge@hs-mannheim.de>             #
  * ###########################################################################
  */
+
+/* Funktion lut_blz() +§§§2 */
+/* ###########################################################################
+ * # lut_blz(): Test ob eine BLZ existiert                                   #
+ * #                                                                         #
+ * # Diese Funktion testet, ob eine BLZ (und Zweigstelle, falls gewünscht)   #
+ * # existiert und gültig ist.                                               #
+ * #                                                                         #
+ * # Copyright (C) 2010 Michael Plugge <m.plugge@hs-mannheim.de>             #
+ * ###########################################################################
+ */
+
+DLL_EXPORT int lut_blz(char *b,int zweigstelle)
+{
+   int idx;
+
+   if(!blz)return LUT2_BLZ_NOT_INITIALIZED;
+   if((idx=lut_index(b))<0)return idx;
+   if(zweigstelle<0 || (filialen && zweigstelle>=filialen[idx]) || (zweigstelle && !filialen))
+      return LUT2_INDEX_OUT_OF_RANGE;
+   return OK;
+}
 
 /* Funktion lut_filialen() +§§§2 */
 /* ###########################################################################
@@ -15603,6 +15646,25 @@ DLL_EXPORT int get_lut_info(char **info,char *lut_name)
    return OK;
 }
 
+/* Funktion kc_free() +§§§1 */
+/*
+ * ######################################################################
+ * # kc_free(): Speicher freigeben                                      #
+ * #                                                                    #
+ * # Die Funktion kc_free() ruft nur free() auf; sie wird vom Perl-Modul#
+ * # benötigt, da in KontoCheck.xs in strawberry perl (Windows) die     #
+ * # Funktion free() auf die Perl-Version umdefiniert wird und damit    #
+ * # keinen Speicher freigeben kann, der von C aus allokiert wurde.     #
+ * #                                                                    #
+ * # Copyright (C) 2010 Michael Plugge <m.plugge@hs-mannheim.de>        #
+ * ######################################################################
+ */
+
+DLL_EXPORT void kc_free(char *ptr)
+{
+   free(ptr);
+}
+
 /* Funktion cleanup_kto() +§§§1 */
 /* ###########################################################################
  * # cleanup_kto(): Speicher freigeben                                       #
@@ -17056,6 +17118,379 @@ DLL_EXPORT int kto_check_write_default(char *lutfile,int block_id)
    if(!block_id)block_id=LUT2_DEFAULT;
    return write_lut_block(lutfile,block_id,(dptr-buffer+1),buffer);
    free(buffer);
+}
+
+DLL_EXPORT char *pz2str(int pz,int *ret)
+{
+   if(ret){
+      if(pz>=135)
+         *ret=NOT_DEFINED;
+      else
+         *ret=OK;
+   }
+   switch(pz){
+      case   0: return "00";
+      case   1: return "01";
+      case   2: return "02";
+      case   3: return "03";
+      case   4: return "04";
+      case   5: return "05";
+      case   6: return "06";
+      case   7: return "07";
+      case   8: return "08";
+      case   9: return "09";
+      case  10: return "10";
+      case  11: return "11";
+      case  12: return "12";
+      case  13: return "13";
+      case  14: return "14";
+      case  15: return "15";
+      case  16: return "16";
+      case  17: return "17";
+      case  18: return "18";
+      case  19: return "19";
+      case  20: return "20";
+      case  21: return "21";
+      case  22: return "22";
+      case  23: return "23";
+      case  24: return "24";
+      case  25: return "25";
+      case  26: return "26";
+      case  27: return "27";
+      case  28: return "28";
+      case  29: return "29";
+      case  30: return "30";
+      case  31: return "31";
+      case  32: return "32";
+      case  33: return "33";
+      case  34: return "34";
+      case  35: return "35";
+      case  36: return "36";
+      case  37: return "37";
+      case  38: return "38";
+      case  39: return "39";
+      case  40: return "40";
+      case  41: return "41";
+      case  42: return "42";
+      case  43: return "43";
+      case  44: return "44";
+      case  45: return "45";
+      case  46: return "46";
+      case  47: return "47";
+      case  48: return "48";
+      case  49: return "49";
+      case  50: return "50";
+      case  51: return "51";
+      case  52: return "52";
+      case  53: return "53";
+      case  54: return "54";
+      case  55: return "55";
+      case  56: return "56";
+      case  57: return "57";
+      case  58: return "58";
+      case  59: return "59";
+      case  60: return "60";
+      case  61: return "61";
+      case  62: return "62";
+      case  63: return "63";
+      case  64: return "64";
+      case  65: return "65";
+      case  66: return "66";
+      case  67: return "67";
+      case  68: return "68";
+      case  69: return "69";
+      case  70: return "70";
+      case  71: return "71";
+      case  72: return "72";
+      case  73: return "73";
+      case  74: return "74";
+      case  75: return "75";
+      case  76: return "76";
+      case  77: return "77";
+      case  78: return "78";
+      case  79: return "79";
+      case  80: return "80";
+      case  81: return "81";
+      case  82: return "82";
+      case  83: return "83";
+      case  84: return "84";
+      case  85: return "85";
+      case  86: return "86";
+      case  87: return "87";
+      case  88: return "88";
+      case  89: return "89";
+      case  90: return "90";
+      case  91: return "91";
+      case  92: return "92";
+      case  93: return "93";
+      case  94: return "94";
+      case  95: return "95";
+      case  96: return "96";
+      case  97: return "97";
+      case  98: return "98";
+      case  99: return "99";
+      case 100: return "A0";
+      case 101: return "A1";
+      case 102: return "A2";
+      case 103: return "A3";
+      case 104: return "A4";
+      case 105: return "A5";
+      case 106: return "A6";
+      case 107: return "A7";
+      case 108: return "A8";
+      case 109: return "A9";
+      case 110: return "B0";
+      case 111: return "B1";
+      case 112: return "B2";
+      case 113: return "B3";
+      case 114: return "B4";
+      case 115: return "B5";
+      case 116: return "B6";
+      case 117: return "B7";
+      case 118: return "B8";
+      case 119: return "B9";
+      case 120: return "C0";
+      case 121: return "C1";
+      case 122: return "C2";
+      case 123: return "C3";
+      case 124: return "C4";
+      case 125: return "C5";
+      case 126: return "C6";
+      case 127: return "C7";
+      case 128: return "C8";
+      case 129: return "C9";
+      case 130: return "D0";
+      case 131: return "D1";
+      case 132: return "D2";
+      case 133: return "D3";
+      case 134: return "D4";
+      case 135: return "D5";
+      case 136: return "D6";
+      case 137: return "D7";
+      case 138: return "D8";
+      case 139: return "D9";
+      case 140: return "E0";
+      case 141: return "E1";
+      case 142: return "E2";
+      case 143: return "E3";
+      case 144: return "E4";
+      case 145: return "E5";
+      case 146: return "E6";
+      case 147: return "E7";
+      case 148: return "E8";
+      case 149: return "E9";
+      case 150: return "F0";
+      case 151: return "F1";
+      case 152: return "F2";
+      case 153: return "F3";
+      case 154: return "F4";
+      case 155: return "F5";
+      case 156: return "F6";
+      case 157: return "F7";
+      case 158: return "F8";
+      case 159: return "F9";
+      case 160: return "G0";
+      case 161: return "G1";
+      case 162: return "G2";
+      case 163: return "G3";
+      case 164: return "G4";
+      case 165: return "G5";
+      case 166: return "G6";
+      case 167: return "G7";
+      case 168: return "G8";
+      case 169: return "G9";
+      case 170: return "H0";
+      case 171: return "H1";
+      case 172: return "H2";
+      case 173: return "H3";
+      case 174: return "H4";
+      case 175: return "H5";
+      case 176: return "H6";
+      case 177: return "H7";
+      case 178: return "H8";
+      case 179: return "H9";
+      case 180: return "I0";
+      case 181: return "I1";
+      case 182: return "I2";
+      case 183: return "I3";
+      case 184: return "I4";
+      case 185: return "I5";
+      case 186: return "I6";
+      case 187: return "I7";
+      case 188: return "I8";
+      case 189: return "I9";
+      case 190: return "J0";
+      case 191: return "J1";
+      case 192: return "J2";
+      case 193: return "J3";
+      case 194: return "J4";
+      case 195: return "J5";
+      case 196: return "J6";
+      case 197: return "J7";
+      case 198: return "J8";
+      case 199: return "J9";
+      case 200: return "K0";
+      case 201: return "K1";
+      case 202: return "K2";
+      case 203: return "K3";
+      case 204: return "K4";
+      case 205: return "K5";
+      case 206: return "K6";
+      case 207: return "K7";
+      case 208: return "K8";
+      case 209: return "K9";
+      case 210: return "L0";
+      case 211: return "L1";
+      case 212: return "L2";
+      case 213: return "L3";
+      case 214: return "L4";
+      case 215: return "L5";
+      case 216: return "L6";
+      case 217: return "L7";
+      case 218: return "L8";
+      case 219: return "L9";
+      case 220: return "M0";
+      case 221: return "M1";
+      case 222: return "M2";
+      case 223: return "M3";
+      case 224: return "M4";
+      case 225: return "M5";
+      case 226: return "M6";
+      case 227: return "M7";
+      case 228: return "M8";
+      case 229: return "M9";
+      case 230: return "N0";
+      case 231: return "N1";
+      case 232: return "N2";
+      case 233: return "N3";
+      case 234: return "N4";
+      case 235: return "N5";
+      case 236: return "N6";
+      case 237: return "N7";
+      case 238: return "N8";
+      case 239: return "N9";
+      case 240: return "O0";
+      case 241: return "O1";
+      case 242: return "O2";
+      case 243: return "O3";
+      case 244: return "O4";
+      case 245: return "O5";
+      case 246: return "O6";
+      case 247: return "O7";
+      case 248: return "O8";
+      case 249: return "O9";
+      case 250: return "P0";
+      case 251: return "P1";
+      case 252: return "P2";
+      case 253: return "P3";
+      case 254: return "P4";
+      case 255: return "P5";
+      case 256: return "P6";
+      case 257: return "P7";
+      case 258: return "P8";
+      case 259: return "P9";
+      case 260: return "Q0";
+      case 261: return "Q1";
+      case 262: return "Q2";
+      case 263: return "Q3";
+      case 264: return "Q4";
+      case 265: return "Q5";
+      case 266: return "Q6";
+      case 267: return "Q7";
+      case 268: return "Q8";
+      case 269: return "Q9";
+      case 270: return "R0";
+      case 271: return "R1";
+      case 272: return "R2";
+      case 273: return "R3";
+      case 274: return "R4";
+      case 275: return "R5";
+      case 276: return "R6";
+      case 277: return "R7";
+      case 278: return "R8";
+      case 279: return "R9";
+      case 280: return "S0";
+      case 281: return "S1";
+      case 282: return "S2";
+      case 283: return "S3";
+      case 284: return "S4";
+      case 285: return "S5";
+      case 286: return "S6";
+      case 287: return "S7";
+      case 288: return "S8";
+      case 289: return "S9";
+      case 290: return "T0";
+      case 291: return "T1";
+      case 292: return "T2";
+      case 293: return "T3";
+      case 294: return "T4";
+      case 295: return "T5";
+      case 296: return "T6";
+      case 297: return "T7";
+      case 298: return "T8";
+      case 299: return "T9";
+      case 300: return "U0";
+      case 301: return "U1";
+      case 302: return "U2";
+      case 303: return "U3";
+      case 304: return "U4";
+      case 305: return "U5";
+      case 306: return "U6";
+      case 307: return "U7";
+      case 308: return "U8";
+      case 309: return "U9";
+      case 310: return "V0";
+      case 311: return "V1";
+      case 312: return "V2";
+      case 313: return "V3";
+      case 314: return "V4";
+      case 315: return "V5";
+      case 316: return "V6";
+      case 317: return "V7";
+      case 318: return "V8";
+      case 319: return "V9";
+      case 320: return "W0";
+      case 321: return "W1";
+      case 322: return "W2";
+      case 323: return "W3";
+      case 324: return "W4";
+      case 325: return "W5";
+      case 326: return "W6";
+      case 327: return "W7";
+      case 328: return "W8";
+      case 329: return "W9";
+      case 330: return "X0";
+      case 331: return "X1";
+      case 332: return "X2";
+      case 333: return "X3";
+      case 334: return "X4";
+      case 335: return "X5";
+      case 336: return "X6";
+      case 337: return "X7";
+      case 338: return "X8";
+      case 339: return "X9";
+      case 340: return "Y0";
+      case 341: return "Y1";
+      case 342: return "Y2";
+      case 343: return "Y3";
+      case 344: return "Y4";
+      case 345: return "Y5";
+      case 346: return "Y6";
+      case 347: return "Y7";
+      case 348: return "Y8";
+      case 349: return "Y9";
+      case 350: return "Z0";
+      case 351: return "Z1";
+      case 352: return "Z2";
+      case 353: return "Z3";
+      case 354: return "Z4";
+      case 355: return "Z5";
+      case 356: return "Z6";
+      case 357: return "Z7";
+      case 358: return "Z8";
+      case 359: return "Z9";
+      default: return "??";
+   }
 }
 
 #if DEBUG>0
