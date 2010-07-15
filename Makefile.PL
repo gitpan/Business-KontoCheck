@@ -56,14 +56,14 @@ while(<IN>){
    $ar=$1 if(/^AR = (.+)/);
    $cc=$1 if(/^CC = (.+)/);
    $install_bin=$1 if(/^INSTALLBIN = (.+)/);
-	$osname=$1 if(/^OSNAME = (.+)/);
+   $osname=$1 if(/^OSNAME = (.+)/);
    $ranlib=$1 if(/^RANLIB = (.+)/);
 }
 if($osname=~/MSWin/i){
-	$os_windows=1;
+   $os_windows=1;
 }
 else{
-	$os_windows=0;
+   $os_windows=0;
 }
 close(IN);
 
@@ -195,9 +195,9 @@ sub preprocess {
 # gefundene zlib.a testen durch probeweises Compilieren
 sub test_zlib
 {
-	print "Compile test programm with $zlib_static: ";
+   print "Compile test programm with $zlib_static: ";
    write_testfile();
-	my $retval=system("$cc test_zlib.c $zlib_static -otest_zlib ");
+   my $retval=system("$cc test_zlib.c $zlib_static -otest_zlib ");
    if($retval){ # Fehler beim Compilieren
       print "fail\n";
       $zlib_static="";
@@ -207,10 +207,10 @@ sub test_zlib
       $have_zlib=1;
    }
 
-# nun wieder aufräumen, damit die Testdateien nicht ins Makefile mit eingebaut werden
-	unlink("test_zlib.c");
-	unlink("test_zlib");
-	unlink("test_zlib.exe");
+# nun wieder aufräumen, damit die Testdateien nicht ins Makefile eingebaut werden
+   unlink("test_zlib.c");
+   unlink("test_zlib");
+   unlink("test_zlib.exe");
 }
 
 # C Testdatei schreiben
@@ -222,22 +222,25 @@ sub write_testfile
 #include <string.h>
 #include <zlib.h>
 
+#define CP  (char *)
+#define UCP (unsigned char *)
+
 int main(int argc,char **argv)
 {
    unsigned char buffer1[1024],buffer2[1024];
-   unsigned char *ptr="hello world, hello world, hello world, hello world, hello world, hello world, "
+   unsigned char *ptr=UCP "hello world, hello world, hello world, hello world, hello world, hello world, "
       "hello world, hello world, hello world, hello world, hello world, hello world, "
       "hello world, hello world, hello world, hello world, hello world, hello world, "
       "hello world, hello world, hello world, hello world, hello world, hello world";
    unsigned long len,len1,len2,retval;
 
-   len=strlen(ptr);
+   len=strlen(CP ptr);
    len1=len2=1024;
    retval=compress2(buffer2,&len2,ptr,len,9);
-   printf("compressed: %d -> %d byte\\n",len,len2);
+   printf("compressed: %lu -> %lu byte\\n",len,len2);
    retval=uncompress(buffer1,&len1,buffer2,len2);
-   printf("uncompressed: %d -> %d byte; check: %d\\n",len2,len1,strcmp(buffer1,ptr));
-   return strcmp(ptr,buffer1);
+   printf("uncompressed: %lu -> %lu byte; check: %d\\n",len2,len1,strcmp(CP buffer1,CP ptr));
+   return strcmp(CP ptr,CP buffer1);
 }
 EOD
 ;
@@ -250,15 +253,17 @@ sub write_makefile
    WriteMakefile(
       NAME          => 'Business::KontoCheck',
       VERSION_FROM  => 'lib/Business/KontoCheck.pm', # finds $VERSION
-      PREREQ_PM     => {}, # e.g., Module::Name => 1.1
+      PREREQ_PM         => {
+                           'Test::Pod' => '0', # or a minimum working version
+                           },
       ABSTRACT_FROM => 'lib/Business/KontoCheck.pm', # retrieve abstract from module
       AUTHOR        => 'Michael Plugge <m.plugge@hs-mannheim.de>',
       LIBS          => ['-L.','-lz'],
       LDFLAGS       => '-L.',
       DEFINE        => $define,
       INC           => "-I.$zlib_dir", # e.g., '-I. -I/usr/include/other'
-      OBJECT        => '$(O_FILES)', 	# link all the C files too
-      NO_META       => 1,            	# META.yml is manually generated
+      OBJECT        => '$(O_FILES)',   # link all the C files too
+      NO_META       => 1,              # META.yml is manually generated
       dist          => { 
                               TARFLAGS => 'cf',
                               COMPRESS => 'gzip --best --force',

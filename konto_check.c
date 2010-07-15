@@ -48,9 +48,9 @@
 
 /* Definitionen und Includes  */
 #ifndef VERSION
-#define VERSION "3.2"
+#define VERSION "3.2.1"
 #endif
-#define VERSION_DATE "2010-07-02"
+#define VERSION_DATE "2010-07-15"
 
 #ifndef INCLUDE_KONTO_CHECK_DE
 #define INCLUDE_KONTO_CHECK_DE 1
@@ -17104,7 +17104,7 @@ DLL_EXPORT int kto_check_default_keys(char ***keys,int *cnt)
 
 DLL_EXPORT int kto_check_write_default(char *lutfile,int block_id)
 {
-   char *buffer,*ptr,*dptr;;
+   char *buffer,*ptr,*dptr;
    int i,j;
 
    if(!(buffer=calloc(default_bufsize+default_cnt*4+58,1)))return ERROR_MALLOC;

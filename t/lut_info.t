@@ -13,4 +13,5 @@ ok($retval gt 0,"init: $retval => $kto_retval{$retval} (ok: $ok_cnt, nok: $nok_c
 if($retval>0){
 	@tmp= lut_info('blz.lut');
    ok($#tmp>0,"LUT_info: Es wurden " . scalar(@tmp) . " Variablen durch lut_info() geladen");
+   printf "lut_dir:\n%s\n",$tmp[5];  
 }

@@ -4,6 +4,9 @@ Revision history for Perl extension Business::KontoCheck.
 The complete history can be found in 0_history.txt (in german). The perl
 version starts with 2.1; all previous versions are C only libraries.
 
+3.2.1  Thu Jul 15, 2010
+      - some minor bugfixes and improvements in test routines
+
 3.2  Tue Jul 13, 2010
       - complete rewrite of Makefile.PL; works now also for Windows, better recognition of zlib
       - complete rewrite of search function lut_suche_*(); these functions got a new interface
@@ -87,7 +90,7 @@ version starts with 2.1; all previous versions are C only libraries.
 2.4 Thu November 13, 2007
       - added check method C7
       - bugfix in check method B9
-      - new function kto_ckeck_str
+      - new function kto_check_str
 
 2.3 Sat August 25, 2007
    bugfix release: 
