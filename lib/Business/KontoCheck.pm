@@ -29,7 +29,7 @@ our @EXPORT_OK = qw( kto_check kto_check_str kto_check_blz
 
 our @EXPORT = qw( lut_init kto_check kto_check_blz kto_check_at %kto_retval );
 
-our $VERSION = '3.2.1';
+our $VERSION = '3.3';
 
 require XSLoader;
 XSLoader::load('Business::KontoCheck', $VERSION);
@@ -1139,20 +1139,22 @@ diese müssen dann in der use Klausel anzugeben werden.
    Listenkontext aufgerufen werden. Bei Aufruf in skalarem Kontext
    geben sie eine Referenz auf ein Array mit Bankleitzahlen zurück,
    die die Kriterien erfüllen; bei Aufruf im Listenkontext werden (bis
-   zu) drei Referenzen zurückgegeben. Die erste zeigt auf das Array
-   mit Bankleitzahlen, die zweite auf ein Array mit Indizes der
-   jeweiligen Zweigstellen und die dritte auf ein Array mit den
-   jeweiligen Werten des gesuchten Feldes.
+   zu) drei Array-Referenzen sowie der Rückgabewert der Funktion
+   zurückgegeben. Die erste zeigt auf das Array mit Bankleitzahlen,
+   die zweite auf ein Array mit Indizes der jeweiligen Zweigstellen
+   und die dritte auf ein Array mit den jeweiligen Werten des
+   gesuchten Feldes.
 
-   In dem (optionalen) Parameter $retval wird der numerischer
-   Rückgabewert der Funktion (1 bei Erfolg, oder negative
-   Statusmeldung) zurückgeliefert.. Mittels des assoziativen Arrays
-   %kto_retval{$retval} können diese Rückgabewerte in Klartext
-   konvertiert werden.
+   In dem optionalen Parameter $retval wird ebenfalls der numerischer
+   Rückgabewert der Funktion (wie im 4. Parameter bei Array-Kontext; 1
+   bei Erfolg, oder negative Statusmeldung) zurückgeliefert.. Mittels
+   des assoziativen Arrays %kto_retval{$retval} können diese
+   Rückgabewerte in Klartext konvertiert werden.
 
    Beispiele:
-   $blz_p=lut_suche_ort("mannheim");
+   $blz_p=lut_suche_ort("mannheim",$retval);
    @blz=@$blz_p;     # Array mit allen Banken in Mannheim
+                     # $retval enthält den Rückgabestatus der Funktion
 
    ($blz_p,$idx_p)=lut_suche_ort("mannheim");
    @blz=@$blz_p;     # Array mit allen Banken in Mannheim
@@ -1162,6 +1164,12 @@ diese müssen dann in der use Klausel anzugeben werden.
    @blz=@$blz_p;     # Array mit Banken in Städten, die mit "aa" beginnen
    @idx=@$idx_p;     # Array der Zweigstellen
    @ort=@$ort_p;     # Array der jeweiligen Orte
+
+   ($blz_p,$idx_p,$ort_p,$retval)=lut_suche_ort("aa");
+   @blz=@$blz_p;     # Array mit Banken in Städten, die mit "aa" beginnen
+   @idx=@$idx_p;     # Array der Zweigstellen
+   @ort=@$ort_p;     # Array der jeweiligen Orte
+                     # $retval enthält den Rückgabestatus der Funktion
 
 -------------------------------------------------------------------------
 

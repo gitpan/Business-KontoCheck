@@ -4,6 +4,13 @@ Revision history for Perl extension Business::KontoCheck.
 The complete history can be found in 0_history.txt (in german). The perl
 version starts with 2.1; all previous versions are C only libraries.
 
+3.3    Wed Jul 21, 2010
+      - bug fix in the search routines in konto_check.c; on 64 bit machines these routines
+        failed completely (before the 3.2 release, they were not coverd by the test routines).
+      - (last) change for lut_suche_*(): These functions return in array context also the 
+        return value of the function as 4th parameter.
+      - added some (missing) dummy functions for $use_german=0 and $use_austrian=0
+
 3.2.1  Thu Jul 15, 2010
       - some minor bugfixes and improvements in test routines
 

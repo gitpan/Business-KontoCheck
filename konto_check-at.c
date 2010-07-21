@@ -1989,9 +1989,12 @@ int xmain(int argc,char **argv)
 #endif
 #else /* !INCLUDE_KONTO_CHECK_AT */
 #include "konto_check-at.h"
+char *kto_check_at_str(char *blz,char *kto,char *lut_name){return "EXCLUDED_AT_COMPILETIME";};
 int kto_check_at(char *blz,char *kto,char *lut_name){return EXCLUDED_AT_COMPILETIME;};
+#ifndef INCLUDE_KONTO_CHECK_DE
 char *kto_check_retval2txt(int retval){return "EXCLUDED_AT_COMPILETIME";};
 char *kto_check_retval2html(int retval){return "EXCLUDED_AT_COMPILETIME";};
+#endif
 const char *get_loesch_datum(char *blz){return "EXCLUDED_AT_COMPILETIME";};
 int generate_lut_at(char *inputname,char *outputname,char *plainname,char *plain_format){return EXCLUDED_AT_COMPILETIME;};
 int konto_check_at_version_major(void){return EXCLUDED_AT_COMPILETIME;};

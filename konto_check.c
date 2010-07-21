@@ -48,9 +48,9 @@
 
 /* Definitionen und Includes  */
 #ifndef VERSION
-#define VERSION "3.2.1"
+#define VERSION "3.3"
 #endif
-#define VERSION_DATE "2010-07-15"
+#define VERSION_DATE "2010-07-20"
 
 #ifndef INCLUDE_KONTO_CHECK_DE
 #define INCLUDE_KONTO_CHECK_DE 1
@@ -657,7 +657,7 @@ static volatile int init_status,init_in_progress;
 static int *blz_f,*zweigstelle_f,*zweigstelle_f1,*sort_bic,*sort_name,*sort_name_kurz,*sort_ort,*sort_blz,*sort_pz_methoden,*sort_plz;
 
    /* Arrays zur Umwandlung von ASCII nach Zahlen */
-static UINT4 b0[256],b1[256],b2[256],b3[256],b4[256],b5[256],b6[256],b7[256],b8[256],
+static unsigned int b0[256],b1[256],b2[256],b3[256],b4[256],b5[256],b6[256],b7[256],b8[256],
           bx1[256],bx2[256],by1[256],by4[256],lc[256];
 
 static short *hash;
@@ -16639,10 +16639,10 @@ static int suche_int1(int a1,int a2,int *anzahl,int **start_idx,int **zweigstell
    if(!a2)a2=a1;
    b_sort=*base_sort;
    if(!b_sort){
-      if(!(b_sort=calloc(cnt+10,sizeof(int*))))return ERROR_MALLOC;
+      if(!(b_sort=calloc(cnt+10,sizeof(int))))return ERROR_MALLOC;
       *base_sort=b_sort;   /* Variable an aufrufende Funktion zurückgeben */
       for(i=0;i<cnt;i++)b_sort[i]=i;
-      qsort(b_sort,cnt,sizeof(int*),cmp);
+      qsort(b_sort,cnt,sizeof(int),cmp);
    }
    if((retval=binary_search_int(a1,a2,*base_name,b_sort,cnt,&unten,&cnt))!=OK){
       if(anzahl)*anzahl=0;
@@ -16685,10 +16685,10 @@ static int suche_int2(int a1,int a2,int *anzahl,int **start_idx,int **zweigstell
    }
    b_sort=*base_sort;
    if(!b_sort){
-      if(!(b_sort=calloc(cnt+10,sizeof(int*))))return ERROR_MALLOC;
+      if(!(b_sort=calloc(cnt+10,sizeof(int))))return ERROR_MALLOC;
       *base_sort=b_sort;   /* Variable an aufrufende Funktion zurückgeben */
       for(i=0;i<cnt;i++)b_sort[i]=i;
-      qsort(b_sort,cnt,sizeof(int*),cmp);
+      qsort(b_sort,cnt,sizeof(int),cmp);
    }
    if((retval=binary_search_int(a1,a2,*base_name,b_sort,cnt,&unten,&cnt))!=OK){
       if(anzahl)*anzahl=0;
@@ -16732,10 +16732,10 @@ static int suche_str(char *such_name,int *anzahl,int **start_idx,int **zweigstel
    if(zweigstelle)*zweigstelle=zweigstelle_f;
    b_sort=*base_sort;
    if(!b_sort){
-      if(!(b_sort=calloc(cnt+10,sizeof(int*))))return ERROR_MALLOC;
+      if(!(b_sort=calloc(cnt+10,sizeof(int))))return ERROR_MALLOC;
       *base_sort=b_sort;   /* Variable an aufrufende Funktion zurückgeben */
       for(i=0;i<cnt;i++)b_sort[i]=i;
-      qsort(b_sort,cnt,sizeof(int*),cmp);
+      qsort(b_sort,cnt,sizeof(int),cmp);
    }
    while(isspace(*such_name))such_name++;
    if((retval=binary_search(such_name,*base_name,b_sort,cnt,&unten,&cnt))!=OK){
@@ -17552,6 +17552,7 @@ XI write_lut_block(char *lutname, UINT4 typ,UINT4 len,char *data)EXCLUDED
 XI read_lut_block(char *lutname, UINT4 typ,UINT4 *blocklen,char **data)EXCLUDED
 XI read_lut_slot(char *lutname, int slot,UINT4 *blocklen,char **data)EXCLUDED
 XI lut_dir_dump(char *filename,char *outputname)EXCLUDED
+XI lut_dir_dump_str(char *lutname,char **dptr)EXCLUDED
 XI generate_lut2_p(char *inputname,char *outputname,char *user_info,char *gueltigkeit,
       UINT4 felder,UINT4 filialen,int slots,int lut_version,int set)EXCLUDED
 XI generate_lut2(char *inputname,char *outputname,char *user_info,char *gueltigkeit,
@@ -17568,6 +17569,7 @@ XI lut_multiple(char *b,int *cnt,int **p_blz,char  ***p_name,char ***p_name_kurz
 XI lut_filialen(char *b,int *retval)EXCLUDED
 XI dump_lutfile(char *outputname,UINT4 *required)EXCLUDED
 XI dump_lutfile_p(char *outputname,UINT4 felder)EXCLUDED
+XI lut_blz(char *b,int zweigstelle)EXCLUDED
 XC lut_name(char *b,int zweigstelle,int *retval)EXCLUDED_S
 XC lut_name_i(int b,int zweigstelle,int *retval)EXCLUDED_S
 XC lut_name_kurz(char *b,int zweigstelle,int *retval)EXCLUDED_S
@@ -17606,17 +17608,23 @@ XI kto_check_blz_dbg(char *blz,char *kto,RETVAL *retvals)EXCLUDED
 XI kto_check_pz_dbg(char *pz,char *kto,char *blz,RETVAL *retvals)EXCLUDED
 XC kto_check_test_vars(char *txt,UINT4 i)EXCLUDED_S
 XI set_verbose_debug(int mode)EXCLUDED
-XI lut_suche_bic(char *such_name,int *anzahl,int **start_idx,char ***base_name,int **blz_base)EXCLUDED
-XI lut_suche_namen(char *such_name,int *anzahl,int **start_idx,char ***base_name,int **blz_base)EXCLUDED
-XI lut_suche_namen_kurz(char *such_name,int *anzahl,int **start_idx,char ***base_name,int **blz_base)EXCLUDED
-XI lut_suche_ort(char *such_name,int *anzahl,int **start_idx,char ***base_name,int **blz_base)EXCLUDED
-XI lut_suche_blz(int a1,int a2,int *anzahl,int **start_idx,int **base_name,int **blz_base)EXCLUDED
-XI lut_suche_pz(int a1,int a2,int *anzahl,int **start_idx,int **base_name,int **blz_base)EXCLUDED
-XI lut_suche_plz(int a1,int a2,int *anzahl,int **start_idx,int **base_name,int **blz_base)EXCLUDED
-XI kto_check_init_default(char *lut_name,int block_id);
-XI kto_check_default_keys(char ***keys,int *cnt);
-XI kto_check_set_default(char *key,char *val);
-XI kto_check_set_default_bin(char *key,char *val,int size);
-XI kto_check_get_default(char *key,char **val,int *size);
-XI kto_check_write_default(char *lutfile,int block_id);
+XC pz2str(int pz,int *ret)EXCLUDED_S
+XI lut_suche_bic(char *such_name,int *anzahl,int **start_idx,int **zweigstelle,
+      char ***base_name,int **blz_base)EXCLUDED
+XI lut_suche_namen(char *such_name,int *anzahl,int **start_idx,int **zweigstelle,
+      char ***base_name,int **blz_base)EXCLUDED
+XI lut_suche_namen_kurz(char *such_name,int *anzahl,int **start_idx,int **zweigstelle,
+      char ***base_name,int **blz_base)EXCLUDED
+XI lut_suche_ort(char *such_name,int *anzahl,int **start_idx,int **zweigstelle,
+      char ***base_name,int **blz_base)EXCLUDED
+XI lut_suche_blz(int such1,int such2,int *anzahl,int **start_idx,int **zweigstelle,int **base_name,int **blz_base)EXCLUDED
+XI lut_suche_pz(int such1,int such2,int *anzahl,int **start_idx,int **zweigstelle,int **base_name,int **blz_base)EXCLUDED
+XI lut_suche_plz(int such1,int such2,int *anzahl,int **start_idx,int **zweigstelle,int **base_name,int **blz_base)EXCLUDED
+XI kto_check_init_default(char *lut_name,int block_id)EXCLUDED
+XI kto_check_default_keys(char ***keys,int *cnt)EXCLUDED
+XI kto_check_set_default(char *key,char *val)EXCLUDED
+XI kto_check_set_default_bin(char *key,char *val,int size)EXCLUDED
+XI kto_check_get_default(char *key,char **val,int *size)EXCLUDED
+XI kto_check_write_default(char *lutfile,int block_id)EXCLUDED
+XV kc_free(char *ptr)EXCLUDED
 #endif
