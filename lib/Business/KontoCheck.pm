@@ -18,7 +18,7 @@ our @EXPORT_OK = qw( kto_check kto_check_str kto_check_blz
    lut_blz1 lut_name1 lut_name_kurz1 lut_plz1 lut_ort1 lut_pan1 lut_bic1 lut_pz1
    lut_aenderung1 lut_loeschung1 lut_nachfolge_blz1
    lut_info iban2bic pz2str
-   iban_gen check_iban ipi_check ipi_gen set_verbose_debug
+   iban_gen check_iban ipi_check ipi_gen set_verbose_debug set_default_compression
    retval2txt retval2txt_short retval2utf8 retval2html retval2dos
    kto_check_retval2txt kto_check_retval2txt_short kto_check_retval2utf8
    kto_check_retval2html dump_lutfile kto_check_retval2dos
@@ -29,7 +29,7 @@ our @EXPORT_OK = qw( kto_check kto_check_str kto_check_blz
 
 our @EXPORT = qw( lut_init kto_check kto_check_blz kto_check_at %kto_retval );
 
-our $VERSION = '3.3';
+our $VERSION = '3.4';
 
 require XSLoader;
 XSLoader::load('Business::KontoCheck', $VERSION);
@@ -448,6 +448,8 @@ sub lut_nachfolge_blz1
 
 
 %Business::KontoCheck::kto_retval = (
+-112 => 'die notwendige Kompressions-Bibliothek wurden beim Kompilieren nicht eingebunden',
+-111 => 'der angegebene Wert für die Default-Kompression ist ungültig',
 -110 => 'wahrscheinlich OK; es wurde allerdings ein (weggelassenes) Unterkonto angefügt',
 -109 => 'Ungültige Signatur im Default-Block',
 -108 => 'Die maximale Anzahl Einträge für den Default-Block wurde erreicht',
@@ -572,6 +574,8 @@ sub lut_nachfolge_blz1
   11 => 'wahrscheinlich ok; die Kontonummer kann allerdings (nicht angegebene) Unterkonten enthalten',
   12 => 'wahrscheinlich ok; die Kontonummer enthält eine Unterkontonummer',
 
+'KTO_CHECK_UNSUPPORTED_COMPRESSION'      => 'die notwendige Kompressions-Bibliothek wurden beim Kompilieren nicht eingebunden',
+'KTO_CHECK_INVALID_COMPRESSION_LIB'      => 'der angegebene Wert für die Default-Kompression ist ungültig',
 'OK_UNTERKONTO_ATTACHED'                 => 'wahrscheinlich OK; es wurde allerdings ein (weggelassenes) Unterkonto angefügt',
 'KTO_CHECK_DEFAULT_BLOCK_INVALID'        => 'Ungültige Signatur im Default-Block',
 'KTO_CHECK_DEFAULT_BLOCK_FULL'           => 'Die maximale Anzahl Einträge für den Default-Block wurde erreicht',
@@ -698,6 +702,8 @@ sub lut_nachfolge_blz1
 );
 
 %Business::KontoCheck::kto_retval_kurz = (
+-112 => 'KTO_CHECK_UNSUPPORTED_COMPRESSION',
+-111 => 'KTO_CHECK_INVALID_COMPRESSION_LIB',
 -110 => 'OK_UNTERKONTO_ATTACHED',
 -109 => 'KTO_CHECK_DEFAULT_BLOCK_INVALID',
 -108 => 'KTO_CHECK_DEFAULT_BLOCK_FULL',

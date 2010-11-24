@@ -93,7 +93,8 @@ else{
    $zlib_static="";
 }
 
-if(!$have_zlib){
+# bei Windows testweise immer kompilieren (Verzweiflungstat ;-) )
+if(!$have_zlib || $os_windows){
 # keine zlib gefunden; selbst kompilieren und makefile anpassen
    compile_zlib();
    test_zlib();

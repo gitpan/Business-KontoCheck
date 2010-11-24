@@ -44,16 +44,6 @@
 #ifndef KONTO_CHECK_H_INCLUDED
 #define KONTO_CHECK_H_INCLUDED
 
-/*
- * ##########################################################################
- * # Zum 7. Juni 2010 wird die Prüfzifferberechnung der Methoden C6 und     #
- * # D1 erweitert; mit dem folgenden Compilerschalter werden die Änderungen #
- * # aktiviert.                                                             #
- * ##########################################################################
- */
-
-#define PZ_NEU_2010_06 1
-
 /* 
  * ##########################################################################
  * # Fallls das folgende Makro auf 1 gesetzt wird, werden unterschiedliche  #
@@ -73,10 +63,20 @@
  * # Fallls das Makro DEBUG auf 1 gesetzt wird, werden zwei- und drei-      #
  * # stellige Methoden (Methode + evl. Untermethode) akzeptiert, sowie noch #
  * # diverser Debug-Code mit eingebaut.                                     #
+ * #                                                                        #
+ * # Das Makro VERBOSE_DEBUG wird für einige spezielle Problemfälle benutzt;#
+ * # falls es gesetzt ist, wird im Fehlerfall mittels perror() eine etwas   #
+ * # detailliertere Fehlermeldung ausgegeben (im Moment nur bei fopen()).   #
+ * # Es wird ebenfalls für zum Debuggen von RückgabewerteN (Makro RETURN(r) #
+ * # bei Problemen benutzt.                                                 #
  * ##########################################################################
  */
 #ifndef DEBUG
 #define DEBUG 1
+#endif
+
+#ifndef VERBOSE_DEBUG
+#define VERBOSE_DEBUG 1
 #endif
 
 /*
@@ -248,6 +248,8 @@ extern char *lut2_feld_namen[256];
  */
 
 #undef FALSE
+#define KTO_CHECK_UNSUPPORTED_COMPRESSION     -112
+#define KTO_CHECK_INVALID_COMPRESSION_LIB     -111
 #define OK_UNTERKONTO_ATTACHED                -110
 #define KTO_CHECK_DEFAULT_BLOCK_INVALID       -109
 #define KTO_CHECK_DEFAULT_BLOCK_FULL          -108
@@ -442,6 +444,33 @@ typedef struct{
 } KTO_CHK_CTX;
 
 /*
+ * ##########################################################################
+ * # Benutzte Kompressionsbibliothek für die LUT-Datei. Mögliche Werte:     #
+ * #    COMPRESSION_NONE     keine Kompression                              #
+ * #    COMPRESSION_ZLIB     zlib                                           #
+ * #    COMPRESSION_BZIP2    bzip2                                          #
+ * #    COMPRESSION_LZO      lzo                                            #
+ * #                                                                        #
+ * # Beim Lesen wird die benutzte Kompressionsmethode aus dem Klartext-     #
+ * # Header gelesen; beim Schreiben wird normalerweise die zlib benutzt.    #
+ * # Falls eine LUT-Datei mit einem anderen Kompressionsverfahren oder ohne #
+ * # Kompression geschrieben werden soll, kann die Umstellung durch einen   #
+ * # Aufruf der Funktion set_default_compression() erfolgen.                #
+ * #                                                                        #
+ * # Die Unterschiede der verschiedenen Kompressionsbibliotheken können im  #
+ * # Detail der Datei 0test_compression.txt entnommen werden.               #
+ * ##########################################################################
+ */
+
+#define COMPRESSION_NONE   1
+#define COMPRESSION_ZLIB   2
+#define COMPRESSION_BZIP2  3
+#define COMPRESSION_LZO    4
+#define COMPRESSION_LZMA   5
+
+DLL_EXPORT int set_default_compression(int mode);
+
+/*
  * ######################################################################
  * # kto_check(): Test eines Kontos                                     #
  * #              Diese Funktion stammt aus der alten Programmier-      #
@@ -620,10 +649,15 @@ DLL_EXPORT void kc_free(char *ptr);
  * #    ip:         Pointer auf Integerarray (4 Byte Integer-Werte)          #
  * ###########################################################################
  */
-
 DLL_EXPORT char *kto_check_test_vars(char *txt,UINT4 i);
-DLL_EXPORT int set_verbose_debug(int mode);
 #endif
+
+/*
+ * ############################################################################
+ * # set_verbose_debug(): zusätzliche Debugmeldungen einschalten (bei Bedarf) #
+ * ############################################################################
+ */
+DLL_EXPORT int set_verbose_debug(int mode);
 
 /*
  * ######################################################################

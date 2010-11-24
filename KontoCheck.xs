@@ -63,11 +63,15 @@ set_verbose_debug(mode)
 	int mode;
 
 int
+set_default_compression(mode)
+	int mode;
+
+int
 dump_lutfile(outputname,felder)
    char *outputname;
    int felder;
 CODE:
-#line 149 "KontoCheck.lx"
+#line 153 "KontoCheck.lx"
    RETVAL=dump_lutfile_p(outputname,felder);
 OUTPUT:
    RETVAL
@@ -77,10 +81,10 @@ kto_check_pz(pz,kto...)
    char *pz;
    char *kto;
 PREINIT:
-#line 158 "KontoCheck.lx"
+#line 162 "KontoCheck.lx"
    char *blz;
 CODE:
-#line 160 "KontoCheck.lx"
+#line 164 "KontoCheck.lx"
    switch(items){
       case 2:
          blz=NULL;
@@ -105,12 +109,12 @@ lut_cleanup()
 int
 lut_init(...)
 PREINIT:
-#line 184 "KontoCheck.lx"
+#line 188 "KontoCheck.lx"
    char *lut_name;
    unsigned int required;
    unsigned int set;
 CODE:
-#line 188 "KontoCheck.lx"
+#line 192 "KontoCheck.lx"
    switch(items){
       case 0:
          lut_name=NULL;
@@ -145,12 +149,12 @@ int
 kto_check_init(lut_name...)
    char *lut_name
 PREINIT:
-#line 222 "KontoCheck.lx"
+#line 226 "KontoCheck.lx"
    unsigned int required;
    unsigned int set;
    unsigned int incremental;
 CODE:
-#line 226 "KontoCheck.lx"
+#line 230 "KontoCheck.lx"
    switch(items){
       case 1:
          required=DEFAULT_INIT_LEVEL;
@@ -186,7 +190,7 @@ generate_lut2(inputname,outputname...)
    char *inputname;
    char *outputname;
 PREINIT:
-#line 261 "KontoCheck.lx"
+#line 265 "KontoCheck.lx"
    char *user_info;
    char *gueltigkeit;
    unsigned int felder;
@@ -195,7 +199,7 @@ PREINIT:
    unsigned int lut_version;
    unsigned int set;
 CODE:
-#line 269 "KontoCheck.lx"
+#line 273 "KontoCheck.lx"
    switch(items){
       case 2:
          user_info=NULL;
@@ -283,7 +287,7 @@ lut_filialen_i(r,blz)
    char *blz;
    int r;
 CODE:
-#line 356 "KontoCheck.lx"
+#line 360 "KontoCheck.lx"
    if(items!=2)Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_filialen(blz)");
    RETVAL=lut_filialen(blz,&r);
 OUTPUT:
@@ -294,7 +298,7 @@ int lut_multiple_i(blz,filiale...)
 char *blz;
 int filiale;
 PREINIT:
-#line 366 "KontoCheck.lx"
+#line 370 "KontoCheck.lx"
    int cnt;
    char **p_name;
    char **p_name_kurz;
@@ -308,7 +312,7 @@ PREINIT:
    char *p_loeschung;
    int *p_nachfolge_blz;
  CODE:
-#line 379 "KontoCheck.lx"
+#line 383 "KontoCheck.lx"
    if(items!=14)Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_multiple_i(blz, filiale, cnt, "
          "name, name_kurz, plz, ort, pan, bic, pz, nr, aenderung, loeschung, nachfolge_blz)");
    RETVAL=lut_multiple(blz,&cnt,NULL,&p_name,&p_name_kurz,&p_plz,&p_ort,&p_pan,&p_bic,&p_pz,&p_nr,
@@ -340,13 +344,13 @@ PREINIT:
 OUTPUT:
    RETVAL
 
-#line 411 "KontoCheck.lx"
+#line 415 "KontoCheck.lx"
 char *
 pz2str(pz...)
    int pz;
 CODE:
    int ret;
-#line 418 "KontoCheck.lx"
+#line 422 "KontoCheck.lx"
    if(items<1 || items>2)Perl_croak(aTHX_ "Usage: Business::KontoCheck::pz2str(pz[,retval])");
 
    RETVAL=pz2str(pz,&ret);
@@ -357,15 +361,15 @@ CODE:
 OUTPUT:
    RETVAL
 
-#line 429 "KontoCheck.lx"
+#line 433 "KontoCheck.lx"
 int
 lut_blz_i(blz...)
    char *blz;
 PREINIT:
-#line 435 "KontoCheck.lx"
+#line 439 "KontoCheck.lx"
    unsigned int offset;
 CODE:
-#line 438 "KontoCheck.lx"
+#line 442 "KontoCheck.lx"
    if(items==1)
       offset=0;
    else if(items==2 || items==3)
@@ -381,17 +385,17 @@ CODE:
 OUTPUT:
    RETVAL
 
-#line 427 "KontoCheck.lx"
+#line 431 "KontoCheck.lx"
 
 char *
 lut_name_i(r,blz...)
    char *blz;
    int r;
 PREINIT:
-#line 434 "KontoCheck.lx"
+#line 438 "KontoCheck.lx"
    unsigned int offset;
 CODE:
-#line 437 "KontoCheck.lx"
+#line 441 "KontoCheck.lx"
    if(items==2)
       offset=0;
    else if(items==3 || items==4)
@@ -408,17 +412,17 @@ OUTPUT:
    r
    RETVAL
 
-#line 428 "KontoCheck.lx"
+#line 432 "KontoCheck.lx"
 
 char *
 lut_name_kurz_i(r,blz...)
    char *blz;
    int r;
 PREINIT:
-#line 435 "KontoCheck.lx"
+#line 439 "KontoCheck.lx"
    unsigned int offset;
 CODE:
-#line 438 "KontoCheck.lx"
+#line 442 "KontoCheck.lx"
    if(items==2)
       offset=0;
    else if(items==3 || items==4)
@@ -435,17 +439,17 @@ OUTPUT:
    r
    RETVAL
 
-#line 429 "KontoCheck.lx"
+#line 433 "KontoCheck.lx"
 
 int
 lut_plz_i(r,blz...)
    char *blz;
    int r;
 PREINIT:
-#line 436 "KontoCheck.lx"
+#line 440 "KontoCheck.lx"
    unsigned int offset;
 CODE:
-#line 439 "KontoCheck.lx"
+#line 443 "KontoCheck.lx"
    if(items==2)
       offset=0;
    else if(items==3 || items==4)
@@ -462,17 +466,17 @@ OUTPUT:
    r
    RETVAL
 
-#line 430 "KontoCheck.lx"
+#line 434 "KontoCheck.lx"
 
 char *
 lut_ort_i(r,blz...)
    char *blz;
    int r;
 PREINIT:
-#line 437 "KontoCheck.lx"
+#line 441 "KontoCheck.lx"
    unsigned int offset;
 CODE:
-#line 440 "KontoCheck.lx"
+#line 444 "KontoCheck.lx"
    if(items==2)
       offset=0;
    else if(items==3 || items==4)
@@ -489,17 +493,17 @@ OUTPUT:
    r
    RETVAL
 
-#line 431 "KontoCheck.lx"
+#line 435 "KontoCheck.lx"
 
 int
 lut_pan_i(r,blz...)
    char *blz;
    int r;
 PREINIT:
-#line 438 "KontoCheck.lx"
+#line 442 "KontoCheck.lx"
    unsigned int offset;
 CODE:
-#line 441 "KontoCheck.lx"
+#line 445 "KontoCheck.lx"
    if(items==2)
       offset=0;
    else if(items==3 || items==4)
@@ -516,17 +520,17 @@ OUTPUT:
    r
    RETVAL
 
-#line 432 "KontoCheck.lx"
+#line 436 "KontoCheck.lx"
 
 char *
 lut_bic_i(r,blz...)
    char *blz;
    int r;
 PREINIT:
-#line 439 "KontoCheck.lx"
+#line 443 "KontoCheck.lx"
    unsigned int offset;
 CODE:
-#line 442 "KontoCheck.lx"
+#line 446 "KontoCheck.lx"
    if(items==2)
       offset=0;
    else if(items==3 || items==4)
@@ -543,17 +547,17 @@ OUTPUT:
    r
    RETVAL
 
-#line 433 "KontoCheck.lx"
+#line 437 "KontoCheck.lx"
 
 int
 lut_pz_i(r,blz...)
    char *blz;
    int r;
 PREINIT:
-#line 440 "KontoCheck.lx"
+#line 444 "KontoCheck.lx"
    unsigned int offset;
 CODE:
-#line 443 "KontoCheck.lx"
+#line 447 "KontoCheck.lx"
    if(items==2)
       offset=0;
    else if(items==3 || items==4)
@@ -570,17 +574,17 @@ OUTPUT:
    r
    RETVAL
 
-#line 434 "KontoCheck.lx"
+#line 438 "KontoCheck.lx"
 
 int
 lut_aenderung_i(r,blz...)
    char *blz;
    int r;
 PREINIT:
-#line 441 "KontoCheck.lx"
+#line 445 "KontoCheck.lx"
    unsigned int offset;
 CODE:
-#line 444 "KontoCheck.lx"
+#line 448 "KontoCheck.lx"
    if(items==2)
       offset=0;
    else if(items==3 || items==4)
@@ -597,17 +601,17 @@ OUTPUT:
    r
    RETVAL
 
-#line 435 "KontoCheck.lx"
+#line 439 "KontoCheck.lx"
 
 int
 lut_loeschung_i(r,blz...)
    char *blz;
    int r;
 PREINIT:
-#line 442 "KontoCheck.lx"
+#line 446 "KontoCheck.lx"
    unsigned int offset;
 CODE:
-#line 445 "KontoCheck.lx"
+#line 449 "KontoCheck.lx"
    if(items==2)
       offset=0;
    else if(items==3 || items==4)
@@ -624,17 +628,17 @@ OUTPUT:
    r
    RETVAL
 
-#line 436 "KontoCheck.lx"
+#line 440 "KontoCheck.lx"
 
 int
 lut_nachfolge_blz_i(r,blz...)
    char *blz;
    int r;
 PREINIT:
-#line 443 "KontoCheck.lx"
+#line 447 "KontoCheck.lx"
    unsigned int offset;
 CODE:
-#line 446 "KontoCheck.lx"
+#line 450 "KontoCheck.lx"
    if(items==2)
       offset=0;
    else if(items==3 || items==4)
@@ -655,13 +659,13 @@ char *
 kto_check_retval2txt(ret)
    int ret;
 
-#line 451 "KontoCheck.lx"
+#line 455 "KontoCheck.lx"
 
 char *
 retval2txt(ret)
    int ret;
 CODE:
-#line 457 "KontoCheck.lx"
+#line 461 "KontoCheck.lx"
    if(items!=1)Perl_croak(aTHX_ "Usage: Business::KontoCheck::retval2txt(ret)");
 
    RETVAL=kto_check_retval2txt(ret);
@@ -672,13 +676,13 @@ char *
 kto_check_retval2txt_short(ret)
    int ret;
 
-#line 452 "KontoCheck.lx"
+#line 456 "KontoCheck.lx"
 
 char *
 retval2txt_short(ret)
    int ret;
 CODE:
-#line 458 "KontoCheck.lx"
+#line 462 "KontoCheck.lx"
    if(items!=1)Perl_croak(aTHX_ "Usage: Business::KontoCheck::retval2txt_short(ret)");
 
    RETVAL=kto_check_retval2txt_short(ret);
@@ -689,13 +693,13 @@ char *
 kto_check_retval2html(ret)
    int ret;
 
-#line 453 "KontoCheck.lx"
+#line 457 "KontoCheck.lx"
 
 char *
 retval2html(ret)
    int ret;
 CODE:
-#line 459 "KontoCheck.lx"
+#line 463 "KontoCheck.lx"
    if(items!=1)Perl_croak(aTHX_ "Usage: Business::KontoCheck::retval2html(ret)");
 
    RETVAL=kto_check_retval2html(ret);
@@ -706,13 +710,13 @@ char *
 kto_check_retval2utf8(ret)
    int ret;
 
-#line 454 "KontoCheck.lx"
+#line 458 "KontoCheck.lx"
 
 char *
 retval2utf8(ret)
    int ret;
 CODE:
-#line 460 "KontoCheck.lx"
+#line 464 "KontoCheck.lx"
    if(items!=1)Perl_croak(aTHX_ "Usage: Business::KontoCheck::retval2utf8(ret)");
 
    RETVAL=kto_check_retval2utf8(ret);
@@ -723,13 +727,13 @@ char *
 kto_check_retval2dos(ret)
    int ret;
 
-#line 455 "KontoCheck.lx"
+#line 459 "KontoCheck.lx"
 
 char *
 retval2dos(ret)
    int ret;
 CODE:
-#line 461 "KontoCheck.lx"
+#line 465 "KontoCheck.lx"
    if(items!=1)Perl_croak(aTHX_ "Usage: Business::KontoCheck::retval2dos(ret)");
 
    RETVAL=kto_check_retval2dos(ret);
@@ -741,11 +745,11 @@ int
 lut_info_i(lut_name...)
    char *lut_name;
 PREINIT:
-#line 473 "KontoCheck.lx"
+#line 477 "KontoCheck.lx"
    char *info1,*info2,*dptr;
    int valid1,valid2,want_array,ret;
 CODE:
-#line 476 "KontoCheck.lx"
+#line 480 "KontoCheck.lx"
    want_array=(int)SvIV(ST(1));
    if(items!=7)Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_info_i(lut_name,want_array,info1,valid1,info2,valid2,lut_dir)");
    if(want_array<0)Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_info(lut_name)");
@@ -887,7 +891,7 @@ lut_suche_c(want_array,art...)
    int want_array;
    int art;
 PREINIT:
-#line 617 "KontoCheck.lx"
+#line 621 "KontoCheck.lx"
    char *search,**base_name,warn_buffer[128],*fkt;
    int i,ret,anzahl,*start_idx,*zw,*bb;
    STRLEN len;
@@ -984,7 +988,7 @@ lut_suche_i(want_array,art...)
    int want_array;
    int art;
 PREINIT:
-#line 713 "KontoCheck.lx"
+#line 717 "KontoCheck.lx"
    int search1;
    int search2;
    int i,ret,anzahl,*start_idx,*base_name,*zw,*bb;
@@ -1087,11 +1091,11 @@ generate_lut_at(inputname,outputname...)
    char *inputname;
    char *outputname;
 PREINIT:
-#line 815 "KontoCheck.lx"
+#line 819 "KontoCheck.lx"
    char *plain_name;
    char *plain_format;
 CODE:
-#line 818 "KontoCheck.lx"
+#line 822 "KontoCheck.lx"
    if(items==2){
       plain_name=NULL;
       plain_format=NULL;

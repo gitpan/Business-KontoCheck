@@ -9,7 +9,7 @@ BEGIN{use_ok('Business::KontoCheck','lut_init','lut_name1','lut_pz1','lut_plz1',
 
 sub chk_int
 {
-   my($fkt,$fkt_name,$arg1,$arg2,@blz,@idx,@val,$c11,$c21,$c22,$c31,$c32,$c33,$r1,$r2,$r3,$rx,$i,$cnt);
+   my($fkt,$fkt_name,$arg1,$arg2,@blz,@idx,@val,$c11,$c21,$c22,$c31,$c32,$c33,$r1,$r2,$r3,$i,$cnt);
    $fkt=$_[0];
    $fkt_name=$_[1];
    $arg1=$_[2];
@@ -28,14 +28,14 @@ sub chk_int
    $c22=scalar(@idx);
 
       # Aufruf in Array-Kontext
-   ($p_blz,$p_idx,$p_val,$rx)=$fkt->($arg1,$arg2,$r3);
+   ($p_blz,$p_idx,$p_val)=$fkt->($arg1,$arg2,$r3);
    @blz=@$p_blz;
    @idx=@$p_idx;
    @val=@$p_val;
    $c31=scalar(@blz);
    $c32=scalar(@idx);
    $c33=scalar(@val);
-   $ok_msg="$fkt_name($arg1,$arg2): $c11 Banken gefunden, Rückgabewerte: $r1 / $r2 / $r3 / $rx -> ".retval2txt_short($r1);
+   $ok_msg="$fkt_name($arg1,$arg2): $c11 Banken gefunden, Rückgabewerte: $r1 / $r2 / $r3  -> ".retval2txt_short($r1);
    ok(($c11>0 && $c11==$c21 && $c11==$c22 && $c11==$c31 && $c11==$c32 && $c11==$c33),$ok_msg);
    print "Hier die ersten Werte:\n";
    $cnt=($c11<10)?$c11:10;
@@ -67,14 +67,14 @@ sub chk_str
    $c22=scalar(@idx);
 
       # Aufruf in Array-Kontext
-   ($p_blz,$p_idx,$p_val,$rx)=$fkt->($arg,$r3);
+   ($p_blz,$p_idx,$p_val)=$fkt->($arg,$r3);
    @blz=@$p_blz;
    @idx=@$p_idx;
    @val=@$p_val;
    $c31=scalar(@blz);
    $c32=scalar(@idx);
    $c33=scalar(@val);
-   $ok_msg="$fkt_name('$arg'): $c11 Banken gefunden, Rückgabewerte: $r1 / $r2 / $r3 / $rx -> ".retval2txt_short($r1);
+   $ok_msg="$fkt_name('$arg'): $c11 Banken gefunden, Rückgabewerte: $r1 / $r2 / $r3 -> ".retval2txt_short($r1);
    ok(($c11>0 && $c11==$c21 && $c11==$c22 && $c11==$c31 && $c11==$c32 && $c11==$c33),$ok_msg);
    print "Hier die ersten Werte:\n";
    $cnt=($c11<10)?$c11:10;
