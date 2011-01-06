@@ -4,6 +4,12 @@ Revision history for Perl extension Business::KontoCheck.
 The complete history can be found in 0_history.txt (in german). The perl
 version starts with 2.1; all previous versions are C only libraries.
 
+3.5   Thu Jan 6, 2011
+      - new check method D6 implemented
+      - new calculation for check method D1 implemented
+      - fixed a bug in *BIC routines, which caused a crash under NetBSD/64 Bit
+      - some minor changes in generate_lut2(), additional documentation
+
 3.4    Sat Nov 13, 2010
       - new check method D5 implemented
       - removed check_malloc routines (no longer needed)

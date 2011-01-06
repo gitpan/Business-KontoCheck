@@ -18,7 +18,7 @@
 
 CC=gcc
 
-CFLAGS=-O3 -DUSE_MMAP
+CFLAGS=-O3 -DUSE_MMAP -fPIC
 #CFLAGS=-O -DMAX_WBITS=14 -DMAX_MEM_LEVEL=7
 #CFLAGS=-g -DDEBUG
 #CFLAGS=-O3 -Wall -Wwrite-strings -Wpointer-arith -Wconversion \

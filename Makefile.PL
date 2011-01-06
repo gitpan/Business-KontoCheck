@@ -1,3 +1,8 @@
+
+############################################################
+### dies ist eine generierte Datei - nicht editieren!!!  ###
+############################################################
+
 use 5.006000;
 use ExtUtils::MakeMaker;
 use File::Find;
@@ -61,9 +66,16 @@ while(<IN>){
 }
 if($osname=~/MSWin/i){
    $os_windows=1;
+	$os_darwin=0;
 }
 else{
-   $os_windows=0;
+	if($osname=~/darwin/i){
+		$os_windows=0;
+		$os_darwin=1;
+	}
+	else{
+		$os_darwin=$os_windows=0;
+	}
 }
 close(IN);
 
@@ -93,10 +105,11 @@ else{
    $zlib_static="";
 }
 
-# bei Windows testweise immer kompilieren (Verzweiflungstat ;-) )
-if(!$have_zlib || $os_windows){
+# bei Mac testweise immer kompilieren (Verzweiflungstat ;-) )
+if(!$have_zlib || $os_darwin){
 # keine zlib gefunden; selbst kompilieren und makefile anpassen
-   compile_zlib();
+   $have_zlib=0;
+	compile_zlib();
    test_zlib();
    if($zlib_static){
 # das makefile muß mit geändertem Includepfad noch einmal geschrieben werden
@@ -282,7 +295,7 @@ sub write_makefile
                            'konto_check-cfg.lx' => "konto_check-cfg.lxx\n\tlx2l -x \$<",
                          'lib/Business/KontoCheck.pm' => "pm.lxx konto_check-cfg.lx\n\tlx2l -x \$<",
                          'META.yml'            => "META.lx konto_check-cfg.lx\n\tlx2l \$<",
-                         'konto_check.h'      => "konto_check_h.lx konto_check-cfg.lx\n\tlx2l \$<",
+                         'konto_check.h'      => "konto_check_h.lx konto_check-cfg.lx META.yml lib/Business/KontoCheck.pm\n\tlx2l \$<",
                          'konto_check.c'      => "konto_check.lxx konto_check-cfg.lx \n\tlx2l -x \$< -ua1",
                          'konto_check-at.c'   => "konto_check-at.lxx konto_check-cfg.lx\n\tlx2l -x \$<",
                          'konto_check-at.h'   => "konto_check-at.lxx konto_check-cfg.lx\n\tlx2l -x \$< -uh",

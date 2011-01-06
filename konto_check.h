@@ -7,7 +7,7 @@
  * #  Verwendung in anderen Programmen bzw. Programmiersprachen benutzt     #
  * #  werden.                                                               #
  * #                                                                        #
- * #  Copyright (C) 2002-2009 Michael Plugge <m.plugge@hs-mannheim.de>      #
+ * #  Copyright (C) 2002-2011 Michael Plugge <m.plugge@hs-mannheim.de>      #
  * #                                                                        #
  * #  Dieses Programm ist freie Software; Sie dürfen es unter den           #
  * #  Bedingungen der GNU Lesser General Public License, wie von der Free   #
@@ -43,6 +43,16 @@
 
 #ifndef KONTO_CHECK_H_INCLUDED
 #define KONTO_CHECK_H_INCLUDED
+
+/* 
+ * ##########################################################################
+ * # Die Berechnungsmethode D1 wird zum 7.3.2011 geändert; wenn das         #
+ * # folgenden Makro auf 1 gesetzt wird, wird die neue Berechnungsmethode   #
+ * # verwendet. Die Methode wird aktuell (30.12.2010) von keiner Bank       #
+ * # benutzt, daher kann der neue Code ohne Probleme schon aktiviert werden.#
+ * ##########################################################################
+ */
+#define METHODE_D1_NEU_2011_03_07 1
 
 /* 
  * ##########################################################################
@@ -373,7 +383,8 @@ extern char *lut2_feld_namen[256];
 #define KTO_CHECK_VALUE_REPLACED                10
 #define OK_UNTERKONTO_POSSIBLE                  11
 #define OK_UNTERKONTO_GIVEN                     12
-#line 219 "konto_check_h.lx"
+#define OK_SLOT_CNT_MIN_USED                    13
+#line 229 "konto_check_h.lx"
 
 #define MAX_BLZ_CNT 30000  /* maximale Anzahl BLZ's in generate_lut() */
 
@@ -442,6 +453,30 @@ typedef struct{
    UINT4 b1[256],b2[256],b3[256],b4[256],b5[256],b6[256],b7[256],b8[256];
    int c2,d2,a5,p,konto[11];
 } KTO_CHK_CTX;
+
+/*
+ * ##########################################################################
+ * # SLOT_CNT_MIN: Minimale Anzahl Slots für eine LUT-Daei.                 #
+ * # Dieser Parameter gibt an, wieviele Slots das Inhaltsverzeichnis einer  #
+ * # LUT-Datei mindestens haben soll. Für jeden Block in der LUT-Datei wird #
+ * # ein Slot im Inhaltsverzeichnis benötigt; bei einer LUT-Datei mit allen #
+ * # Einträgen (Level 9) sind das 12 Slots, falls zwei Datensätze in der    #
+ * # Datei gehalten werden sollen, 24 (Mindestanzahl!).                     #
+ * #                                                                        #
+ * # Das Slotverzeichnis ist eine relativ einfache Datenstruktur; es        #
+ * # enthält für jeden Slot nur drei 4 Byte-Integers (Typ, Offset und       #
+ * # Länge); daher ist es auch kein Problem, für das Slotverzeichnis einen  #
+ * # etwas größeren Wert zu wählen. Die Datei wird dadurch nur minimal      #
+ * # größer. Die angegebene Anzahl Slots kann nachträglich nicht mehr       #
+ * # geändert werden, da das Slotverzeichnis am Beginn des Datenblocks      #
+ * # steht und sich bei einer Vergrößerung alle Offsets in der Datei ändern #
+ * # würden; außerdem müßten alle Blocks verschoben werden. Es gibt die     #
+ * # Möglichkeit, eine LUT-Datei zu kopieren (mittels copy_lutfile()); bei  #
+ * # dieser Funktion kann eine neue Anzahl Slots angegeben werden.          #
+ * #                                                                        #
+ * ##########################################################################
+ */
+#define SLOT_CNT_MIN 25
 
 /*
  * ##########################################################################

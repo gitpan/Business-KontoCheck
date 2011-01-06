@@ -29,7 +29,7 @@ our @EXPORT_OK = qw( kto_check kto_check_str kto_check_blz
 
 our @EXPORT = qw( lut_init kto_check kto_check_blz kto_check_at %kto_retval );
 
-our $VERSION = '3.4';
+our $VERSION = '3.5';
 
 require XSLoader;
 XSLoader::load('Business::KontoCheck', $VERSION);
@@ -573,6 +573,7 @@ sub lut_nachfolge_blz1
   10 => 'ok; der Wert für den Schlüssel wurde überschrieben',
   11 => 'wahrscheinlich ok; die Kontonummer kann allerdings (nicht angegebene) Unterkonten enthalten',
   12 => 'wahrscheinlich ok; die Kontonummer enthält eine Unterkontonummer',
+  13 => 'ok; die Anzahl Slots wurde auf SLOT_CNT_MIN hochgesetzt',
 
 'KTO_CHECK_UNSUPPORTED_COMPRESSION'      => 'die notwendige Kompressions-Bibliothek wurden beim Kompilieren nicht eingebunden',
 'KTO_CHECK_INVALID_COMPRESSION_LIB'      => 'der angegebene Wert für die Default-Kompression ist ungültig',
@@ -699,6 +700,7 @@ sub lut_nachfolge_blz1
 'KTO_CHECK_VALUE_REPLACED'               => 'ok; der Wert für den Schlüssel wurde überschrieben',
 'OK_UNTERKONTO_POSSIBLE'                 => 'wahrscheinlich ok; die Kontonummer kann allerdings (nicht angegebene) Unterkonten enthalten',
 'OK_UNTERKONTO_GIVEN'                    => 'wahrscheinlich ok; die Kontonummer enthält eine Unterkontonummer',
+'OK_SLOT_CNT_MIN_USED'                   => 'ok; die Anzahl Slots wurde auf SLOT_CNT_MIN hochgesetzt',
 );
 
 %Business::KontoCheck::kto_retval_kurz = (
@@ -827,6 +829,7 @@ sub lut_nachfolge_blz1
   10 => 'KTO_CHECK_VALUE_REPLACED',
   11 => 'OK_UNTERKONTO_POSSIBLE',
   12 => 'OK_UNTERKONTO_GIVEN',
+  13 => 'OK_SLOT_CNT_MIN_USED',
 );
 
 END{ lut_cleanup(); }
@@ -910,8 +913,8 @@ language is german too.
 =head1 DESCRIPTION
 
 Dies ist Business::KontoCheck, ein Programm zum Testen der Prüfziffern
-von deutschen und österreichischen Bankkonten. Dies ist die
-Perl-Version der C-Library (als XSUB Modul).
+von deutschen und österreichischen Bankkonten. Dies ist die Perl-
+Version der C-Library (als XSUB Modul).
 
 =head1 EXPORT
 
@@ -987,7 +990,14 @@ diese müssen dann in der use Klausel anzugeben werden.
      lut_version: Format der LUT-Datei. Mögliche Werte:
                   1: altes Format (1.0)
                   2: altes Format (1.1) mit Infozeile
-                  3: (nur für generate_lut2()) neues Format (2.0)
+                  3: neues Format (2.0).
+
+                  Die Werte 1 und 2 werden defaultmäßig nicht mehr
+                  unterstützt, da sie komplett obsolet sind; falls
+                  jemand eine Datei im alten Format generieren will,
+                  muß in konto_check.h das Makro GENERATE_OLD_LUTFILE
+                  auf 1 gesetzt werden. Andernfalls wird immer eine
+                  Datei im neuen Format generiert.
 
    Die folgenden Parameter gelten nur für generate_lut2():
 
@@ -995,12 +1005,44 @@ diese müssen dann in der use Klausel anzugeben werden.
                   JJJJMMTT-JJJJMMTT, z.B. 20071203-20080302
 
      felder:      (Integer, 0-9) Felder, die in die LUT-Datei
-                  aufgenommen werden sollen.
+                  aufgenommen werden sollen. Folgende Felder werden
+                  in die Datei aufgenommen (nicht aufgeführt, aber
+                  immer dabei sind Infoblock, BLZ und Prüfziffer).
+                  Name+Kn. steht dabei für einen Block, der Name und
+                  Kurzname der Bank enthält; dieser läßt sich besser
+                  komprimieren, als wenn die beiden Blocks getrennt
+                  sind. Lfd.Nr. ist die laufende Nr. in der BLZ-Datei;
+                  praktisch wird sie wohl nicht benötigt, ist aber zur
+                  Vollständigkeit mit enthalten.
+
+    0: (nur die drei Defaultblocks) (3 Slots)
+    1: Name+Kn. (4 Slots)
+    2: Name+Kn.,BIC (5 Slots)
+    3: Name,PLZ,Ort (6 Slots)
+    4: Name,PLZ,Ort,BIC (7 Slots)
+    5: Name+Kn.,PLZ,Ort,BIC (7 Slots)
+    6: Name+Kn.,PLZ,Ort,BIC,Nachfolge-BLZ (8 Slots)
+    7: Name+Kn.,PLZ,Ort,BIC,Nachfolge-BLZ,Änderung (9 Slots)
+    8: Name+Kn.,PLZ,Ort,BIC,Nachfolge-BLZ,Änderung,Löschung (10 Slots)
+    9: Name+Kn.,PLZ,Ort,BIC,Nachfolge-BLZ,Änderung,Löschung,PAN,Lfd.Nr. (12 Slots)
 
      filialen:    Flag (0 oder 1), ob die Filialdaten ebenfalls
                   aufgenommen werden sollen.
 
-     slots:       Anzahl Slots (mögliche Verzeichniseinträge) der LUT-Datei
+     slots:       Anzahl Slots (mögliche Verzeichniseinträge) der
+                  LUT-Datei. Für einen vollen Datensatz (felder=9)
+                  werden 12 Slots benötigt; falls die Datei zwei
+                  Datensätze enthalten soll, braucht man mindestens
+                  24 Slots.
+
+                  In konto_check.h ist das Makro SLOT_CNT_MIN
+                  definiert, das die minimale Anzahl Slots angibt.
+                  Falls beim Aufruf dieser Funktion weniger Slots
+                  angegeben werden, erhält man den Rückgabewert
+                  OK_SLOT_CNT_MIN_USED, und die Anzahl der Slots wird
+                  auf den Minimalwert gesetzt. Falls nicht genügend
+                  Slots verfügbar sind, um die Datei zu generieren,
+                  wird der (Fehler-)Wert LUT2_NO_SLOT_FREE zurückgegeben.
 
      set:         (Integer, 0, 1 oder 2) Angabe, ob das primäre Set (0
                   bzw. 1) oder sekundäre Datensatz (2) geschrieben
@@ -1301,7 +1343,7 @@ Michael Plugge, E<lt>m.plugge@hs-mannheim.deE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2007-2010 by Michael Plugge
+Copyright (C) 2007-2011 by Michael Plugge
 
 This library is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself, either Perl version 5.8.8 or, at your option,
