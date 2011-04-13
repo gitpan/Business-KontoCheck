@@ -47,7 +47,7 @@ kto_check(pz_or_blz,kto,lut_name)
    char *kto;
    char *lut_name;
 
-char *
+const char *
 kto_check_str(pz_or_blz,kto,lut_name)
    char *pz_or_blz;
    char *kto;
@@ -345,7 +345,7 @@ OUTPUT:
    RETVAL
 
 #line 415 "KontoCheck.lx"
-char *
+const char *
 pz2str(pz...)
    int pz;
 CODE:
@@ -655,13 +655,13 @@ OUTPUT:
    r
    RETVAL
 
-char *
+const char *
 kto_check_retval2txt(ret)
    int ret;
 
 #line 455 "KontoCheck.lx"
 
-char *
+const char *
 retval2txt(ret)
    int ret;
 CODE:
@@ -672,13 +672,13 @@ CODE:
 OUTPUT:
    RETVAL
 
-char *
+const char *
 kto_check_retval2txt_short(ret)
    int ret;
 
 #line 456 "KontoCheck.lx"
 
-char *
+const char *
 retval2txt_short(ret)
    int ret;
 CODE:
@@ -689,13 +689,13 @@ CODE:
 OUTPUT:
    RETVAL
 
-char *
+const char *
 kto_check_retval2html(ret)
    int ret;
 
 #line 457 "KontoCheck.lx"
 
-char *
+const char *
 retval2html(ret)
    int ret;
 CODE:
@@ -706,13 +706,13 @@ CODE:
 OUTPUT:
    RETVAL
 
-char *
+const char *
 kto_check_retval2utf8(ret)
    int ret;
 
 #line 458 "KontoCheck.lx"
 
-char *
+const char *
 retval2utf8(ret)
    int ret;
 CODE:
@@ -723,13 +723,13 @@ CODE:
 OUTPUT:
    RETVAL
 
-char *
+const char *
 kto_check_retval2dos(ret)
    int ret;
 
 #line 459 "KontoCheck.lx"
 
-char *
+const char *
 retval2dos(ret)
    int ret;
 CODE:

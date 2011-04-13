@@ -4,6 +4,12 @@ Revision history for Perl extension Business::KontoCheck.
 The complete history can be found in 0_history.txt (in german). The perl
 version starts with 2.1; all previous versions are C only libraries.
 
+3.6   Wed April 13, 2011
+      - new check methods D7 and D8 implemented
+      - new calculation for check methods B8, C6, D4 implemented
+      - fixed a bug in check method D6
+      - some minor bug fixes
+
 3.5   Thu Jan 6, 2011
       - new check method D6 implemented
       - new calculation for check method D1 implemented

@@ -1,4 +1,27 @@
 ##################################################################################
+#          PRÜFZIFFERBERECHNUNG VON DEUTSCHEN KONTONUMMERN                       #
+#                           C-/Perl/PHP-Bibliothek                               #
+##################################################################################
+#                                                                                #
+# Autor             : Michael Plugge <m.plugge@hs-mannheim.de>                   #
+# Version           : 3.6                                                        #
+# Datum             : 13.04.2011                                                 #
+##################################################################################
+
+##################################################################################
+###                       13.04.11 Version 3.6                                 ###
+##################################################################################
+
+ - neue Prüfziffermethode D7 und D8 implementiert (gültig ab 6.6.2011)
+
+ - Änderungen in den Prüfziffermethoden B8, C6 und D4 implementiert (gültig ab 6.6.2011)
+
+ - Bugfix in Methode D6 (falls sich in D6a für die Prüfziffer 10 ergab, wurde die
+   Meldung "ungültiges Konto" zurückgegeben, statt mit D6b weiterzutesten).
+
+ - diverse kleinere Bugfixes (viele bedingt durch Compiler-Warnungen im Ruby-Port)
+
+##################################################################################
 ###                       06.01.11 Version 3.5                                 ###
 ##################################################################################
 
@@ -8,7 +31,8 @@
 
  - die Variablen lut_set_* enthalten jetzt explizit auch BLZ und Prüfziffer
 
- - Fehler in den *BIC-Routinen beseitigt, der unter NetBSD/64 Bit zum Absturz führte
+ - Fehler in den *BIC-Routinen beseitigt, der unter NetBSD/64 Bit und
+   Dragonfly/64Bit zum Absturz führte
 
  - Fix für Compilerproblem unter Solaris
 

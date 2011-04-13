@@ -180,8 +180,8 @@ DLL_EXPORT char *kto_check_at_str(char *blz,char *kto,char *lut_name);
  * ###########################################################################
  */
 
-DLL_EXPORT char *kto_check_retval2txt(int retval);
-DLL_EXPORT char *kto_check_retval2html(int retval);
+DLL_EXPORT const char *kto_check_retval2txt(int retval);
+DLL_EXPORT const char *kto_check_retval2html(int retval);
 
 
 /* ###########################################################################

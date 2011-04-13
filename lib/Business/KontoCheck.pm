@@ -29,7 +29,7 @@ our @EXPORT_OK = qw( kto_check kto_check_str kto_check_blz
 
 our @EXPORT = qw( lut_init kto_check kto_check_blz kto_check_at %kto_retval );
 
-our $VERSION = '3.5';
+our $VERSION = '3.6';
 
 require XSLoader;
 XSLoader::load('Business::KontoCheck', $VERSION);
@@ -455,7 +455,7 @@ sub lut_nachfolge_blz1
 -108 => 'Die maximale Anzahl Einträge für den Default-Block wurde erreicht',
 -107 => 'Es wurde noch kein Default-Block angelegt',
 -106 => 'Der angegebene Schlüssel wurde im Default-Block nicht gefunden',
--105 => 'Der Datensatz ist nicht mehr gültig, aber jünger als der andere',
+-105 => 'Beide Datensätze sind nicht mehr gültig; dieser ist  aber jünger als der andere',
 -104 => 'Die Auftraggeber-Kontonummer des C-Datensatzes unterscheidet sich von der des A-Satzes',
 -103 => 'Die Auftraggeber-Bankleitzahl des C-Datensatzes unterscheidet sich von der des A-Satzes',
 -102 => 'Die DTA-Datei enthält (unzulässige) Zeilenvorschübe',
@@ -582,7 +582,7 @@ sub lut_nachfolge_blz1
 'KTO_CHECK_DEFAULT_BLOCK_FULL'           => 'Die maximale Anzahl Einträge für den Default-Block wurde erreicht',
 'KTO_CHECK_NO_DEFAULT_BLOCK'             => 'Es wurde noch kein Default-Block angelegt',
 'KTO_CHECK_KEY_NOT_FOUND'                => 'Der angegebene Schlüssel wurde im Default-Block nicht gefunden',
-'LUT2_NO_LONGER_VALID_BETTER'            => 'Der Datensatz ist nicht mehr gültig, aber jünger als der andere',
+'LUT2_NO_LONGER_VALID_BETTER'            => 'Beide Datensätze sind nicht mehr gültig; dieser ist  aber jünger als der andere',
 'DTA_SRC_KTO_DIFFERENT'                  => 'Die Auftraggeber-Kontonummer des C-Datensatzes unterscheidet sich von der des A-Satzes',
 'DTA_SRC_BLZ_DIFFERENT'                  => 'Die Auftraggeber-Bankleitzahl des C-Datensatzes unterscheidet sich von der des A-Satzes',
 'DTA_CR_LF_IN_FILE'                      => 'Die DTA-Datei enthält (unzulässige) Zeilenvorschübe',

@@ -1,8 +1,3 @@
-
-############################################################
-### dies ist eine generierte Datei - nicht editieren!!!  ###
-############################################################
-
 use 5.006000;
 use ExtUtils::MakeMaker;
 use File::Find;
@@ -99,14 +94,20 @@ if($os_windows){
    }
 }
 else{
+   if($os_darwin){
+# Mac-System; nur -lz, selbst kompilieren macht bislang Probleme
+      $zlib_static=" -lz";
+      $have_zlib=1;
+   }
+   else{
 # Nicht-Windows System; testen mit -lz
-   $zlib_static="-lz";  # Krücke für test_zlib()
-   test_zlib();
-   $zlib_static="";
+      $zlib_static=" -lz";  # Krücke für test_zlib()
+      test_zlib();
+      $zlib_static="";
+   }
 }
 
-# bei Mac testweise immer kompilieren (Verzweiflungstat ;-) )
-if(!$have_zlib || $os_darwin){
+if(!$have_zlib){
 # keine zlib gefunden; selbst kompilieren und makefile anpassen
    $have_zlib=0;
 	compile_zlib();

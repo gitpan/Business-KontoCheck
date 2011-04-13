@@ -7,16 +7,6 @@ BEGIN { use_ok('Business::KontoCheck') };
 
 $ok_cnt=$nok_cnt=0;
 
-# first set verbose debug
-# this code was used to find the -38 bug in version 2.93 (and previous) on 64 bit machines
-# currently it is no longer needed
-#
-#$retval=Business::KontoCheck::set_verbose_debug(6);
-#$retval=Business::KontoCheck::set_verbose_debug(1);
-#$ret_txt=$kto_retval{$retval};
-#if($retval gt 0){$ok_cnt++;}else{$nok_cnt++;}
-#ok($retval gt 0,"set_verbose_retval(): $retval => $ret_txt (ok: $ok_cnt, nok: $nok_cnt)");
-
 # check initialization with base init level
 $retval=lut_init("blz.lut",0);
 $ret_txt=$kto_retval{$retval};

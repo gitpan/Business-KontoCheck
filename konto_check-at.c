@@ -1206,7 +1206,7 @@ DLL_EXPORT const char *get_loesch_datum(char *blz1)
  * ###########################################################################
  */
 
-DLL_EXPORT char *kto_check_retval2txt(int retval)
+DLL_EXPORT const char *kto_check_retval2txt(int retval)
 {
    switch(retval){
       case UNDEFINED_SUBMETHOD:
@@ -1322,7 +1322,7 @@ DLL_EXPORT char *kto_check_retval2txt(int retval)
  * ###########################################################################
  */
 
-DLL_EXPORT char *kto_check_retval2html(int retval)
+DLL_EXPORT const char *kto_check_retval2html(int retval)
 {
    switch(retval){
       case UNDEFINED_SUBMETHOD:
