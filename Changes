@@ -4,6 +4,15 @@ Revision history for Perl extension Business::KontoCheck.
 The complete history can be found in 0_history.txt (in german). The perl
 version starts with 2.1; all previous versions are C only libraries.
 
+4.0   Jul 2011
+      - the search routines are rewritten; they are able to deal with all
+         4 supported character sets now (ISO 8859-1, UTF-8, DOS CP-850
+         and HTML entities); also the encoding of output can be changed.
+      - fast initialization of search routines (index blocks in lutfile)
+      - the blacklist for IBAN generation (available from Sparkasse) is now supported
+      - changes for check methods B6 and D1 (valid from 2011-09-05) are implemented
+      - various minor changes and bugfixes
+
 3.6   Wed April 13, 2011
       - new check methods D7 and D8 implemented
       - new calculation for check methods B8, C6, D4 implemented

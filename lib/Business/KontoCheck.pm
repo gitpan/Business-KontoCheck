@@ -13,23 +13,23 @@ our @ISA = qw(Exporter);
 our @EXPORT_OK = qw( kto_check kto_check_str kto_check_blz
    kto_check_pz generate_lut generate_lut2 lut_cleanup lut_valid
    lut_init kto_check_init copy_lutfile lut_multiple lut_filialen
-   lut_blz lut_name lut_name_kurz lut_plz lut_ort lut_pan lut_bic lut_pz
-   lut_aenderung lut_loeschung lut_nachfolge_blz
-   lut_blz1 lut_name1 lut_name_kurz1 lut_plz1 lut_ort1 lut_pan1 lut_bic1 lut_pz1
-   lut_aenderung1 lut_loeschung1 lut_nachfolge_blz1
-   lut_info iban2bic pz2str
-   iban_gen check_iban ipi_check ipi_gen set_verbose_debug set_default_compression
-   retval2txt retval2txt_short retval2utf8 retval2html retval2dos
-   kto_check_retval2txt kto_check_retval2txt_short kto_check_retval2utf8
+   lut_blz lut_name lut_name_kurz lut_plz lut_ort lut_pan lut_bic
+   lut_pz lut_aenderung lut_loeschung lut_nachfolge_blz lut_blz1
+   lut_name1 lut_name_kurz1 lut_plz1 lut_ort1 lut_pan1 lut_bic1
+   lut_pz1 lut_aenderung1 lut_loeschung1 lut_nachfolge_blz1 iban_gen
+   check_iban ipi_check ipi_gen set_verbose_debug lut_info
+   set_default_compression iban2bic pz2str kto_check_encoding
+   kto_check_encoding_str keep_raw_data retval2txt retval2txt_short
+   retval2iso retval2utf8 retval2html retval2dos kto_check_retval2txt
+   kto_check_retval2txt_short kto_check_retval2utf8
    kto_check_retval2html dump_lutfile kto_check_retval2dos
    lut_suche_blz lut_suche_pz lut_suche_plz lut_suche_bic
-   lut_suche_namen lut_suche_namen_kurz lut_suche_ort
-   konto_check_at kto_check_at_str generate_lut_at
-   %kto_retval %kto_retval_kurz );
+   lut_suche_namen lut_suche_namen_kurz lut_suche_ort konto_check_at
+   kto_check_at_str generate_lut_at %kto_retval %kto_retval_kurz );
 
 our @EXPORT = qw( lut_init kto_check kto_check_blz kto_check_at %kto_retval );
 
-our $VERSION = '3.6';
+our $VERSION = '4.0';
 
 require XSLoader;
 XSLoader::load('Business::KontoCheck', $VERSION);
@@ -62,6 +62,23 @@ sub lut_info
    else{
       $ret=lut_info_i($lut_name,$args,$info1,$valid1,$info2,$valid2,$lut_dir);
       return $ret;
+   }
+}
+
+sub current_lutfile_name
+{
+   my $lut_name;
+   my $set;
+   my $level;
+   my $retval;
+
+   if(wantarray()){
+      $lut_name=current_lutfile_name_i(1,$set,$level,$retval);
+      return ($lut_name,$set,$level,$retval);
+   }
+   else{
+      $lut_name=current_lutfile_name_i(0,$set,$level,$retval);
+      return $lut_name;
    }
 }
 
@@ -448,6 +465,7 @@ sub lut_nachfolge_blz1
 
 
 %Business::KontoCheck::kto_retval = (
+-113 => 'das Institut erlaubt keine eigene IBAN-Berechnung',
 -112 => 'die notwendige Kompressions-Bibliothek wurden beim Kompilieren nicht eingebunden',
 -111 => 'der angegebene Wert für die Default-Kompression ist ungültig',
 -110 => 'wahrscheinlich OK; es wurde allerdings ein (weggelassenes) Unterkonto angefügt',
@@ -575,6 +593,7 @@ sub lut_nachfolge_blz1
   12 => 'wahrscheinlich ok; die Kontonummer enthält eine Unterkontonummer',
   13 => 'ok; die Anzahl Slots wurde auf SLOT_CNT_MIN hochgesetzt',
 
+'NO_OWN_IBAN_CALCULATION'                => 'das Institut erlaubt keine eigene IBAN-Berechnung',
 'KTO_CHECK_UNSUPPORTED_COMPRESSION'      => 'die notwendige Kompressions-Bibliothek wurden beim Kompilieren nicht eingebunden',
 'KTO_CHECK_INVALID_COMPRESSION_LIB'      => 'der angegebene Wert für die Default-Kompression ist ungültig',
 'OK_UNTERKONTO_ATTACHED'                 => 'wahrscheinlich OK; es wurde allerdings ein (weggelassenes) Unterkonto angefügt',
@@ -704,6 +723,7 @@ sub lut_nachfolge_blz1
 );
 
 %Business::KontoCheck::kto_retval_kurz = (
+-113 => 'NO_OWN_IBAN_CALCULATION',
 -112 => 'KTO_CHECK_UNSUPPORTED_COMPRESSION',
 -111 => 'KTO_CHECK_INVALID_COMPRESSION_LIB',
 -110 => 'OK_UNTERKONTO_ATTACHED',
@@ -894,8 +914,12 @@ language is german too.
    $retval=iban2bic(iban)
    $retval=iban_gen(blz,kto)
 
+   $enc=kto_check_encoding($encoding)
+   $enc_str=kto_check_encoding_str($encoding)
+   $keep=keep_raw_data($flag)
    $retval=retval2txt($retval)
    $retval=retval2txt_short($retval)
+   $retval=retval2iso($retval)
    $retval=retval2html($retval)
    $retval=retval2utf8($retval)
    $retval=retval2dos($retval)
@@ -1112,6 +1136,102 @@ diese müssen dann in der use Klausel anzugeben werden.
 
    Falls der Aufruf im Array-Kontext nicht gewünscht ist, gibt es noch
    alternative Funktionen, die nur in skalarem Kontext arbeiten: 
+
+   -------------------------------------------------------------------------
+
+  Funktion:  keep_raw_data
+             kto_check_encoding
+             kto_check_encoding_str
+
+  Aufgabe:   Diese Funktionen setzen die Ausgabekodierung (sowohl für
+      die Felder der LUT-Datei als auch für Statusmeldungen mit der
+      Funktion kto_check_retval2txt()) fest.
+
+
+  Aufruf:    $flag=keep_raw_data($flag)
+             $encoding=kto_check_encoding($mode)
+             $encoding_str=kto_check_encoding_str($mode)
+
+    Diese Funktion legt den benutzten Zeichensatz für Fehlermeldungen
+    durch die Funktion retval2txt() und einige Felder der LUT-Datei
+    (Name, Kurzname, Ort) fest. Wenn die Funktion nicht aufgerufen
+    wird, wird der Wert DEFAULT_ENCODING aus konto_check.h benutzt.
+
+    _Achtung_: Das Verhalten der Funktionen hängt von dem Flag
+    keep_raw_data_flag der C-Bibliothek ab. Falls das Flag gesetzt
+    ist, werden die Rohdaten der Blocks Name, Kurzname und Ort im
+    Speicher gehalten; bei einem Wechsel der Kodierung wird auch für
+    diese Blocks die Kodierung umgesetzt. Falls das Flag nicht gesetzt
+    ist, sollte die Funktion *vor* der Initialisierung aufgerufen
+    werden, da in dem Fall die Daten der LUT-Datei nur bei der
+    Initialisierung konvertiert werden. Mit der Funktion
+    keep_raw_data() kann das Flag gesetzt oder gelöscht werden.
+
+    Für den Parameter mode werden die folgenden Werte akzeptiert:
+
+    1:   ISO-8859-1
+    2:   UTF-8
+    3:   HTML
+    4:   DOS CP 850
+    51:  ISO-8859-1, Makro für Fehlermeldungen
+    52:  UTF-8, Makro für Fehlermeldungen
+    53:  HTML, Makro für Fehlermeldungen
+    54:  DOS CP 850, Makro für Fehlermeldungen
+
+    Rückgabewert ist die aktuelle Kodierung als Integer oder (bei
+    kto_check_encoding_str()) als String. Falls zwei Kodierungen
+    angegeben sind, ist die erste die der Statusmeldungen, die zweite
+    die der LUT-Blocks:
+
+     1:  "ISO-8859-1";
+     2:  "UTF-8";
+     3:  "HTML entities";
+     4:  "DOS CP 850";
+     12: "ISO-8859-1/UTF-8";
+     13: "ISO-8859-1/HTML";
+     14: "ISO-8859-1/DOS CP 850";
+     21: "UTF-8/ISO-8859-1";
+     23: "UTF-8/HTML";
+     24: "UTF-8/DOS CP-850";
+     31: "HTML entities/ISO-8859-1";
+     32: "HTML entities/UTF-8";
+     34: "HTML entities/DOS CP-850";
+     41: "DOS CP-850/ISO-8859-1";
+     42: "DOS CP-850/UTF-8";
+     43: "DOS CP-850/HTML";
+     51: "Makro/ISO-8859-1";
+     52: "Makro/UTF-8";
+     53: "Makro/HTML";
+     54: "Makro/DOS CP 850";
+
+    Mit der Funktion keep_raw_data() läßt sich einstellen, ob die
+    Rohwerte der LUT-Datei gespeichert werden sollen (das erfordert
+    etwa 900 KB zusätzlichen Hauptspeicher, erlaubt aber das
+    Umkodieren der LUT-Blocks nach der Initialisierung).
+
+   -------------------------------------------------------------------------
+
+  Funktion:  kto_check_retval2txt
+             kto_check_retval2iso
+             kto_check_retval2utf8
+             kto_check_retval2html
+             kto_check_retval2dos
+             kto_check_retval2txt_short
+
+  Aufgabe:   Ausgabe numerischer Statusmeldungen als Klartext.
+
+  Aufruf:    $retval_txt=kto_check_retval2txt($retval)
+             $retval_txt=kto_check_retval2iso($retval)
+             $retval_txt=kto_check_retval2utf8($retval)
+             $retval_txt=kto_check_retval2html($retval)
+             $retval_txt=kto_check_retval2dos($retval)
+             $retval_txt=kto_check_retval2txt_short($retval)
+
+   Diese Funktionen wandeln die numerischen Rückgabewerte in einen
+   Klartext-String der gewünschten Kodierung um. Die Kodierung der
+   Funktion kto_check_retval2txt() wird dabei durch die Funktion
+   kto_check_encoding() (s.o.) festgelegt; die anderen Funktionen
+   geben jeweils eine feste Kodierung zurück.
 
    -------------------------------------------------------------------------
 

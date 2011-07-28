@@ -1,12 +1,98 @@
 ##################################################################################
 #          PRÜFZIFFERBERECHNUNG VON DEUTSCHEN KONTONUMMERN                       #
-#                           C-/Perl/PHP-Bibliothek                               #
+#                           C-/AWK/Perl/PHP-Bibliothek                           #
 ##################################################################################
 #                                                                                #
 # Autor             : Michael Plugge <m.plugge@hs-mannheim.de>                   #
-# Version           : 3.6                                                        #
-# Datum             : 13.04.2011                                                 #
+# Version           : 4.0                                                        #
+# Datum             : 26.07.2011                                                 #
 ##################################################################################
+
+##################################################################################
+###                       26.07.11 Version 4.0                                 ###
+##################################################################################
+
+Die Version 4.0 enthält einige wesentliche Änderungen in der Suche nach Banken
+sowie in der Kodierung der Ausgabe. Außerdem wurde in der Funktion iban_gen()
+noch eine Prüfung hinzugefügt, ob die Bank einer Selbstberechnung der IBAN
+widersprochen hat. Hier die wichtigsten Änderungen im Einzelnen:
+
+ - Es gibt eine neue Funktion kto_check_encoding(), mit der die Kodierung der
+   Ausgabe (sowohl für Fehlermeldungen als auch die Felder der LUT-Datei
+   (Bankname, Kurzname, Ort) festgelegt werden kann. Die Funktion
+   kto_check_retval2txt() gibt die Ausgabe entsprechend der gewählten Kodierung
+   aus; eine neue Funktion (kto_check_retval2iso()) übernimmt die Rolle der
+   alten Funktion, die immer die Kodierung ISO-8859-1 benutzte.
+
+ - Die Sortierungsroutinen wurden umgeschrieben, so daß Umlaute werden in allen
+   Kodierungen erkannt werden. Außerdem können die Suchbegriffe jetzt auch in
+   einer beliebigen Kodierung angegeben werden, sogar mit HTML Entities. Alle
+   Zeichen werden auf eine interne Repräsentation mit 12 Bit umgesetzt; dabei
+   werden Groß- und Kleinbuchstaben gleich behandelt und Umlaute sowie
+   Buchstaben mit Akzenten als eigene Zeichen direkt nach dem entsprechenden
+   Grundbuchstaben einsortiert. Dies erscheint mir konsistenter als die alte
+   Version, bei denen diese Zeichen mit den Grundbuchstaben einfach gleichgesetzt
+   wurden, und auch besser als die Version, z.B Umlaute unter <Grundbuchstabe+e>
+   zu sortieren.
+
+ - In der alten Version wurde beim ersten Aufruf einer Suchroutine der
+   entsprechende Suchindex jeweils neu generiert; die Suchindizes sind nun als
+   LUT-Blocks gespeichert und können sehr schnell eingelesen werden. Die
+   benötigte Zeit für den ersten Suchvorgang (in PHP) reduziert bei meinem
+   Laptop dadurch von ca. 35ms (mit Generierung des Index) auf weniger als 1ms
+   (mit vorberechnetem Index-Block aus der LUT-Datei). Alle weiteren
+   Suchvorgänge laufen dann sehr schnell ab (sie benötigen etwa 40 Mikrosekunden).
+   
+   In der SVN-Version 53 ist noch ein Fehler bei der Generierung der
+   Indexblocks enthalten; der Index für die Kurzbezeichnung der Institute wird
+   beim kombinierten Block für Namen und Kurznamen nicht richtig erzeugt. In
+   der aktuellen Version wurde der Fehler berichtigt; der Indexblock der alten
+   LUT-Datei vom 9.7.2011 auf SF.net ist allerdings auch fehlerhaft; die Datei
+   sollte durch die aktuelle Version ersetzt werden.
+
+ - Falls dem Suchmuster bei Stringsuche ein ! vorangestellt wird, wird eine
+   genaue Suche durchgeführt. Es werden nur die Ergebnisse zurückgeliefert,
+   die genau auf das Suchmuster passen.
+
+ - Aufgrund der zusätzlichen Indexblocks (je Set bis zu sechs zusätzliche
+   Blocks) wurde die minimale Slotzahl auf 40 erhöht.
+
+ - Für den Parameter set in der Funktion in generate_lut2() sind jetzt auch die
+   Werte 10, 11 und 12 möglich. Sie entsprechen den Werten 0, 1 und 2 des
+   normalen Aufrufs; es werden jedoch keine Indexblocks generiert.
+
+ - Es gibt eine neue Funktion current_lutfile_name(); diese liefert den Namen
+   und das für die Initialisierung benutzte set zurück. Sie wurde zunächst für
+   die inkrementelle Initialisierung der Indexblocks benötigt, ist aber auch
+   für andere Aufgaben nützlich.
+
+ - Die Funktion iban_gen() wertet jetzt eine Liste von Banken aus, die der
+   IBAN-Berechnung nicht zugestimmt haben. Die Liste ist die Datei CONFIG.INI
+   des SEPA Account Converters; sie kann mit der Funktion lut_keine_iban_berechnung() 
+   direkt in eine LUT-Datei geschrieben werden. Der entsprechende Block wird bei der
+   Initialisierung gelesen und von iban_gen() ausgewertet; falls er nicht in der
+   LUT-Datei enthalten ist, erzeugt das allerdings auch keine Warnung.
+
+   Alle Banken der Liste erzeugen eine Statusmeldung mit dem Wert
+   OK_UNTERKONTO_ATTACHED, OK_UNTERKONTO_POSSIBLE oder OK_UNTERKONTO_GIVEN.
+   Falls einer dieser Stauswerte zurückgegeben wird, ist somit immer Vorsicht
+   geboten; der generierte IBAN sollte direkt bei dem zugehörigen Institut
+   überprüft werden.
+   
+   Weblinks:
+   
+        https://www.sparkasse-rhein-neckar-nord.de/pdf/content/sepa/kurzanleitung.pdf
+        https://www.sparkasse-rhein-neckar-nord.de/firmenkunden/internationales_geschaeft/sepa/vorteile/index.php
+        https://www.sparkasse-rhein-neckar-nord.de/firmenkunden/internationales_geschaeft/sepa/vorteile/sepa_account_converter.msi
+
+ - Im AWK-Port wurde die Funktion iban_gen() hinzugefügt
+
+ - Es gibt die Beispielsdatei mini.cs für C#.net, sowie eine Interface-Datei für C#
+
+ - Die Änderungen der Prüfzifferberechnungsmethoden B6 und D1 (gültig ab 5.9.11) sind implementiert
+
+ - diverse kleinere Änderungen und Bugfixes
+
 
 ##################################################################################
 ###                       13.04.11 Version 3.6                                 ###
