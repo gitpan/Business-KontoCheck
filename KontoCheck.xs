@@ -990,15 +990,129 @@ OUTPUT:
    RETVAL
 
 void
+lut_suche_volltext_i(want_array,search...)
+   int want_array;
+   char *search;
+PREINIT:
+#line 666 "KontoCheck.lx"
+   char **base_name;
+   int i,ret,anzahl,anzahl_name,start_name_idx,*start_idx,*zw,*bb;
+   AV *zweigstelle,*blz_array,*vals;
+   SV *zweigstelle_p,*blz_array_p,*vals_p;
+PPCODE:
+   if(items<2 || items>3)Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_suche_volltext(suchworte[,retval])");
+   ret=lut_suche_volltext(search,&anzahl_name,&start_name_idx,&base_name,&anzahl,&start_idx,&zw,&bb);
+   if(items==3){
+      sv_setiv(ST(2),(IV)ret);
+      SvSETMAGIC(ST(2));
+   }
+
+   blz_array=newAV();
+   if(anzahl){
+      /* das BLZ-Array auch in ein neues Array kopieren und als Referenz zurückgeben */
+      av_unshift(blz_array,anzahl); /* Platz machen */
+      for(i=0;i<anzahl;i++)av_store(blz_array,i,newSViv(bb[start_idx[i]]));
+   }
+   blz_array_p=sv_2mortal((SV*)newRV(sv_2mortal((SV*)blz_array)));
+
+   if(want_array){   /* die beiden nächsten Arrays werden nur bei Bedarf gefüllt */
+      zweigstelle=newAV();
+      vals=newAV();
+      if(anzahl){
+            /* die Zweigstellen und Werte in ein neues Array kopieren, dann als Referenz zurückgeben */
+         av_unshift(zweigstelle,anzahl);
+         av_unshift(vals,anzahl_name);
+         for(i=0;i<anzahl;i++)av_store(zweigstelle,i,newSViv(zw[start_idx[i]]));
+         for(i=0;i<anzahl_name;i++)av_store(vals,i,newSVpvf("%s",base_name[start_name_idx+i]));
+      }
+      zweigstelle_p=sv_2mortal((SV*)newRV(sv_2mortal((SV*)zweigstelle)));
+      vals_p=sv_2mortal((SV*)newRV(sv_2mortal((SV*)vals)));
+      XPUSHs(blz_array_p);
+      XPUSHs(zweigstelle_p);
+      XPUSHs(vals_p);
+      XPUSHs(sv_2mortal(newSViv(ret)));
+      XSRETURN(4);
+   }
+   else{
+      XPUSHs(blz_array_p);
+      XSRETURN(1);
+   }
+
+void
+lut_suche_multiple_i(want_array,search...)
+   int want_array;
+   char *search;
+PREINIT:
+#line 714 "KontoCheck.lx"
+   char *such_cmd;
+   int i,uniq,ret;
+   UINT4 anzahl,*blz,*zweigstellen;
+   AV *zweigstellen_array,*blz_array;
+   SV *zweigstelle_p,*blz_array_p;
+PPCODE:
+
+            /* Anzahl, BLZ, Zweigstellen: nur Rückgabeparameter */
+   switch(items){
+      case 2:  /* keine zusätzlichen Parameter */
+         uniq=UNIQ_DEFAULT;
+         such_cmd=NULL;
+         break;
+      case 3:  /* nur uniq */
+         uniq=SvIV(ST(2));
+         such_cmd=NULL;
+         break;
+      case 4:
+      case 5:
+         uniq=SvIV(ST(2));
+         such_cmd=SvPV_nolen(ST(3));
+         break;
+      default:
+         Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_suche_multiple(search_words[,uniq[,search_cmd[,ret]]])");
+         break;
+   }
+
+   ret=lut_suche_multiple(search,uniq,such_cmd,&anzahl,&zweigstellen,&blz);
+   if(items>4){   /* retval zurückgeben */
+      sv_setiv(ST(4),(IV)ret);
+      SvSETMAGIC(ST(4));
+   }
+
+   blz_array=newAV();
+   if(anzahl){
+      /* das BLZ-Array auch in ein neues Array kopieren und als Referenz zurückgeben */
+      av_unshift(blz_array,anzahl); /* Platz machen */
+      for(i=0;i<anzahl;i++)av_store(blz_array,i,newSViv(blz[i]));
+   }
+   blz_array_p=sv_2mortal((SV*)newRV(sv_2mortal((SV*)blz_array)));
+
+   if(want_array){   /* das nächste Array wird nur bei Bedarf gefüllt */
+      zweigstellen_array=newAV();
+      if(anzahl){
+            /* die Zweigstellen in ein neues Array kopieren, dann als Referenz zurückgeben */
+         av_unshift(zweigstellen_array,anzahl);
+         for(i=0;i<anzahl;i++)av_store(zweigstellen_array,i,newSViv(zweigstellen[i]));
+      }
+      zweigstelle_p=sv_2mortal((SV*)newRV(sv_2mortal((SV*)zweigstellen_array)));
+      XPUSHs(blz_array_p);
+      XPUSHs(zweigstelle_p);
+      XPUSHs(sv_2mortal(newSViv(ret)));
+      XSRETURN(3);
+   }
+   else{
+      XPUSHs(blz_array_p);
+      XSRETURN(1);
+   }
+
+void
 lut_suche_c(want_array,art...)
    int want_array;
    int art;
 PREINIT:
-#line 666 "KontoCheck.lx"
+#line 778 "KontoCheck.lx"
    char *search,**base_name,warn_buffer[128],*fkt;
    int i,ret,anzahl,*start_idx,*zw,*bb;
    STRLEN len;
-   AV *zweigstelle,*blz_array,*vals;
+   AV *zweigstellen_array,*blz_array,*vals;
    SV *zweigstelle_p,*blz_array_p,*vals_p;
 PPCODE:
    switch(art){
@@ -1062,18 +1176,18 @@ PPCODE:
    blz_array_p=sv_2mortal((SV*)newRV(sv_2mortal((SV*)blz_array)));
 
    if(want_array){   /* die beiden nächsten Arrays werden nur bei Bedarf gefüllt */
-      zweigstelle=newAV();
+      zweigstellen_array=newAV();
       vals=newAV();
       if(anzahl){
             /* die Zweigstellen und Werte in ein neues Array kopieren, dann als Referenz zurückgeben */
-         av_unshift(zweigstelle,anzahl);
+         av_unshift(zweigstellen_array,anzahl);
          av_unshift(vals,anzahl);
          for(i=0;i<anzahl;i++){
-            av_store(zweigstelle,i,newSViv(zw[start_idx[i]]));
+            av_store(zweigstellen_array,i,newSViv(zw[start_idx[i]]));
             av_store(vals,i,newSVpvf("%s",base_name[start_idx[i]]));
          }
       }
-      zweigstelle_p=sv_2mortal((SV*)newRV(sv_2mortal((SV*)zweigstelle)));
+      zweigstelle_p=sv_2mortal((SV*)newRV(sv_2mortal((SV*)zweigstellen_array)));
       vals_p=sv_2mortal((SV*)newRV(sv_2mortal((SV*)vals)));
       XPUSHs(blz_array_p);
       XPUSHs(zweigstelle_p);
@@ -1091,11 +1205,11 @@ lut_suche_i(want_array,art...)
    int want_array;
    int art;
 PREINIT:
-#line 762 "KontoCheck.lx"
+#line 874 "KontoCheck.lx"
    int search1;
    int search2;
    int i,ret,anzahl,*start_idx,*base_name,*zw,*bb;
-   AV *zweigstelle,*blz_array,*vals;
+   AV *zweigstellen_array,*blz_array,*vals;
    SV *zweigstelle_p,*blz_array_p,*vals_p;
 PPCODE:
    switch(items){
@@ -1152,18 +1266,18 @@ PPCODE:
    blz_array_p=sv_2mortal((SV*)newRV(sv_2mortal((SV*)blz_array)));
 
    if(want_array){   /* die beiden nächsten Arrays werden nur bei Bedarf gefüllt */
-      zweigstelle=newAV();
+      zweigstellen_array=newAV();
       vals=newAV();
       if(anzahl){
             /* die Zweigstellen und Werte in ein neues Array kopieren, dann als Referenz zurückgeben */
-         av_unshift(zweigstelle,anzahl);
+         av_unshift(zweigstellen_array,anzahl);
          av_unshift(vals,anzahl);
          for(i=0;i<anzahl;i++){
-            av_store(zweigstelle,i,newSViv(zw[start_idx[i]]));
+            av_store(zweigstellen_array,i,newSViv(zw[start_idx[i]]));
             av_store(vals,i,newSViv(base_name[start_idx[i]]));
          }
       }
-      zweigstelle_p=sv_2mortal((SV*)newRV(sv_2mortal((SV*)zweigstelle)));
+      zweigstelle_p=sv_2mortal((SV*)newRV(sv_2mortal((SV*)zweigstellen_array)));
       vals_p=sv_2mortal((SV*)newRV(sv_2mortal((SV*)vals)));
 
       XPUSHs(blz_array_p);
@@ -1194,11 +1308,11 @@ generate_lut_at(inputname,outputname...)
    char *inputname;
    char *outputname;
 PREINIT:
-#line 864 "KontoCheck.lx"
+#line 976 "KontoCheck.lx"
    char *plain_name;
    char *plain_format;
 CODE:
-#line 867 "KontoCheck.lx"
+#line 979 "KontoCheck.lx"
    if(items==2){
       plain_name=NULL;
       plain_format=NULL;

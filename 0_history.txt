@@ -4,9 +4,43 @@
 ##################################################################################
 #                                                                                #
 # Autor             : Michael Plugge <m.plugge@hs-mannheim.de>                   #
-# Version           : 4.0                                                        #
-# Datum             : 26.07.2011                                                 #
+# Version           : 4.1                                                        #
+# Datum             : 30.05.2012                                                 #
 ##################################################################################
+
+##################################################################################
+###                       30.05.12 Version 4.1                                 ###
+##################################################################################
+
+Die Version 4.1 enthält die neuen Suchfunktionen lut_suche_volltext()
+und lut_suche_multiple() sowie einige kleinere Änderungen.
+
+ - Die neue Funktion lut_suche_volltext() realisiert eine Volltextsuche in den
+   Feldern Bankname, Kurzname und Ort. Alle in diesen drei Feldern vorkommenden
+   Worte werden indiziert und in zwei Blocks der LUT-Datei geschrieben. Die
+   Volltextsuche sucht dann nach jeweils einem Wort, das in einem der drei Felder
+   vorkommt.
+   
+ - Eine weitere neue Funktion ist lut_suche_multiple(); mit dieser Funktion ist
+   es möglich, Banken zu suchen, die mehrere Kriterien erfüllen. Es können bis zu
+   26 Teilsuchen definiert werden, die dann beliebig miteinander verknüpft werden
+   können. Als Verknüpfung sind "Addition" (+), "Subtraktion" (-) und
+   "Multiplikation" (*) definiert. 
+
+   Die Funktion lut_suche_multiple() sucht alle Banken, die mehreren Kriterien 
+   entsprechen. Dabei können bis zu 26 Teilsuchen definiert werden, die beliebig
+   miteinander verknüpft werden können (additiv, subtraktiv und multiplikativ).
+   Ein kleines Readme zu den Suchfunktionen und ihren Parametern wird bald folgen.
+
+ - neue Prüfziffermethode D9 implementiert (gültig ab 4.6.2012)
+
+ - in PHP 5.4 wurde das API geändert; kleine Anpassung notwendig
+
+ - die IBAN-Länge wird für die verschiedenen Länder getestet
+
+ - diverse kleinere Bugfixes
+
+ - neues "mini" mini.vb mit Visual Basic .NET Interface
 
 ##################################################################################
 ###                       26.07.11 Version 4.0                                 ###
@@ -24,7 +58,7 @@ widersprochen hat. Hier die wichtigsten Änderungen im Einzelnen:
    aus; eine neue Funktion (kto_check_retval2iso()) übernimmt die Rolle der
    alten Funktion, die immer die Kodierung ISO-8859-1 benutzte.
 
- - Die Sortierungsroutinen wurden umgeschrieben, so daß Umlaute werden in allen
+ - Die Sortierungsroutinen wurden umgeschrieben, so daß Umlaute in allen
    Kodierungen erkannt werden. Außerdem können die Suchbegriffe jetzt auch in
    einer beliebigen Kodierung angegeben werden, sogar mit HTML Entities. Alle
    Zeichen werden auf eine interne Repräsentation mit 12 Bit umgesetzt; dabei
@@ -36,7 +70,7 @@ widersprochen hat. Hier die wichtigsten Änderungen im Einzelnen:
    zu sortieren.
 
  - In der alten Version wurde beim ersten Aufruf einer Suchroutine der
-   entsprechende Suchindex jeweils neu generiert; die Suchindizes sind nun als
+   entsprechende Suchindex jeweils neu generiert. Die Suchindizes sind nun als
    LUT-Blocks gespeichert und können sehr schnell eingelesen werden. Die
    benötigte Zeit für den ersten Suchvorgang (in PHP) reduziert bei meinem
    Laptop dadurch von ca. 35ms (mit Generierung des Index) auf weniger als 1ms
@@ -47,7 +81,7 @@ widersprochen hat. Hier die wichtigsten Änderungen im Einzelnen:
    Indexblocks enthalten; der Index für die Kurzbezeichnung der Institute wird
    beim kombinierten Block für Namen und Kurznamen nicht richtig erzeugt. In
    der aktuellen Version wurde der Fehler berichtigt; der Indexblock der alten
-   LUT-Datei vom 9.7.2011 auf SF.net ist allerdings auch fehlerhaft; die Datei
+   LUT-Datei vom 9.7.2011 auf SF.net war allerdings auch fehlerhaft; die Datei
    sollte durch die aktuelle Version ersetzt werden.
 
  - Falls dem Suchmuster bei Stringsuche ein ! vorangestellt wird, wird eine
@@ -86,6 +120,9 @@ widersprochen hat. Hier die wichtigsten Änderungen im Einzelnen:
         https://www.sparkasse-rhein-neckar-nord.de/firmenkunden/internationales_geschaeft/sepa/vorteile/sepa_account_converter.msi
 
  - Im AWK-Port wurde die Funktion iban_gen() hinzugefügt
+
+ - es wurde der AWK-Port für awk 4.0.0 implementiert. Diese AWK-Version enthält
+   ein komplett neues API; es ist allerdings leichter zu lesen als das alte.
 
  - Es gibt die Beispielsdatei mini.cs für C#.net, sowie eine Interface-Datei für C#
 

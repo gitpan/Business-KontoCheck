@@ -1,7 +1,7 @@
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl new_pz.t'
 
-use Test::More tests => 7990;
+use Test::More tests => 8005;
 
 BEGIN { use_ok('Business::KontoCheck') };
 
@@ -8005,3 +8005,18 @@ __DATA__
 0 D8 1062813622
 -3 D8 0000260986
 -3 D8 0500260986
+1 D91 1234567897
+1 D91 0123456782
+1 D92 9876543210
+1 D92 1234567890
+1 D92 0123456789
+1 D93 1100132044
+1 D93 1100669030
+0 D91 9876543210
+0 D91 1234567890
+0 D91 6543217890
+0 D91 0543216789
+0 D92 6543217890
+0 D92 0543216789
+0 D93 1100789043
+0 D93 1100914032

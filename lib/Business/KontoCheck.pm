@@ -24,12 +24,13 @@ our @EXPORT_OK = qw( kto_check kto_check_str kto_check_blz
    kto_check_retval2txt_short kto_check_retval2utf8
    kto_check_retval2html dump_lutfile kto_check_retval2dos
    lut_suche_blz lut_suche_pz lut_suche_plz lut_suche_bic
-   lut_suche_namen lut_suche_namen_kurz lut_suche_ort konto_check_at
-   kto_check_at_str generate_lut_at %kto_retval %kto_retval_kurz );
+   lut_suche_volltext lut_suche_namen lut_suche_namen_kurz
+   lut_suche_ort lut_suche_multiple konto_check_at kto_check_at_str
+   generate_lut_at %kto_retval %kto_retval_kurz );
 
 our @EXPORT = qw( lut_init kto_check kto_check_blz kto_check_at %kto_retval );
 
-our $VERSION = '4.0';
+our $VERSION = '4.1';
 
 require XSLoader;
 XSLoader::load('Business::KontoCheck', $VERSION);
@@ -234,6 +235,26 @@ sub lut_suche_plz
 }
 
 
+
+sub lut_suche_volltext
+{
+   if(wantarray()){
+      return lut_suche_volltext_i(1,@_);
+   }
+   else{
+      return lut_suche_volltext_i(0,@_);
+   }
+}
+
+sub lut_suche_multiple
+{
+   if(wantarray()){
+      return lut_suche_multiple_i(1,@_);
+   }
+   else{
+      return lut_suche_multiple_i(0,@_);
+   }
+}
 
 sub lut_blz
 {
@@ -465,6 +486,13 @@ sub lut_nachfolge_blz1
 
 
 %Business::KontoCheck::kto_retval = (
+-120 => 'Keine Bankverbindung/IBAN angegeben',
+-119 => 'Ungültiges Zeichen ( ()+-/&.,\' ) für die Volltextsuche gefunden',
+-118 => 'Die Volltextsuche sucht jeweils nur ein einzelnes Wort; benutzen SIe lut_suche_multiple() zur Suche nach mehreren Worten',
+-117 => 'die angegebene Suchresource ist ungültig',
+-116 => 'Suche: im Verknüpfungsstring sind nur die Zeichen a-z sowie + und - erlaubt',
+-115 => 'Suche: es müssen zwischen 1 und 26 Suchmuster angegeben werden',
+-114 => 'Das Feld Volltext wurde nicht initialisiert',
 -113 => 'das Institut erlaubt keine eigene IBAN-Berechnung',
 -112 => 'die notwendige Kompressions-Bibliothek wurden beim Kompilieren nicht eingebunden',
 -111 => 'der angegebene Wert für die Default-Kompression ist ungültig',
@@ -592,7 +620,16 @@ sub lut_nachfolge_blz1
   11 => 'wahrscheinlich ok; die Kontonummer kann allerdings (nicht angegebene) Unterkonten enthalten',
   12 => 'wahrscheinlich ok; die Kontonummer enthält eine Unterkontonummer',
   13 => 'ok; die Anzahl Slots wurde auf SLOT_CNT_MIN hochgesetzt',
+  14 => 'ok; ein(ige) Schlüssel wurden nicht gefunden',
+  15 => 'Die Bankverbindung wurde nicht getestet',
 
+'LUT2_NO_ACCOUNT_GIVEN'                  => 'Keine Bankverbindung/IBAN angegeben',
+'LUT2_VOLLTEXT_INVALID_CHAR'             => 'Ungültiges Zeichen ( ()+-/&.,\' ) für die Volltextsuche gefunden',
+'LUT2_VOLLTEXT_SINGLE_WORD_ONLY'         => 'Die Volltextsuche sucht jeweils nur ein einzelnes Wort; benutzen SIe lut_suche_multiple() zur Suche nach mehreren Worten',
+'LUT_SUCHE_INVALID_RSC'                  => 'die angegebene Suchresource ist ungültig',
+'LUT_SUCHE_INVALID_CMD'                  => 'Suche: im Verknüpfungsstring sind nur die Zeichen a-z sowie + und - erlaubt',
+'LUT_SUCHE_INVALID_CNT'                  => 'Suche: es müssen zwischen 1 und 26 Suchmuster angegeben werden',
+'LUT2_VOLLTEXT_NOT_INITIALIZED'          => 'Das Feld Volltext wurde nicht initialisiert',
 'NO_OWN_IBAN_CALCULATION'                => 'das Institut erlaubt keine eigene IBAN-Berechnung',
 'KTO_CHECK_UNSUPPORTED_COMPRESSION'      => 'die notwendige Kompressions-Bibliothek wurden beim Kompilieren nicht eingebunden',
 'KTO_CHECK_INVALID_COMPRESSION_LIB'      => 'der angegebene Wert für die Default-Kompression ist ungültig',
@@ -720,9 +757,18 @@ sub lut_nachfolge_blz1
 'OK_UNTERKONTO_POSSIBLE'                 => 'wahrscheinlich ok; die Kontonummer kann allerdings (nicht angegebene) Unterkonten enthalten',
 'OK_UNTERKONTO_GIVEN'                    => 'wahrscheinlich ok; die Kontonummer enthält eine Unterkontonummer',
 'OK_SLOT_CNT_MIN_USED'                   => 'ok; die Anzahl Slots wurde auf SLOT_CNT_MIN hochgesetzt',
+'SOME_KEYS_NOT_FOUND'                    => 'ok; ein(ige) Schlüssel wurden nicht gefunden',
+'LUT2_KTO_NOT_CHECKED'                   => 'Die Bankverbindung wurde nicht getestet',
 );
 
 %Business::KontoCheck::kto_retval_kurz = (
+-120 => 'LUT2_NO_ACCOUNT_GIVEN',
+-119 => 'LUT2_VOLLTEXT_INVALID_CHAR',
+-118 => 'LUT2_VOLLTEXT_SINGLE_WORD_ONLY',
+-117 => 'LUT_SUCHE_INVALID_RSC',
+-116 => 'LUT_SUCHE_INVALID_CMD',
+-115 => 'LUT_SUCHE_INVALID_CNT',
+-114 => 'LUT2_VOLLTEXT_NOT_INITIALIZED',
 -113 => 'NO_OWN_IBAN_CALCULATION',
 -112 => 'KTO_CHECK_UNSUPPORTED_COMPRESSION',
 -111 => 'KTO_CHECK_INVALID_COMPRESSION_LIB',
@@ -850,6 +896,8 @@ sub lut_nachfolge_blz1
   11 => 'OK_UNTERKONTO_POSSIBLE',
   12 => 'OK_UNTERKONTO_GIVEN',
   13 => 'OK_SLOT_CNT_MIN_USED',
+  14 => 'SOME_KEYS_NOT_FOUND',
+  15 => 'LUT2_KTO_NOT_CHECKED',
 );
 
 END{ lut_cleanup(); }
@@ -898,13 +946,15 @@ language is german too.
    $retval=lut_valid()
    $ret=pz2str($pz[,$ret])
 
-   [$@]bic=lut_suche_bic($bic[,$retval])
-   [$@]namen=lut_suche_namen($namen[,$retval])
-   [$@]namen_kurz=lut_suche_namen_kurz($namen_kurz])
-   [$@]ort=lut_suche_ort($ort[,$retval])
-   [$@]blz=lut_suche_blz($blz1[,$blz2[,$retval]])
-   [$@]pz=lut_suche_pz($pz1[,$pz2[,$retval]])
-   [$@]plz=lut_suche_plz($plz1[,$plz2[,$retval]])
+   [$@]ret=lut_suche_bic($bic[,$retval])
+   [$@]ret=lut_suche_namen($namen[,$retval])
+   [$@]ret=lut_suche_namen_kurz($namen_kurz])
+   [$@]ret=lut_suche_ort($ort[,$retval])
+   [$@]ret=lut_suche_blz($blz1[,$blz2[,$retval]])
+   [$@]ret=lut_suche_pz($pz1[,$pz2[,$retval]])
+   [$@]ret=lut_suche_plz($plz1[,$plz2[,$retval]])
+   [$@]ret=lut_suche_volltext($suchworte[,$retval])
+   [$@]ret=lut_suche_multiple($suchworte[,$uniq[,$such_cmd[,$retval]]])
 
    $retval=copy_lutfile($old_name,$new_name,$new_slots)
    $retval=dump_lutfile($outputname,$felder)
@@ -1026,7 +1076,7 @@ diese müssen dann in der use Klausel anzugeben werden.
    Die folgenden Parameter gelten nur für generate_lut2():
 
      gueltigkeit: Gültigkeitsbereich der LUT-Datei, im Format
-                  JJJJMMTT-JJJJMMTT, z.B. 20071203-20080302
+                  JJJJMMTT-JJJJMMTT, z.B. 20120305-20120603
 
      felder:      (Integer, 0-9) Felder, die in die LUT-Datei
                   aufgenommen werden sollen. Folgende Felder werden
@@ -1279,6 +1329,8 @@ diese müssen dann in der use Klausel anzugeben werden.
              lut_suche_ort()
              lut_suche_pz()
              lut_suche_plz()
+             lut_suche_volltext()
+             lut_suche_multiple()
 
   Aufgabe:  Suche von Banken (nach Feldern der BLZ-Datei)
 
@@ -1291,12 +1343,20 @@ diese müssen dann in der use Klausel anzugeben werden.
              [$@]ret=lut_suche_pz($pz1[,$pz2[,$retval]])
              [$@]ret=lut_suche_plz($plz1[,$plz2[,$retval]])
 
+             [$@]ret=lut_suche_volltext($suchworte[,$retval])
+             [$@]ret=lut_suche_multiple($suchworte[,$uniq[,$such_cmd[,$retval]]])
+
    Mit diesen Funktionen lassen sich Banken suchen, die bestimmte
    Kriterien erfüllen. Bei alphanumerischer Suche (BIC, Name,
-   Kurzname, Ort) kann ein vollständiger Name oder Namensanfang
-   angegeben werden. So findet z.B. eine Suche lut_suche_ort("aa") die
-   Banken in in Aach, Aachen, Aalen und Aarbergen, während eine Suche
-   wie lut_suche_ort("aac") nur die Banken in Aach und Aachen findet.
+   Kurzname, Ort, Volltext, multiple) kann ein vollständiger Name
+   oder Namensanfang angegeben werden. So findet z.B. eine Suche
+   lut_suche_ort("aa") die Banken in in Aach, Aachen, Aalen und
+   Aarbergen, während eine Suche wie lut_suche_ort("aac") nur die
+   Banken in Aach und Aachen findet. Soll die Suche exakt sein,
+   d.h. das Suchwort nicht als Wortanfang verstanden werden, ist
+   diesem ein ! voranzustellen. Eine Suche wie lut_suche_ort("!aach")
+   findet dann nur Aach, nicht mehr Aachen. Diese Syntaxt läßt sich
+   auch für lut_suche_multiple() anwenden.
 
    Bei numerischer Suche (BLZ, Prüfziffer oder PLZ) kann ein Bereich
    spezifiziert werden. Falls der zweite Suchparameter nicht angegeben
@@ -1306,18 +1366,72 @@ diese müssen dann in der use Klausel anzugeben werden.
    Diese Funktionen können sowohl in skalarem als auch im
    Listenkontext aufgerufen werden. Bei Aufruf in skalarem Kontext
    geben sie eine Referenz auf ein Array mit Bankleitzahlen zurück,
-   die die Kriterien erfüllen; bei Aufruf im Listenkontext werden (bis
-   zu) drei Array-Referenzen sowie der Rückgabewert der Funktion
-   zurückgegeben. Die erste zeigt auf das Array mit Bankleitzahlen,
-   die zweite auf ein Array mit Indizes der jeweiligen Zweigstellen
-   und die dritte auf ein Array mit den jeweiligen Werten des
-   gesuchten Feldes.
+   die die Kriterien erfüllen; bei Aufruf im Listenkontext werden
+   zwei (bei lut_suche_multiple()) bzw. drei (bei allen anderen
+   Suchfunktionen) Array-Referenzen sowie der Rückgabewert der
+   Funktion zurückgegeben.
+
+   Die erste zeigt auf das Array mit Bankleitzahlen, die zweite auf
+   ein Array mit Indizes der jeweiligen Zweigstellen und die dritte
+   auf ein Array mit den jeweiligen Werten des gesuchten Feldes.
 
    In dem optionalen Parameter $retval wird ebenfalls der numerischer
    Rückgabewert der Funktion (wie im 4. Parameter bei Array-Kontext; 1
    bei Erfolg, oder negative Statusmeldung) zurückgeliefert.. Mittels
    des assoziativen Arrays %kto_retval{$retval} können diese
    Rückgabewerte in Klartext konvertiert werden.
+
+   Die Funktion lut_suche_multiple() sucht alle Banken, die mehreren
+   Kriterien entsprechen. Dabei können bis zu 26 Teilsuchen definiert
+   werden, die beliebig miteinander verknüpft werden können (additiv,
+   subtraktiv und multiplikativ).
+
+   Parameter:
+   such_string: Dieser Parameter gibt die Felder an, nach denen
+   gesucht wird. Er besteht aus einem oder mehreren Suchbefehlen, die
+   jeweils folgenden Aufbau haben: [suchindex:]suchwert[@suchfeld]
+
+   Der (optionale) Suchindex ist ein Buchstabe von a-z, mit dem das
+   Suchfeld im Suchkommando (zweiter Parameter) referenziert werden
+   kann. Falls er nicht angegeben wird, erhält der erste Suchstring
+   den Index a, der zweite den Index b etc.
+
+   Der Suchwert ist der Wert nach dem gesucht werden soll. Für die
+   Textfelder ist es der Beginn des Wortes (aa passt z.B. auf Aach,
+   Aachen, Aalen, Aarbergen), für numerische Felder kann es eine
+   Zahl oder ein Zahlbereich in der Form 22-33 sein.
+
+   Das Suchfeld gibt an, nach welchem Feld der BLZ-Datei gesucht
+   werden soll. Falls das Suchfeld nicht angegeben wird, wird eine
+   Volltextsuche (alle Einzelworte in Name, Kurzname und Ort)
+   gemacht. Die folgende Werte sind möglich:
+
+      bl    BLZ
+      bi    BIC
+      k     Kurzname
+      n     Name
+      o     Ort
+      pl    PLZ
+      pr    Prüfziffer
+      pz    Prüfziffer
+      v     Volltext
+
+   In der obigen Tabelle der Suchfelder sind nur die Kurzversionen
+   angegeben; eine Angabe wie aa@ort oder 57000-58000@plz ist auch
+   problemlos möglich.
+
+   such_cmd: Dieser Parameter gibt an, wie die Teilsuchen miteinander
+   verknüpft werden sollen. Der Ausdruck abc bedeutet, daß die BLZs in
+   den Teilsuchen a, b und c enthalten sein müssen; der Ausdruck
+   a+b+c, daß sie in mindestens einer Teilsuche enthalten sein muß;
+   der Ausdruck a-b, daß sie in a, aber nicht in b enthalten sein darf
+   (Beispiel s.u.). Falls das Suchkommando nicht angegeben wird,
+   müssen die Ergebnis-BLZs in allen Teilsuchen enthalten sein.
+
+   uniq: Falls dieser Parameter 1 ist, wird für jede Bank nur eine
+   Zweigstelle ausgegeben; falls er 0 ist, werden alle gefundenen
+   Zweigstellen ausgegeben. Falls der Parameter weggelassen wird, wird
+   der Standardwert (UNIQ_DEFAULT aus konto_check.h) benutzt.
 
    Beispiele:
    $blz_p=lut_suche_ort("mannheim",$retval);
@@ -1339,7 +1453,27 @@ diese müssen dann in der use Klausel anzugeben werden.
    @ort=@$ort_p;     # Array der jeweiligen Orte
                      # $retval enthält den Rückgabestatus der Funktion
 
--------------------------------------------------------------------------
+   ($blz_p,$idx_p,$retval)
+         =lut_suche_multiple("b:55000000-55100000@blz o:67000-68000@plz sparkasse","bo")
+      # Bei diesem Aufruf werden nur die beiden ersten Teilsuchen (nach
+      # BLZ und PLZ) benutzt; die Suche findet alle Banken mit einer BLZ
+      # zwischen 55000000 und 55100000 im PLZ-Bereich 67000 bis 68000.
+
+   ($blz_p,$idx_p,$retval)
+         =lut_suche_multiple("b:55000000-55030000@blz o:67000-68000@plz sparkasse","co")
+      # Ähnlicher Suche wie oben, allerdings werden nur die beiden
+      # letzten Teilsuchen berücksichtigt.
+
+   ($blz_p,$idx_p,$retval)=lut_suche_multiple("67000-68000@plz sparda",0)
+      # Dieser Aufruf gibt alle Filialen der Sparda-Bank im PLZ-Bereich
+      # 67000 bis 68000 zurück.
+
+   ($blz_p,$idx_p,$retval)=lut_suche_multiple("skat")
+      # Dieser Aufruf ist einfach eine Volltextsuche nach der Skat-Bank.
+      # Der direkte Aufruf von bank_suche_volltext() ist intern
+      # natürlich wesentlich leichtgewichtiger, aber die Suche so auch
+      # möglich.
+
 
   Funktion:  kto_check_at()
              kto_check_at_str()
@@ -1463,7 +1597,7 @@ Michael Plugge, E<lt>m.plugge@hs-mannheim.deE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2007-2011 by Michael Plugge
+Copyright (C) 2007-2012 by Michael Plugge
 
 This library is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself, either Perl version 5.8.8 or, at your option,
@@ -1484,5 +1618,6 @@ details.
 You should have received a copy of the GNU Lesser General Public License along
 with this library; if not, write to the Free Software Foundation, Inc., 51
 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+or download it from http://www.gnu.org/licenses/lgpl.html
 
 =cut

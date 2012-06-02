@@ -247,6 +247,8 @@
 #define LUT2_PLZ_SORT                20
 #define LUT2_PZ_SORT                 21
 #define LUT2_OWN_IBAN                22
+#define LUT2_VOLLTEXT_TXT            23
+#define LUT2_VOLLTEXT_IDX            24
 
 #define LUT2_2_BLZ                  101
 #define LUT2_2_FILIALEN             102
@@ -270,6 +272,8 @@
 #define LUT2_2_PLZ_SORT             120
 #define LUT2_2_PZ_SORT              121
 #define LUT2_2_OWN_IBAN             122
+#define LUT2_2_VOLLTEXT_TXT         123
+#define LUT2_2_VOLLTEXT_IDX         124
 
 #define LUT2_DEFAULT                501
 
@@ -286,6 +290,13 @@ extern const char *lut2_feld_namen[256];
  */
 
 #undef FALSE
+#define LUT2_NO_ACCOUNT_GIVEN                 -120
+#define LUT2_VOLLTEXT_INVALID_CHAR            -119
+#define LUT2_VOLLTEXT_SINGLE_WORD_ONLY        -118
+#define LUT_SUCHE_INVALID_RSC                 -117
+#define LUT_SUCHE_INVALID_CMD                 -116
+#define LUT_SUCHE_INVALID_CNT                 -115
+#define LUT2_VOLLTEXT_NOT_INITIALIZED         -114
 #define NO_OWN_IBAN_CALCULATION               -113
 #define KTO_CHECK_UNSUPPORTED_COMPRESSION     -112
 #define KTO_CHECK_INVALID_COMPRESSION_LIB     -111
@@ -413,6 +424,8 @@ extern const char *lut2_feld_namen[256];
 #define OK_UNTERKONTO_POSSIBLE                  11
 #define OK_UNTERKONTO_GIVEN                     12
 #define OK_SLOT_CNT_MIN_USED                    13
+#define SOME_KEYS_NOT_FOUND                     14
+#define LUT2_KTO_NOT_CHECKED                    15
 #line 243 "konto_check_h.lx"
 
 #define MAX_BLZ_CNT 30000  /* maximale Anzahl BLZ's in generate_lut() */
@@ -794,15 +807,44 @@ DLL_EXPORT int lut_nachfolge_blz(char *b,int zweigstelle,int *retval);
 DLL_EXPORT int lut_nachfolge_blz_i(int b,int zweigstelle,int *retval);
 DLL_EXPORT int lut_keine_iban_berechnung(char *iban_blacklist,char *lutfile,int set);
 
-   /* Suche von BLZs */
-DLL_EXPORT int lut_suche_bic(char *such_name,int *anzahl,int **start_idx,int **zweigstelle_base,char ***base_name,int **blz_base);
-DLL_EXPORT int lut_suche_namen(char *such_name,int *anzahl,int **start_idx,int **zweigstelle_base,char ***base_name,int **blz_base);
-DLL_EXPORT int lut_suche_namen_kurz(char *such_name,int *anzahl,int **start_idx,int **zweigstelle_base,char ***base_name,int **blz_base);
-DLL_EXPORT int lut_suche_ort(char *such_name,int *anzahl,int **start_idx,int **zweigstelle_base,char ***base_name,int **blz_base);
-DLL_EXPORT int lut_suche_blz(int such1,int such2,int *anzahl,int **start_idx,int **zweigstelle_base,int **base_name,int **blz_base);
-DLL_EXPORT int lut_suche_pz(int such1,int such2,int *anzahl,int **start_idx,int **zweigstelle_base,int **base_name,int **blz_base);
-DLL_EXPORT int lut_suche_plz(int such1,int such2,int *anzahl,int **start_idx,int **zweigstelle_base,int **base_name,int **blz_base);
+/*
+ * ######################################################################
+ * # Suche von Banken nach verschiedenen Kriterien                      #
+ * ######################################################################
+ */
+
+#define LUT_SUCHE_VOLLTEXT    1
+#define LUT_SUCHE_BIC         2
+#define LUT_SUCHE_NAMEN       3
+#define LUT_SUCHE_NAMEN_KURZ  4
+#define LUT_SUCHE_ORT         5
+#define LUT_SUCHE_BLZ         6
+#define LUT_SUCHE_PLZ         7
+#define LUT_SUCHE_PZ          8
+
+   /* Defaultwert für uniq bei Suchfunktionen (=> nur eine Zweigstelle
+    * zurückgeben) (betrifft nur PHP, Perl und Ruby, bei denen der Parameter
+    * weggelassen werden kann).
+    */
+#define UNIQ_DEFAULT 1
+
+DLL_EXPORT int kto_check_idx2blz(int idx,int *zweigstelle,int *retval);
 DLL_EXPORT int konto_check_idx2blz(int idx,int *zweigstelle,int *retval);
+DLL_EXPORT int lut_suche_bic(char *such_name,int *anzahl,int **start_idx,int **zweigstellen_base,char ***base_name,int **blz_base);
+DLL_EXPORT int lut_suche_namen(char *such_name,int *anzahl,int **start_idx,int **zweigstellen_base,char ***base_name,int **blz_base);
+DLL_EXPORT int lut_suche_namen_kurz(char *such_name,int *anzahl,int **start_idx,int **zweigstellen_base,char ***base_name,int **blz_base);
+DLL_EXPORT int lut_suche_ort(char *such_name,int *anzahl,int **start_idx,int **zweigstellen_base,char ***base_name,int **blz_base);
+DLL_EXPORT int lut_suche_blz(int such1,int such2,int *anzahl,int **start_idx,int **zweigstellen_base,int **base_name,int **blz_base);
+DLL_EXPORT int lut_suche_pz(int such1,int such2,int *anzahl,int **start_idx,int **zweigstellen_base,int **base_name,int **blz_base);
+DLL_EXPORT int lut_suche_plz(int such1,int such2,int *anzahl,int **start_idx,int **zweigstellen_base,int **base_name,int **blz_base);
+DLL_EXPORT int lut_suche_volltext(char *such_wort,int *anzahl,int *base_name_idx,char ***base_name,int *zweigstellen_anzahl,int **start_idx,int **zweigstellen_base,int **blz_base);
+DLL_EXPORT int lut_suche_multiple(char *such_worte,int uniq,char *such_cmd,UINT4 *anzahl,UINT4 **zweigstellen,UINT4 **blz);
+DLL_EXPORT int lut_suche_sort1(int anzahl,int *blz_base,int *zweigstellen_base,int *idx,int *anzahl_o,int **idx_op,int **cnt_o,int uniq);
+DLL_EXPORT int lut_suche_sort2(int anzahl,int *blz,int *zweigstellen,int *anzahl_o,int **blz_op,int **zweigstellen_op,int **cnt_o,int uniq);
+DLL_EXPORT int lut_suche_init(int uniq);
+DLL_EXPORT int lut_suche_free(int id);
+DLL_EXPORT int lut_suche_set(int such_id,int idx,int typ,int i1,int i2,char *txt);
+DLL_EXPORT int lut_suche(int such_id,char *such_cmd,UINT4 *such_cnt,UINT4 **filiale,UINT4 **blz);
 
    /* (Benutzerdefinierte) Default-Werte in der LUT-Datei lesen und schreiben */
 #define DEFAULT_CNT 50                 /* Anzahl Einträge (fest) */
