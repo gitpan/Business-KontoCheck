@@ -16,6 +16,7 @@ examples/testkonten.txt
 t/austrian.t
 t/base.t
 t/encoding.t
+t/generate_lut.t
 t/iban.t
 t/ipi.t
 t/lut2.t

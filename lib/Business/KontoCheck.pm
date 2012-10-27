@@ -5,6 +5,7 @@ package Business::KontoCheck;
 use 5.006000;
 use strict;
 use warnings;
+use encoding 'iso-8859-1';
 
 require Exporter;
 
@@ -26,11 +27,11 @@ our @EXPORT_OK = qw( kto_check kto_check_str kto_check_blz
    lut_suche_blz lut_suche_pz lut_suche_plz lut_suche_bic
    lut_suche_volltext lut_suche_namen lut_suche_namen_kurz
    lut_suche_ort lut_suche_multiple konto_check_at kto_check_at_str
-   generate_lut_at %kto_retval %kto_retval_kurz );
+   generate_lut_at %kto_retval %kto_retval_kurz lut_keine_iban_berechnung);
 
 our @EXPORT = qw( lut_init kto_check kto_check_blz kto_check_at %kto_retval );
 
-our $VERSION = '4.1';
+our $VERSION = '4.2';
 
 require XSLoader;
 XSLoader::load('Business::KontoCheck', $VERSION);
@@ -486,6 +487,7 @@ sub lut_nachfolge_blz1
 
 
 %Business::KontoCheck::kto_retval = (
+-121 => 'Die Länge der IBAN für das angegebene Länderkürzel ist falsch',
 -120 => 'Keine Bankverbindung/IBAN angegeben',
 -119 => 'Ungültiges Zeichen ( ()+-/&.,\' ) für die Volltextsuche gefunden',
 -118 => 'Die Volltextsuche sucht jeweils nur ein einzelnes Wort; benutzen SIe lut_suche_multiple() zur Suche nach mehreren Worten',
@@ -619,10 +621,11 @@ sub lut_nachfolge_blz1
   10 => 'ok; der Wert für den Schlüssel wurde überschrieben',
   11 => 'wahrscheinlich ok; die Kontonummer kann allerdings (nicht angegebene) Unterkonten enthalten',
   12 => 'wahrscheinlich ok; die Kontonummer enthält eine Unterkontonummer',
-  13 => 'ok; die Anzahl Slots wurde auf SLOT_CNT_MIN hochgesetzt',
+  13 => 'ok; die Anzahl Slots wurde auf SLOT_CNT_MIN (40) hochgesetzt',
   14 => 'ok; ein(ige) Schlüssel wurden nicht gefunden',
   15 => 'Die Bankverbindung wurde nicht getestet',
 
+'INVALID_IBAN_LENGTH'                    => 'Die Länge der IBAN für das angegebene Länderkürzel ist falsch',
 'LUT2_NO_ACCOUNT_GIVEN'                  => 'Keine Bankverbindung/IBAN angegeben',
 'LUT2_VOLLTEXT_INVALID_CHAR'             => 'Ungültiges Zeichen ( ()+-/&.,\' ) für die Volltextsuche gefunden',
 'LUT2_VOLLTEXT_SINGLE_WORD_ONLY'         => 'Die Volltextsuche sucht jeweils nur ein einzelnes Wort; benutzen SIe lut_suche_multiple() zur Suche nach mehreren Worten',
@@ -756,12 +759,13 @@ sub lut_nachfolge_blz1
 'KTO_CHECK_VALUE_REPLACED'               => 'ok; der Wert für den Schlüssel wurde überschrieben',
 'OK_UNTERKONTO_POSSIBLE'                 => 'wahrscheinlich ok; die Kontonummer kann allerdings (nicht angegebene) Unterkonten enthalten',
 'OK_UNTERKONTO_GIVEN'                    => 'wahrscheinlich ok; die Kontonummer enthält eine Unterkontonummer',
-'OK_SLOT_CNT_MIN_USED'                   => 'ok; die Anzahl Slots wurde auf SLOT_CNT_MIN hochgesetzt',
+'OK_SLOT_CNT_MIN_USED'                   => 'ok; die Anzahl Slots wurde auf SLOT_CNT_MIN (40) hochgesetzt',
 'SOME_KEYS_NOT_FOUND'                    => 'ok; ein(ige) Schlüssel wurden nicht gefunden',
 'LUT2_KTO_NOT_CHECKED'                   => 'Die Bankverbindung wurde nicht getestet',
 );
 
 %Business::KontoCheck::kto_retval_kurz = (
+-121 => 'INVALID_IBAN_LENGTH',
 -120 => 'LUT2_NO_ACCOUNT_GIVEN',
 -119 => 'LUT2_VOLLTEXT_INVALID_CHAR',
 -118 => 'LUT2_VOLLTEXT_SINGLE_WORD_ONLY',
@@ -1334,16 +1338,16 @@ diese müssen dann in der use Klausel anzugeben werden.
 
   Aufgabe:  Suche von Banken (nach Feldern der BLZ-Datei)
 
-  Aufruf:    [$@]ret=lut_suche_bic($bic[,$retval])
-             [$@]ret=lut_suche_namen($namen[,$retval])
-             [$@]ret=lut_suche_namen_kurz($namen_kurz[,$retval])
-             [$@]ret=lut_suche_ort($ort[,$retval])
+  Aufruf:    [$@]ret=lut_suche_bic($bic[,$retval[,$uniq[,$sort]]])
+             [$@]ret=lut_suche_namen($namen[,$retval[,$uniq[,$sort]]])
+             [$@]ret=lut_suche_namen_kurz($namen_kurz[,$retval[,$uniq[,$sort]]])
+             [$@]ret=lut_suche_ort($ort[,$retval[,$uniq[,$sort]]])
 
-             [$@]ret=lut_suche_blz($blz1[,$blz2[,$retval]])
-             [$@]ret=lut_suche_pz($pz1[,$pz2[,$retval]])
-             [$@]ret=lut_suche_plz($plz1[,$plz2[,$retval]])
+             [$@]ret=lut_suche_blz($blz1[,$blz2[,$retval[,$uniq[,$sort]]]])
+             [$@]ret=lut_suche_pz($pz1[,$pz2[,$retval[,$uniq[,$sort]]]])
+             [$@]ret=lut_suche_plz($plz1[,$plz2[,$retval[,$uniq[,$sort]]]])
 
-             [$@]ret=lut_suche_volltext($suchworte[,$retval])
+             [$@]ret=lut_suche_volltext($suchworte[,$retval[,$uniq[,$sort]]])
              [$@]ret=lut_suche_multiple($suchworte[,$uniq[,$such_cmd[,$retval]]])
 
    Mit diesen Funktionen lassen sich Banken suchen, die bestimmte
@@ -1367,13 +1371,18 @@ diese müssen dann in der use Klausel anzugeben werden.
    Listenkontext aufgerufen werden. Bei Aufruf in skalarem Kontext
    geben sie eine Referenz auf ein Array mit Bankleitzahlen zurück,
    die die Kriterien erfüllen; bei Aufruf im Listenkontext werden
-   zwei (bei lut_suche_multiple()) bzw. drei (bei allen anderen
+   zwei (bei lut_suche_multiple()) bzw. vier (bei allen anderen
    Suchfunktionen) Array-Referenzen sowie der Rückgabewert der
    Funktion zurückgegeben.
 
    Die erste zeigt auf das Array mit Bankleitzahlen, die zweite auf
    ein Array mit Indizes der jeweiligen Zweigstellen und die dritte
-   auf ein Array mit den jeweiligen Werten des gesuchten Feldes.
+   (nicht lut_suche_multiple()!) auf ein Array mit den jeweiligen Werten
+   des gesuchten Feldes. Der nächste Parameter ist der Statuscode; als
+   letzter Parameter kommt bei allen Suchfunktionen (außer
+   lut_suche_multiple()) noch eine Referenz auf ein Array, in dem zu
+   jeder gefundenen BLZ die Anzahl der Zweigstellen zurückgegeben
+   wird, falls der Parameter uniq auf 1 gesetzt war.
 
    In dem optionalen Parameter $retval wird ebenfalls der numerischer
    Rückgabewert der Funktion (wie im 4. Parameter bei Array-Kontext; 1
@@ -1431,7 +1440,11 @@ diese müssen dann in der use Klausel anzugeben werden.
    uniq: Falls dieser Parameter 1 ist, wird für jede Bank nur eine
    Zweigstelle ausgegeben; falls er 0 ist, werden alle gefundenen
    Zweigstellen ausgegeben. Falls der Parameter weggelassen wird, wird
-   der Standardwert (UNIQ_DEFAULT aus konto_check.h) benutzt.
+   der Standardwert (UNIQ_DEFAULT_PERL aus konto_check.h) benutzt.
+
+   sort: Falls dieser Parameter 1 ist, werden die Banken nach BLZ
+   sortiert, nicht in der Reihenfolge der Suchbegriffe (Standard).
+   Falls der Parameter uniq 1 ist, wird immer nach BLZ sortiert.
 
    Beispiele:
    $blz_p=lut_suche_ort("mannheim",$retval);
@@ -1447,10 +1460,11 @@ diese müssen dann in der use Klausel anzugeben werden.
    @idx=@$idx_p;     # Array der Zweigstellen
    @ort=@$ort_p;     # Array der jeweiligen Orte
 
-   ($blz_p,$idx_p,$ort_p,$retval)=lut_suche_ort("aa");
+   ($blz_p,$idx_p,$ort_p,$retval,$cnt_p)=lut_suche_ort("aa",$rv,1);
    @blz=@$blz_p;     # Array mit Banken in Städten, die mit "aa" beginnen
    @idx=@$idx_p;     # Array der Zweigstellen
    @ort=@$ort_p;     # Array der jeweiligen Orte
+   @cnt=@$cpt_p;     # Array mit Anzahl der gefundenen Zweigstellen (bei $uniq=1)
                      # $retval enthält den Rückgabestatus der Funktion
 
    ($blz_p,$idx_p,$retval)

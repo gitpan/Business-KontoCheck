@@ -4,9 +4,27 @@
 ##################################################################################
 #                                                                                #
 # Autor             : Michael Plugge <m.plugge@hs-mannheim.de>                   #
-# Version           : 4.1                                                        #
-# Datum             : 30.05.2012                                                 #
+# Version           : 4.2                                                        #
+# Datum             : 04.10.2012                                                 #
 ##################################################################################
+
+##################################################################################
+###                       24.10.12 Version 4.2                                 ###
+##################################################################################
+
+      - encoding error in KontoCheck.pm gefixt
+      - einige Speicherprobleme gefixt
+      - IBAN Generierung der Flessa Bank korrigiert (es wird für alle BLZs der
+        Flessa-Bank dieselbe BLZ benutzt)
+      - in Perl gibt es jetzt die Funktion lut_keine_iban_berechnung() sowie
+        eine optionale Variable in generate_lut2(), um eine IBAN-Blacklist an
+        eine LUT-Datei anzuhängen
+      - Perl: neue Testdatei generate_lut.t zum Test der Generierung einer LUT-Datei
+      - Perl und Ruby: Alle Suchroutinen in KontoCheckRaw haben jetzt die Parameter
+        sort (Ausgabe nach BLZ sortieren) und uniq (für jede Bank nur eine
+        Zweigstelle ausgeben); auch die Ruby-Funktion KontoCheck::suche()
+        unterstützt die beiden Parameter.
+     - diverse kleinere Änderungen
 
 ##################################################################################
 ###                       30.05.12 Version 4.1                                 ###
@@ -35,6 +53,8 @@ und lut_suche_multiple() sowie einige kleinere Änderungen.
  - neue Prüfziffermethode D9 implementiert (gültig ab 4.6.2012)
 
  - in PHP 5.4 wurde das API geändert; kleine Anpassung notwendig
+
+ - neu im AWK-Port sind die Funktionen iban_gen(), iban_check(), ipi_gen() und ipi_check().
 
  - die IBAN-Länge wird für die verschiedenen Länder getestet
 
@@ -366,7 +386,7 @@ Diese Version enthält einige kritische Bugfixes; es wurde in der C Bibliothek
 nicht aller allokierter Speicher freigegeben, was unter PHP zu erheblichen
 Problemen führte. Mittels valgrind und duma wurden die fehlerhaften
 Allokierungen aufgespürt und korrigiert; nun werden alle Speicherblocks auch
-wieder frei- gegeben.
+wieder freigegeben.
 
 Es wurden außerdem noch einige neue Funktionen zum Suchen von Bankleitzahlen
 implementiert; eine Beschreibung dieser Funktionen steht allerdings noch aus.

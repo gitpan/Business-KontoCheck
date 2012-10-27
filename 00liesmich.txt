@@ -38,8 +38,9 @@ Unterschiede in der Aufrufsyntax, sowohl für Parameter als auch Rückgabewerte.
 Changes                     : Versionsgeschichte/Perl
 README                      : kurzes README für CPAN
 MANIFEST                    : Dateiliste (von Perl benötigt)
-blz.lut                     : LUT-Datei für die deutsche Version
-blz-at.lut                  : LUT-Datei für die österreichische Version
+blz.lut                     : LUT-Datei für die deutsche Version (nur ein
+                              Datensatz ohne Datum, für automatische Tests)
+blz-at.lut                  : LUT-Datei für die österreichische Version (Testdaten)
 konto_check.h               : C Header-Datei für die deutsche Version
 konto_check-at.h            : C Header-Datei für die österreichische Version
 konto_check.c               : C Quellcode für die deutsche Version
@@ -87,7 +88,7 @@ Funktionen mittels "perldoc Business::KontoCheck" nachgelesen werden kann.
 Die aktuelle Bankleitzahltabelle wird veröffentlicht von der Deutschen
 Bundesbank:
 
-http://www.bundesbank.de/zahlungsverkehr/zahlungsverkehr_bankleitzahlen_download.php
+http://www.bundesbank.de/Redaktion/DE/Standardartikel/Kerngeschaeftsfelder/Unbarer_Zahlungsverkehr/bankleitzahlen_download.html
 
 Dabei ist die Datei blz_*.zip herunterzuladen und auszupacken (aktuell z.B.
 blz_20081208.zip). Die Aktualisierung erfolgt alle 3 Monate. Diese Datei kann
@@ -97,7 +98,7 @@ konvertiert werden.
 Die aktuellen Prüfziffermethoden werden ebenfalls von der Deutschen Bundesbank
 veröffentlicht:
 
-http://www.bundesbank.de/zahlungsverkehr/zahlungsverkehr_pruefziffernberechnung.php
+http://www.bundesbank.de/Redaktion/DE/Downloads/Kerngeschaeftsfelder/Unbarer_Zahlungsverkehr/pruefzifferberechnungsmethoden.pdf?__blob=publicationFile
 
 Allgemeine Informationen und Links gibt es vom Bundesverband deutscher Banken
 unter http://www.bdb.de/verband/Intern.htm

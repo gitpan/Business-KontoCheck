@@ -1,4 +1,7 @@
-#line 6 "konto_check_h.lx"
+/* vim: ft=c:set si:set fileencoding=iso-8859-1
+ */
+#line 9 "konto_check_h.lx"
+
 /*
  * ##########################################################################
  * #  Dies ist konto_check, ein Programm zum Testen der Prüfziffern         #
@@ -46,11 +49,38 @@
 
 /* 
  * ##########################################################################
- * # Die Berechnungsmethoden B6 und D1 werden zum 5.9.11 geändert; mit dem  #
- * # folgenden Makro werden die neuen Berechnungsmethoden aktiviert.        #
+ * # Hier eine Info der Flessabank zur IBAN-Berechnung (abgerufen 13.6.12   #
+ * # von http://www.flessabank.de/aktuell.php?akt=149)                      #
+ * #                                                                        #
+ * # Aktuelles Bankleitzahl/BIC                                             #
+ * #                                                                        #
+ * # Im Rahmen eines umfassenden Konsolidierungsprojekts der Deutschen      #
+ * # Bundesbank und der Europäischen Zentralbank werden immer mehr Filialen #
+ * # der Deutschen Bundesbank geschlossen. Dabei wird auch die aktuelle     #
+ * # Bankleitzahlenlogik für die Deutsche Bundesbank überarbeitet.          #
+ * #                                                                        #
+ * # Um als FLESSABANK dieser veränderten Situation gerecht zu werden,      #
+ * # haben wir uns entschlossen, unsere Bankleitzahlenstruktur zu           #
+ * # vereinfachen und auf die zentrale Bankleitzahl 793 301 11 umzustellen. #
+ * # Ihre Kontonummern bleiben dabei unverändert gültig!                    #
+ * #                                                                        #
+ * # Betroffen sind hiervon folgende Bankleitzahlen:                        #
+ * # 700 301 11 (Niederlassung München)                                     #
+ * # 763 301 11 (Niederlassung Erlangen)                                    #
+ * # 770 301 11 (Niederlassung Bamberg)                                     #
+ * # 783 301 11 (Niederlassung Coburg)                                      #
+ * # 840 301 11 (Niederlassung Meiningen)                                   #
+ * #                                                                        #
+ * # Für die Bereiche Internet-Banking und girocard ist bereits heute nur   #
+ * # die Bankleitzahl 793 301 11 gültig. Auch Ihre IBAN (International Bank #
+ * # Account Number = Internationale Kontonummer) wird ausschließlich mit   #
+ * # der Bankleitzahl 793 301 11 erstellt. Wir teilen Ihnen diese zusammen  #
+ * # mit unserem BIC (Bank Identifier Code = Bankkennung) auf jedem         #
+ * # Kontoauszug mit.                                                       #
  * ##########################################################################
  */
-#define METHODE_NEU_2011_09_05 1
+
+#define FLESSA_KORREKTUR 1
 
 /* Das Makro DEFAULT_ENCODING legt die Ausgabe-Kodierung für die Funktion
  * kto_check_retval2txt() und die Blocks Name, Kurzname und Ort aus der
@@ -176,6 +206,19 @@
 
 /*
  * ######################################################################
+ * # AWK_ADD_MICROTIME: AWK-Funktionalität mit Mikrosekunden-Auflösung  #
+ * # Falls das folgende Makro auf 1 gesetzt wird, wird im awk-Port die  #
+ * # Funktion microtime() definiert, die - anders als systime() - mit   #
+ * # hoher Auflösung (Mikrosekunden) arbeitet. Parameter etc. finden    #
+ * # sich in konto_check_awk.c. Standardmäßig ist die Funktion nicht    #
+ * # aktiviert.                                                         #
+ * ######################################################################
+ */
+#define AWK_ADD_MICROTIME 0
+
+
+/*
+ * ######################################################################
  * #          Defaultnamen und Suchpfad für die LUT-Datei               #
  * ######################################################################
  */
@@ -197,8 +240,8 @@
  * ######################################################################
  */
 
-#define DEFAULT_LUT_FIELDS_NUM   5
-#define DEFAULT_LUT_FIELDS       lut_set_5
+#define DEFAULT_LUT_FIELDS_NUM   9
+#define DEFAULT_LUT_FIELDS       lut_set_9
 #define DEFAULT_LUT_VERSION      3
 #define DEFAULT_SLOTS            40
 #define DEFAULT_INIT_LEVEL       5
@@ -290,6 +333,7 @@ extern const char *lut2_feld_namen[256];
  */
 
 #undef FALSE
+#define INVALID_IBAN_LENGTH                   -121
 #define LUT2_NO_ACCOUNT_GIVEN                 -120
 #define LUT2_VOLLTEXT_INVALID_CHAR            -119
 #define LUT2_VOLLTEXT_SINGLE_WORD_ONLY        -118
@@ -426,7 +470,7 @@ extern const char *lut2_feld_namen[256];
 #define OK_SLOT_CNT_MIN_USED                    13
 #define SOME_KEYS_NOT_FOUND                     14
 #define LUT2_KTO_NOT_CHECKED                    15
-#line 243 "konto_check_h.lx"
+#line 287 "konto_check_h.lx"
 
 #define MAX_BLZ_CNT 30000  /* maximale Anzahl BLZ's in generate_lut() */
 
@@ -822,11 +866,17 @@ DLL_EXPORT int lut_keine_iban_berechnung(char *iban_blacklist,char *lutfile,int 
 #define LUT_SUCHE_PLZ         7
 #define LUT_SUCHE_PZ          8
 
-   /* Defaultwert für uniq bei Suchfunktionen (=> nur eine Zweigstelle
+   /* Defaultwert für sort/uniq bei Suchfunktionen (=> nur eine Zweigstelle
     * zurückgeben) (betrifft nur PHP, Perl und Ruby, bei denen der Parameter
     * weggelassen werden kann).
+    *
+    * Für Perl gibt es eine eigene Definition, da sort und uniq bis einschließlich
+    * Version 4.1 nicht unterstützt wurden. Mit der Standarddefinition von
+    * UNIQ_DEFAULT (2) würde sich eine Änderung im Verhalten ergeben,
+    * die so nicht erwünscht ist.
     */
-#define UNIQ_DEFAULT 1
+#define UNIQ_DEFAULT 2
+#define UNIQ_DEFAULT_PERL 0
 
 DLL_EXPORT int kto_check_idx2blz(int idx,int *zweigstelle,int *retval);
 DLL_EXPORT int konto_check_idx2blz(int idx,int *zweigstelle,int *retval);

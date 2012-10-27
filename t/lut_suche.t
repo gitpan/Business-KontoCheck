@@ -1,7 +1,7 @@
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl lut_suche.t'
 
-use Test::More tests => 21;
+use Test::More tests => 45;
 
 BEGIN{use_ok('Business::KontoCheck','lut_init','lut_name1','lut_pz1','lut_plz1','lut_ort1',
       'lut_suche_ort','lut_suche_blz','pz2str','lut_suche_pz','lut_suche_plz','lut_suche_bic',
@@ -43,6 +43,40 @@ sub chk_int
    for($i=0;$i<$cnt;$i++){
       $b=$blz[$i];
       printf("%2d/%3d %s %2d [%d] %s, %s\n",$i+1,$c11,$b,$idx[$i],$val[$i],lut_name1($b),lut_ort1($b));
+   }
+   print "\n";
+
+      # Aufruf in Array-Kontext mit uniq
+   ($p_blz,$p_idx,$p_val,$r3x,$p_cntx)=$fkt->($arg1,$arg2,$r4,1);
+   @blz=@$p_blz;
+   @idx=@$p_idx;
+   @val=@$p_val;
+   @cntx=@$p_cntx;
+   $c41=scalar(@blz);
+   $ok_msg="$fkt_name($arg1,$arg2): $c41 Banken gefunden, uniq: 1, Rückgabewert: $r4  -> ".retval2txt_short($r4);
+   ok(($c41>0),$ok_msg);
+   print "Hier die ersten Werte mit uniq=1:\n";
+   $cnt=($c41<10)?$c41:10;
+   for($i=0;$i<$cnt;$i++){
+      $b=$blz[$i];
+      printf("%2d/%3d %s %2d (%d Zw.) [%d] %s, %s\n",$i+1,$c41,$b,$idx[$i],$cntx[$i],$val[$i],lut_name1($b),lut_ort1($b));
+   }
+   print "\n";
+
+      # Aufruf in Array-Kontext mit sort
+   ($p_blz,$p_idx,$p_val,$r3x,$p_cntx)=$fkt->($arg1,$arg2,$r5,0,1);
+   @blz=@$p_blz;
+   @idx=@$p_idx;
+   @val=@$p_val;
+   @cntx=@$p_cntx;
+   $c51=scalar(@blz);
+   $ok_msg="$fkt_name($arg1,$arg2): $c51 Banken gefunden, uniq 0, sort 1, Rückgabewert: $r5 -> ".retval2txt_short($r5);
+   ok(($c51>0 && $c11==$c51),$ok_msg);
+   print "Hier die ersten Werte mit sort=1 und uniq=0:\n";
+   $cnt=($c51<10)?$c51:10;
+   for($i=0;$i<$cnt;$i++){
+      $b=$blz[$i];
+      printf("%2d/%3d %s %2d [%d] %s, %s\n",$i+1,$c51,$b,$idx[$i],$val[$i],lut_name1($b),lut_ort1($b));
    }
    print "\n";
    return $c11;
@@ -101,6 +135,47 @@ sub chk_str
           printf("   %2d. %s\n",$i+1,$val[$i]);
       }
 
+   }
+   print "\n";
+
+      # Aufruf in Array-Kontext mit uniq
+   ($p_blz,$p_idx,$p_val,$r3x,$p_cntx)=$fkt->($arg,$r4,1);
+   @blz=@$p_blz;
+   @idx=@$p_idx;
+   @val=@$p_val;
+   @cntx=@$p_cntx;
+   $c41=scalar(@blz);
+   $ok_msg="$fkt_name('$arg'): $c41 Banken gefunden, uniq: 1, Rückgabewert: $r4 -> ".retval2txt_short($r4);
+   ok(($c41>0),$ok_msg);
+   print "Hier die ersten Werte mit uniq=1:\n";
+   $cnt=($c41<10)?$c41:10;
+   for($i=0;$i<$cnt;$i++){
+      $b=$blz[$i];
+      $zw=$idx[$i];
+      if($fkt_name eq "lut_suche_volltext"){
+         printf("%2d/%3d %s %2d (%d Zw.) %s, %d %s\n",$i+1,$c41,$b,$idx[$i],$cntx[$i],lut_name1($b,$zw),lut_plz1($b,$zw),lut_ort1($b,$zw));
+      }
+      else{
+         printf("%2d/%3d %s %2d (%d Zw.) [%s] %s, %s\n",$i+1,$c41,$b,$idx[$i],$cntx[$i],$val[$i],lut_name1($b,$zw),lut_ort1($b,$zw));
+      }
+   }
+   print "\n";
+
+      # Aufruf in Array-Kontext mit sort
+   ($p_blz,$p_idx,$p_val,$r3x,$p_cntx)=$fkt->($arg,$r5,0,1);
+   @blz=@$p_blz;
+   @idx=@$p_idx;
+   @val=@$p_val;
+   @cntx=@$p_cntx;
+   $c51=scalar(@blz);
+   $ok_msg="$fkt_name('$arg'): $c51 Banken gefunden, uniq 0, sort 1, Rückgabewert: $r5 -> ".retval2txt_short($r5);
+   ok(($c51>0 && $c11==$c51),$ok_msg);
+   print "Hier die ersten Werte mit sort=1 und uniq=0:\n";
+   $cnt=($c51<10)?$c51:10;
+   for($i=0;$i<$cnt;$i++){
+      $b=$blz[$i];
+      $zw=$idx[$i];
+      printf("%2d/%3d %s %2d %s, %s\n",$i+1,$c51,$b,$idx[$i],lut_name1($b,$zw),lut_ort1($b,$zw));
    }
    print "\n";
    return $c11;
@@ -164,4 +239,3 @@ suche_multiple('sparkasse ma@o',1);
 suche_multiple('sparkasse 68000-68900@plz',0);
 suche_multiple('sparkasse 68000-68900@plz',1);
 suche_multiple('sparkasse 68000-68900@plz al',1);
-
