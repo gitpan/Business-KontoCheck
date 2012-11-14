@@ -4,13 +4,19 @@ Revision history for Perl extension Business::KontoCheck.
 The complete history can be found in 0_history.txt (in german). The perl
 version starts with 2.1; all previous versions are C only libraries.
 
-4.2   Thu Oct 4, 2012
+4.3   Thu Nov 13, 2012
+      This is a perl-only bugfix release that adds a missing file (t/blz.t) and
+      (i hope ;-))) fixes the test::pod encoding bug.
+
+4.2   Thu Oct 24, 2012
       - fixed encoding error in KontoCheck.pm
       - fixed some memory problems
       - fixed IBAN generation of Flessa bank
       - new testfile t/generate_lut.t for checking the generation of a lutfile
-      - new (optional) variable keine_iban_berechnung in function generate_lut2() for IBAN blacklist block
-      - new function lut_keine_iban_berechnung() for appending an IBAN blacklist block to an existing lutfile
+      - new (optional) variable keine_iban_berechnung in function
+        generate_lut2() for IBAN blacklist block
+      - new function lut_keine_iban_berechnung() for appending an IBAN
+        blacklist block to an existing lutfile
       - (optional) parameters uniq and sort for search routines
       - some minor changes
 

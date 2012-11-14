@@ -5,7 +5,7 @@ package Business::KontoCheck;
 use 5.006000;
 use strict;
 use warnings;
-use encoding 'iso-8859-1';
+use encoding 'ISO8859-1';
 
 require Exporter;
 
@@ -31,7 +31,7 @@ our @EXPORT_OK = qw( kto_check kto_check_str kto_check_blz
 
 our @EXPORT = qw( lut_init kto_check kto_check_blz kto_check_at %kto_retval );
 
-our $VERSION = '4.2';
+our $VERSION = '4.3';
 
 require XSLoader;
 XSLoader::load('Business::KontoCheck', $VERSION);
@@ -908,6 +908,8 @@ END{ lut_cleanup(); }
 
 1;
 __END__
+
+=encoding ISO8859-1
 
 =head1 NAME
 

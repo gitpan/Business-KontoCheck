@@ -48,7 +48,7 @@
 
 /* Definitionen und Includes  */
 #ifndef VERSION
-#define VERSION "4.2"
+#define VERSION "4.3"
 #endif
 #define VERSION_DATE "2012-10-24"
 

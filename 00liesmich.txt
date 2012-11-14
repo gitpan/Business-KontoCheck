@@ -40,6 +40,7 @@ README                      : kurzes README für CPAN
 MANIFEST                    : Dateiliste (von Perl benötigt)
 blz.lut                     : LUT-Datei für die deutsche Version (nur ein
                               Datensatz ohne Datum, für automatische Tests)
+blz_min.txt                 : Minimale BLZ-Datei für Test der LUT-Generierung
 blz-at.lut                  : LUT-Datei für die österreichische Version (Testdaten)
 konto_check.h               : C Header-Datei für die deutsche Version
 konto_check-at.h            : C Header-Datei für die österreichische Version

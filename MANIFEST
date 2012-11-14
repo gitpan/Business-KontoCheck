@@ -17,6 +17,8 @@ t/austrian.t
 t/base.t
 t/encoding.t
 t/generate_lut.t
+blz.txt
+CONFIG.INI
 t/iban.t
 t/ipi.t
 t/lut2.t
