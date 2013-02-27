@@ -82,6 +82,13 @@
 
 #define FLESSA_KORREKTUR 1
 
+/* Zum Gueltigkeitstermin 4. Maerz 2013 erfolgen Aenderungen der
+ * Pruefzifferberechnungsmethoden C6 und D1; mit dem folgenden Makro werden
+ * diese Änderungen aktiviert.
+ */
+#define PZ_METHODEN_2013_03_04 1
+
+
 /* Das Makro DEFAULT_ENCODING legt die Ausgabe-Kodierung für die Funktion
  * kto_check_retval2txt() und die Blocks Name, Kurzname und Ort aus der
  * LUT-Datei fest. Die folgenden Werte sind möglich:
@@ -470,7 +477,7 @@ extern const char *lut2_feld_namen[256];
 #define OK_SLOT_CNT_MIN_USED                    13
 #define SOME_KEYS_NOT_FOUND                     14
 #define LUT2_KTO_NOT_CHECKED                    15
-#line 287 "konto_check_h.lx"
+#line 294 "konto_check_h.lx"
 
 #define MAX_BLZ_CNT 30000  /* maximale Anzahl BLZ's in generate_lut() */
 
