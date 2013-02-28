@@ -39,7 +39,7 @@ __DATA__
 25020600:Santander Consumer Bank, 30179 Hannover
 25020700:Hanseatic Bank Hannover, 30159 Hannover
 25050180:Sparkasse Hannover, 30001 Hannover
-30050000:WestLB Düsseldorf, 40002 Düsseldorf
+30050000:Ld Bk Hess-Thür, Gz, Dus, 40019 Düsseldorf
 30070010:Deutsche Bank Düsseldorf, 40189 Düsseldorf
 50951469:Sparkasse Starkenburg, 64646 Heppenheim (Bergstraße)
 54510067:Postbank Ludwigshafen, 67057 Ludwigshafen am Rhein

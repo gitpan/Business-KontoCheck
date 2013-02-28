@@ -6,8 +6,8 @@ vim:tw=80:ft=text:ai
 ########################################################################
 #                                                                      #
 # Autor             : Michael Plugge <m.plugge@hs-mannheim.de>         #
-# Version           : 4.4                                              #
-# Datum             : 02.02.2013                                       #
+# Version           : 4.5                                              #
+# Datum             : 28.02.2013                                       #
 #                                                                      #
 ########################################################################
 
@@ -92,9 +92,9 @@ Bundesbank:
 http://www.bundesbank.de/Redaktion/DE/Standardartikel/Kerngeschaeftsfelder/Unbarer_Zahlungsverkehr/bankleitzahlen_download.html
 
 Dabei ist die Datei blz_*.zip herunterzuladen und auszupacken (aktuell z.B.
-blz_20081208.zip). Die Aktualisierung erfolgt alle 3 Monate. Diese Datei kann
-mittels der Funktion generate_lut() in das LUT-Format für die Bibliothek
-konvertiert werden.
+blz_2013_03_04_txt_zip.zip). Die Aktualisierung erfolgt alle 3 Monate. Diese
+Datei kann mittels der Funktion generate_lut() in das LUT-Format für die
+Bibliothek konvertiert werden.
 
 Die aktuellen Prüfziffermethoden werden ebenfalls von der Deutschen Bundesbank
 veröffentlicht:
@@ -185,7 +185,7 @@ hundert Kontonummern aus dem Internet benutzt.
 8. COPYRIGHT
 ============
 
-Copyright (C) 2002-2011 Michael Plugge.
+Copyright (C) 2002-2013 Michael Plugge.
 
 Diese Bibliothek ist freie Software; Sie dürfen sie unter den Bedingungen der GNU
 Lesser General Public License, wie von der Free Software Foundation
