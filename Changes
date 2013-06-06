@@ -9,7 +9,7 @@ version starts with 2.1; all previous versions are C only libraries.
       in blz.lut
 
 4.4   Sat Feb 2, 2013
-      - new check method D9 implemented
+      - new check method E0 implemented
       - changes in check methods C6 and D1 implemented
       - bug fix in check method C6
 

@@ -4,9 +4,25 @@
 ##################################################################################
 #                                                                                #
 # Autor             : Michael Plugge <m.plugge@hs-mannheim.de>                   #
-# Version           : 4.5                                                        #
-# Datum             : 28.02.2013                                                 #
+# Version           : 4.6                                                        #
+# Datum             : 28.05.2013                                                 #
 ##################################################################################
+
+##################################################################################
+###                       07.06.13 Version 4.6                                 ###
+##################################################################################
+
+ - IBAN-Regeln implementiert und getestet
+ - Änderungen in Prüfziffermethode 51 und 84 (gültig ab 3.6.2013)
+ - Kommentar zu Prüfziffermethode E0 angepasst (Klarstellung)
+ - neue Funktion lut_iban_regel()) zur Bestimmung der IBAN-Regel für eine Bankverbindung
+ - neue Funktion iban_bic_gen() zur Bestimmung einer IBAN sowie BIC und benutzter
+   BLZ/Kontonummer
+ - neue Funktion get_kto_check_version_x() mit etwas mehr Infos
+ - kleiner Bugfix in main.c: bei der Anzeige der Bankdaten in der Konsole wurde
+       bei Prüfziffermethoden ab B0 die erste Stelle der Prüfziffermethode immer
+       falsch ausgegeben.
+
 
 ##################################################################################
 ###                       28.02.13 Version 4.5                                 ###

@@ -20,6 +20,7 @@ t/generate_lut.t
 blz.txt
 CONFIG.INI
 t/iban.t
+t/iban_gen.t
 t/ipi.t
 t/lut2.t
 t/lut_info.t

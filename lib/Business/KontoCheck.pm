@@ -15,8 +15,8 @@ our @EXPORT_OK = qw( kto_check kto_check_str kto_check_blz
    kto_check_pz generate_lut generate_lut2 lut_cleanup lut_valid
    lut_init kto_check_init copy_lutfile lut_multiple lut_filialen
    lut_blz lut_name lut_name_kurz lut_plz lut_ort lut_pan lut_bic
-   lut_pz lut_aenderung lut_loeschung lut_nachfolge_blz lut_blz1
-   lut_name1 lut_name_kurz1 lut_plz1 lut_ort1 lut_pan1 lut_bic1
+   lut_pz lut_aenderung lut_loeschung lut_nachfolge_blz lut_iban_regel
+   lut_blz1 lut_name1 lut_name_kurz1 lut_plz1 lut_ort1 lut_pan1 lut_bic1
    lut_pz1 lut_aenderung1 lut_loeschung1 lut_nachfolge_blz1 iban_gen
    check_iban ipi_check ipi_gen set_verbose_debug lut_info
    set_default_compression iban2bic pz2str kto_check_encoding
@@ -31,7 +31,7 @@ our @EXPORT_OK = qw( kto_check kto_check_str kto_check_blz
 
 our @EXPORT = qw( lut_init kto_check kto_check_blz kto_check_at %kto_retval );
 
-our $VERSION = '4.5';
+our $VERSION = '4.6';
 
 require XSLoader;
 XSLoader::load('Business::KontoCheck', $VERSION);
@@ -64,6 +64,32 @@ sub lut_info
    else{
       $ret=lut_info_i($lut_name,$args,$info1,$valid1,$info2,$valid2,$lut_dir);
       return $ret;
+   }
+}
+
+sub iban_gen
+{
+   my $kto;
+   my $blz;
+   my $kto2;
+   my $blz2;
+   my $ret;
+   my $iban;
+   my $papier;
+   my $bic;
+   my $regel;
+   my $pz_methode;
+   my $argc;
+
+   $kto=$_[0];
+   $blz=$_[1];
+   if(wantarray()){
+      $ret=iban_gen_i($kto,$blz,$iban,$papier,$bic,$regel,$pz_methode,$blz2,$kto2);
+      return ($ret,$iban,$papier,$bic,$regel,$pz_methode,$blz2,$kto2);
+   }
+   else{
+      $ret=iban_gen_i($kto,$blz,$iban,$papier,$bic,$regel,$pz_methode,$blz2,$kto2);
+      return $iban;
    }
 }
 
@@ -485,8 +511,36 @@ sub lut_nachfolge_blz1
    return lut_nachfolge_blz_i($r,@_);
 }
 
+sub lut_iban_regel
+{
+   my $r=1;
+   my $v;
+
+   $v=lut_iban_regel_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub lut_iban_regel1
+{
+   my $r=1;
+
+   return lut_iban_regel_i($r,@_);
+}
+
 
 %Business::KontoCheck::kto_retval = (
+-128 => 'Die BLZ passt nicht zur angegebenen IBAN-Regel',
+-127 => 'Die Kontonummer ist nicht eindeutig (es gibt mehrere Möglichkeiten)',
+-126 => 'Die IBAN-Regel ist noch nicht implementiert',
+-125 => 'Die IBAN-Regel ist nicht bekannt',
+-124 => 'Für die Bankverbindung ist keine IBAN-Berechnung erlaubt',
+-123 => 'Die Bankverbindung ist mit der alten BLZ stimmig, mit der Nachfolge-BLZ nicht',
+-122 => 'Das Feld IBAN-Regel wurde nicht initialisiert',
 -121 => 'Die Länge der IBAN für das angegebene Länderkürzel ist falsch',
 -120 => 'Keine Bankverbindung/IBAN angegeben',
 -119 => 'Ungültiges Zeichen ( ()+-/&.,\' ) für die Volltextsuche gefunden',
@@ -621,10 +675,25 @@ sub lut_nachfolge_blz1
   10 => 'ok; der Wert für den Schlüssel wurde überschrieben',
   11 => 'wahrscheinlich ok; die Kontonummer kann allerdings (nicht angegebene) Unterkonten enthalten',
   12 => 'wahrscheinlich ok; die Kontonummer enthält eine Unterkontonummer',
-  13 => 'ok; die Anzahl Slots wurde auf SLOT_CNT_MIN (40) hochgesetzt',
+  13 => 'ok; die Anzahl Slots wurde auf SLOT_CNT_MIN (50) hochgesetzt',
   14 => 'ok; ein(ige) Schlüssel wurden nicht gefunden',
   15 => 'Die Bankverbindung wurde nicht getestet',
+  16 => 'Es wurden fast alle BLocks (außer den IBAN-Regeln) geladen',
+  17 => 'ok; für die BLZ wurde allerdings die Nachfolge-BLZ eingesetzt',
+  18 => 'ok; die Kontonummer wurde allerdings ersetzt',
+  19 => 'ok; die Bankleitzahl wurde allerdings ersetzt',
+  20 => 'ok; die Bankleitzahl und Kontonummer wurde allerdings ersetzt',
+  21 => 'ok; die Bankverbindung ist (ohne Test) als richtig anzusehen',
+  22 => 'ok; für IBAN ist (durch eine Regel) allerdings ein anderer BIC definiert',
+  23 => 'ok; für die BIC-Bestimmung der ehemaligen Hypo-Bank für IBAN wird i.A. zusätzlich die Kontonummer benötigt',
 
+'IBAN_INVALID_RULE'                      => 'Die BLZ passt nicht zur angegebenen IBAN-Regel',
+'IBAN_AMBIGUOUS_KTO'                     => 'Die Kontonummer ist nicht eindeutig (es gibt mehrere Möglichkeiten)',
+'IBAN_RULE_NOT_IMPLEMENTED'              => 'Die IBAN-Regel ist noch nicht implementiert',
+'IBAN_RULE_UNKNOWN'                      => 'Die IBAN-Regel ist nicht bekannt',
+'NO_IBAN_CALCULATION'                    => 'Für die Bankverbindung ist keine IBAN-Berechnung erlaubt',
+'OLD_BLZ_OK_NEW_NOT'                     => 'Die Bankverbindung ist mit der alten BLZ stimmig, mit der Nachfolge-BLZ nicht',
+'LUT2_IBAN_REGEL_NOT_INITIALIZED'        => 'Das Feld IBAN-Regel wurde nicht initialisiert',
 'INVALID_IBAN_LENGTH'                    => 'Die Länge der IBAN für das angegebene Länderkürzel ist falsch',
 'LUT2_NO_ACCOUNT_GIVEN'                  => 'Keine Bankverbindung/IBAN angegeben',
 'LUT2_VOLLTEXT_INVALID_CHAR'             => 'Ungültiges Zeichen ( ()+-/&.,\' ) für die Volltextsuche gefunden',
@@ -759,12 +828,27 @@ sub lut_nachfolge_blz1
 'KTO_CHECK_VALUE_REPLACED'               => 'ok; der Wert für den Schlüssel wurde überschrieben',
 'OK_UNTERKONTO_POSSIBLE'                 => 'wahrscheinlich ok; die Kontonummer kann allerdings (nicht angegebene) Unterkonten enthalten',
 'OK_UNTERKONTO_GIVEN'                    => 'wahrscheinlich ok; die Kontonummer enthält eine Unterkontonummer',
-'OK_SLOT_CNT_MIN_USED'                   => 'ok; die Anzahl Slots wurde auf SLOT_CNT_MIN (40) hochgesetzt',
+'OK_SLOT_CNT_MIN_USED'                   => 'ok; die Anzahl Slots wurde auf SLOT_CNT_MIN (50) hochgesetzt',
 'SOME_KEYS_NOT_FOUND'                    => 'ok; ein(ige) Schlüssel wurden nicht gefunden',
 'LUT2_KTO_NOT_CHECKED'                   => 'Die Bankverbindung wurde nicht getestet',
+'LUT2_OK_WITHOUT_IBAN_RULES'             => 'Es wurden fast alle BLocks (außer den IBAN-Regeln) geladen',
+'OK_NACHFOLGE_BLZ_USED'                  => 'ok; für die BLZ wurde allerdings die Nachfolge-BLZ eingesetzt',
+'OK_KTO_REPLACED'                        => 'ok; die Kontonummer wurde allerdings ersetzt',
+'OK_BLZ_REPLACED'                        => 'ok; die Bankleitzahl wurde allerdings ersetzt',
+'OK_BLZ_KTO_REPLACED'                    => 'ok; die Bankleitzahl und Kontonummer wurde allerdings ersetzt',
+'OK_IBAN_WITHOUT_KC_TEST'                => 'ok; die Bankverbindung ist (ohne Test) als richtig anzusehen',
+'OK_INVALID_FOR_IBAN'                    => 'ok; für IBAN ist (durch eine Regel) allerdings ein anderer BIC definiert',
+'OK_HYPO_REQUIRES_KTO'                   => 'ok; für die BIC-Bestimmung der ehemaligen Hypo-Bank für IBAN wird i.A. zusätzlich die Kontonummer benötigt',
 );
 
 %Business::KontoCheck::kto_retval_kurz = (
+-128 => 'IBAN_INVALID_RULE',
+-127 => 'IBAN_AMBIGUOUS_KTO',
+-126 => 'IBAN_RULE_NOT_IMPLEMENTED',
+-125 => 'IBAN_RULE_UNKNOWN',
+-124 => 'NO_IBAN_CALCULATION',
+-123 => 'OLD_BLZ_OK_NEW_NOT',
+-122 => 'LUT2_IBAN_REGEL_NOT_INITIALIZED',
 -121 => 'INVALID_IBAN_LENGTH',
 -120 => 'LUT2_NO_ACCOUNT_GIVEN',
 -119 => 'LUT2_VOLLTEXT_INVALID_CHAR',
@@ -902,6 +986,14 @@ sub lut_nachfolge_blz1
   13 => 'OK_SLOT_CNT_MIN_USED',
   14 => 'SOME_KEYS_NOT_FOUND',
   15 => 'LUT2_KTO_NOT_CHECKED',
+  16 => 'LUT2_OK_WITHOUT_IBAN_RULES',
+  17 => 'OK_NACHFOLGE_BLZ_USED',
+  18 => 'OK_KTO_REPLACED',
+  19 => 'OK_BLZ_REPLACED',
+  20 => 'OK_BLZ_KTO_REPLACED',
+  21 => 'OK_IBAN_WITHOUT_KC_TEST',
+  22 => 'OK_INVALID_FOR_IBAN',
+  23 => 'OK_HYPO_REQUIRES_KTO',
 );
 
 END{ lut_cleanup(); }
@@ -935,19 +1027,20 @@ language is german too.
    $retval=generate_lut($inputname,$outputname,$user_info,$lut_version);
    $retval=generate_lut2($inputname,$outputname[,$user_info[,$gueltigkeit[,$felder[,$filialen[,$slots[,$lut_version[,$set]]]]]]]);
 
-   [$@]retval=lut_blz($blz[,$offset])
+   [$@]retval=lut_blz($blz[,$offset[,$ret]])
    [$@]retval=lut_info($lut_name)
-   [$@]retval=lut_filialen($blz[,$offset])
-   [$@]retval=lut_name($blz[,$offset])
-   [$@]retval=lut_name_kurz($blz[,$offset])
-   [$@]retval=lut_plz($blz[,$offset])
-   [$@]retval=lut_ort($blz[,$offset])
-   [$@]retval=lut_pan($blz[,$offset])
-   [$@]retval=lut_bic($blz[,$offset])
-   [$@]retval=lut_pz($blz[,$offset])
-   [$@]retval=lut_aenderung($blz[,$offset])
-   [$@]retval=lut_loeschung($blz[,$offset])
-   [$@]retval=lut_nachfolge_blz($blz[,$offset])
+   [$@]retval=lut_filialen($blz[,$offset[,$ret]])
+   [$@]retval=lut_name($blz[,$offset[,$ret]])
+   [$@]retval=lut_name_kurz($blz[,$offset[,$ret]])
+   [$@]retval=lut_plz($blz[,$offset[,$ret]])
+   [$@]retval=lut_ort($blz[,$offset[,$ret]])
+   [$@]retval=lut_pan($blz[,$offset[,$ret]])
+   [$@]retval=lut_bic($blz[,$offset[,$ret]])
+   [$@]retval=lut_pz($blz[,$offset[,$ret]])
+   [$@]retval=lut_aenderung($blz[,$offset[,$ret]])
+   [$@]retval=lut_loeschung($blz[,$offset[,$ret]])
+   [$@]retval=lut_nachfolge_blz($blz[,$offset[,$ret]])
+   [$@]retval=lut_iban_regel($blz[,$offset[,$ret]])
 
    $retval=lut_valid()
    $ret=pz2str($pz[,$ret])
@@ -968,7 +1061,7 @@ language is german too.
 
    $retval=iban_check(iban)
    $retval=iban2bic(iban)
-   $retval=iban_gen(blz,kto)
+   [$@]retval=iban_gen(blz,kto)
 
    $enc=kto_check_encoding($encoding)
    $enc_str=kto_check_encoding_str($encoding)
@@ -1149,6 +1242,7 @@ diese müssen dann in der use Klausel anzugeben werden.
              lut_aenderung()
              lut_loeschung()
              lut_nachfolge_blz()
+             lut_iban_regel()
 
   Aufgabe:   Bestimmung von Feldern der BLZ-Datei
 
@@ -1163,6 +1257,7 @@ diese müssen dann in der use Klausel anzugeben werden.
              [$@]ret=lut_aenderung($blz[,$filiale[,$ret]])
              [$@]ret=lut_loeschung($blz[,$filiale[,$ret]])
              [$@]ret=lut_nachfolge_blz($blz[,$filiale[,$ret]])
+             [$@]ret=lut_iban_regel($blz[,$filiale[,$ret]])
              $ret=pz2str($pz[,$ret])
 
    Die Funktionen bestimmen die diversen Felder der BLZ-Datei zu einer
