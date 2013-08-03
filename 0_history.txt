@@ -1,12 +1,86 @@
 ##################################################################################
 #          PRÜFZIFFERBERECHNUNG VON DEUTSCHEN KONTONUMMERN                       #
-#                           C-/AWK/Perl/PHP-Bibliothek                           #
+#                  C-/AWK/Perl/PHP/Ruby-Bibliothek                               #
 ##################################################################################
 #                                                                                #
 # Autor             : Michael Plugge <m.plugge@hs-mannheim.de>                   #
-# Version           : 4.6                                                        #
-# Datum             : 28.05.2013                                                 #
+# Version           : 5.0 (final)                                                #
+# Datum             : 02.08.2013                                                 #
 ##################################################################################
+
+##################################################################################
+###                       02.08.13 Version 5.0 (final)                         ###
+##################################################################################
+
+ - Änderungen der Pruefzifferberechnungsmethoden 57 und 95 (gültig ab 9.9.2013)
+   implementiert. Die Änderungen werden zum Gültigkeitsdatum automatisch aktiviert.
+
+ - Änderungen der IBAN-Regeln zum 9. September 2013 implementiert:
+   IBAN-Regeln 05, 12, 13, 20, 21, 31, 33, 35, 40 aktualisiert auf Version 1
+   IBAN-Regeln 48 - 54 neu implementiert
+
+ - bei iban_gen() wird unterschieden, ob ein Konto ersetzt wurde (z.B. Spendenkonten),
+   oder ob nur ein Unterkonto angehängt wurde. Der Rückgabewert OK_UNTERKONTO_ATTACHED
+   ist jetzt eine positive Statusmeldung, keine Fehlermeldung mehr.
+
+ - neue "schwarze Liste" für IBANs (in der Datei iban.blacklist; nähere Info in der Datei)
+
+ - einige kleinere Änderungen in den IBAN-Regeln berücksichtigt, die von der
+   Deutschen Bundesbank per Mail verbreitet wurden (sie werden erst im Dezember
+   in die offizielle Version aufgenommen, die Institute bitten jedoch darum
+   sie schon zu berücksichtigen; betrifft die Regeln 10, 15 und 43).
+
+ - Überprüfung in iban_check(), ob die übergebene IBAN mit der selbst erzeugten
+   übereinstimmt, oder ob evl. ein Unterkonto nicht angehängt wurde oder eine
+   IBAN-Regel nicht beachtet wurde; so werden falsch erzeugte IBANs erkannt
+
+ - Alle Leerzeichen werden vor der Verarbeitung aus der IBAN entfernt
+   (Funktionen iban2bic() sowie iban_check() )
+
+ - Ruby: die Funktion version() akzeptiert einen optionalen Integer-Parameter, mit
+   dem verschiedene Infos über die konto_check-Bibliothek erfragt werden können
+
+ - Ruby ist jetzt wieder mit im SVN
+
+ - Die Funktion iban_gen() in Ruby, PHP und Perl gibt nun auch die benutzte IBAN-Regel zurück
+
+ - PHP: einige Standardwerte für PHP-Generierung wurden geändert:
+      * Beschreibung der Prüfziffermethoden werden defaultmäßig eingebunden
+      * symbolische Rückgabewerte werden defaultmäßig definiert
+      * BAV Kompatibilität ist standardmäßig aus und hat noch einen zusätzlichen
+        Schalter in konto_check.h (die Funktionalität wird aktuell nicht benutzt)).
+      * Außerdem in konto_check.ini:
+            konto_check.init_default_level=9    (statt 5)
+            konto_check.lut_path1=.             (alt: /etc)
+            konto_check.lut_path2=/etc          (alt: .)
+
+ - Info zu IBAN-Regeln in den Info-Teil der LUT-Datei übernommen
+
+ - Fehler in IBAN-Regel 5 (Commerzbank) bei Kontenkreis 998000000-999499999 berichtigt
+
+ - Fehler in IBAN-Regel 46 berichtigt
+
+ - Fehler in Prüfziffermethode C7 berichtigt: 10-stellige Konten sind ungültig.
+   Der Fehler trat nur auf, wenn die Untermethoden C7a oder C7b direkt
+   aufgerufen wurden (praktisch vor allem bei IBAN-Generierung).
+
+ - Behandlung von Unterkonten in Methode C7 überarbeitet
+
+ - in Prüfziffermethode 16 wird beim Divisionsrest 1 und unterschiedlichen
+   Ziffern an der 9. und 10. Stelle der Wert FALSE zurückgegeben (dies ist die
+   Rückgabe des Bank Account Validators (BAV), sowie des SEPA IBAN Konverters
+   der Sparkassen als auch des VR Bank IBAN Konverters.
+
+ - Bug fix in lut_bic(); die Funktion lieferte manchmal eine access violation
+
+ - Die Funktion lut_bic() liefert wieder für Zweigstellen deren BIC, nicht den
+   der Hauptstelle
+
+ - Die comdirect bank behält ihren BIC aus der Bundesbank-Datei
+
+ - Das Löschflag 'D' bei lut_aenderung() wird berücksichtigt; BLZs mit diesem
+   Flag werden nicht mehr bearbeitet.
+
 
 ##################################################################################
 ###                       07.06.13 Version 4.6                                 ###
@@ -20,8 +94,8 @@
    BLZ/Kontonummer
  - neue Funktion get_kto_check_version_x() mit etwas mehr Infos
  - kleiner Bugfix in main.c: bei der Anzeige der Bankdaten in der Konsole wurde
-       bei Prüfziffermethoden ab B0 die erste Stelle der Prüfziffermethode immer
-       falsch ausgegeben.
+   bei Prüfziffermethoden ab B0 die erste Stelle der Prüfziffermethode immer
+   falsch ausgegeben.
 
 
 ##################################################################################
@@ -53,17 +127,23 @@
 ##################################################################################
 
       - encoding error in KontoCheck.pm gefixt
+
       - einige Speicherprobleme gefixt
+
       - IBAN Generierung der Flessa Bank korrigiert (es wird für alle BLZs der
         Flessa-Bank dieselbe BLZ benutzt)
+
       - in Perl gibt es jetzt die Funktion lut_keine_iban_berechnung() sowie
         eine optionale Variable in generate_lut2(), um eine IBAN-Blacklist an
         eine LUT-Datei anzuhängen
+
       - Perl: neue Testdatei generate_lut.t zum Test der Generierung einer LUT-Datei
+
       - Perl und Ruby: Alle Suchroutinen in KontoCheckRaw haben jetzt die Parameter
         sort (Ausgabe nach BLZ sortieren) und uniq (für jede Bank nur eine
         Zweigstelle ausgeben); auch die Ruby-Funktion KontoCheck::suche()
         unterstützt die beiden Parameter.
+
      - diverse kleinere Änderungen
 
 ##################################################################################

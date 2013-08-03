@@ -31,7 +31,7 @@ our @EXPORT_OK = qw( kto_check kto_check_str kto_check_blz
 
 our @EXPORT = qw( lut_init kto_check kto_check_blz kto_check_at %kto_retval );
 
-our $VERSION = '4.6';
+our $VERSION = '5.0';
 
 require XSLoader;
 XSLoader::load('Business::KontoCheck', $VERSION);
@@ -534,6 +534,12 @@ sub lut_iban_regel1
 
 
 %Business::KontoCheck::kto_retval = (
+-134 => 'Die BLZ findet sich in der Ausschlußliste für IBAN-Berechnungen',
+-133 => 'Die BLZ ist in der Bundesbank-Datei als gelöscht markiert und somit ungültig',
+-132 => 'Die IBAN-Prüfsumme stimmt, es gibt allerdings einen Fehler in der eigenen IBAN-Bestimmung (wahrscheinlich falsch)',
+-131 => 'Die IBAN-Prüfsumme stimmt, eine IBAN-Berechnung ist allerdings nicht erlaubt (wahrscheinlich falsch)',
+-130 => 'Die IBAN-Prüfsumme stimmt, es wurde allerdings eine IBAN-Regel nicht beachtet (wahrscheinlich falsch)',
+-129 => 'Die IBAN-Prüfsumme stimmt, es fehlt aber ein Unterkonto (wahrscheinlich falsch)',
 -128 => 'Die BLZ passt nicht zur angegebenen IBAN-Regel',
 -127 => 'Die Kontonummer ist nicht eindeutig (es gibt mehrere Möglichkeiten)',
 -126 => 'Die IBAN-Regel ist noch nicht implementiert',
@@ -552,7 +558,7 @@ sub lut_iban_regel1
 -113 => 'das Institut erlaubt keine eigene IBAN-Berechnung',
 -112 => 'die notwendige Kompressions-Bibliothek wurden beim Kompilieren nicht eingebunden',
 -111 => 'der angegebene Wert für die Default-Kompression ist ungültig',
--110 => 'wahrscheinlich OK; es wurde allerdings ein (weggelassenes) Unterkonto angefügt',
+-110 => '(nicht mehr als Fehler, sondern positive Ausgabe - Dummy für den alten Wert)',
 -109 => 'Ungültige Signatur im Default-Block',
 -108 => 'Die maximale Anzahl Einträge für den Default-Block wurde erreicht',
 -107 => 'Es wurde noch kein Default-Block angelegt',
@@ -686,7 +692,15 @@ sub lut_iban_regel1
   21 => 'ok; die Bankverbindung ist (ohne Test) als richtig anzusehen',
   22 => 'ok; für IBAN ist (durch eine Regel) allerdings ein anderer BIC definiert',
   23 => 'ok; für die BIC-Bestimmung der ehemaligen Hypo-Bank für IBAN wird i.A. zusätzlich die Kontonummer benötigt',
+  24 => 'ok; die Kontonummer wurde ersetzt, die neue Kontonummer hat keine Prüfziffer',
+  25 => 'ok; es wurde ein (weggelassenes) Unterkonto angefügt',
 
+'BLZ_BLACKLISTED'                        => 'Die BLZ findet sich in der Ausschlußliste für IBAN-Berechnungen',
+'BLZ_MARKED_AS_DELETED'                  => 'Die BLZ ist in der Bundesbank-Datei als gelöscht markiert und somit ungültig',
+'IBAN_CHKSUM_OK_SOMETHING_WRONG'         => 'Die IBAN-Prüfsumme stimmt, es gibt allerdings einen Fehler in der eigenen IBAN-Bestimmung (wahrscheinlich falsch)',
+'IBAN_CHKSUM_OK_NO_IBAN_CALCULATION'     => 'Die IBAN-Prüfsumme stimmt, eine IBAN-Berechnung ist allerdings nicht erlaubt (wahrscheinlich falsch)',
+'IBAN_CHKSUM_OK_RULE_IGNORED'            => 'Die IBAN-Prüfsumme stimmt, es wurde allerdings eine IBAN-Regel nicht beachtet (wahrscheinlich falsch)',
+'IBAN_CHKSUM_OK_UNTERKTO_MISSING'        => 'Die IBAN-Prüfsumme stimmt, es fehlt aber ein Unterkonto (wahrscheinlich falsch)',
 'IBAN_INVALID_RULE'                      => 'Die BLZ passt nicht zur angegebenen IBAN-Regel',
 'IBAN_AMBIGUOUS_KTO'                     => 'Die Kontonummer ist nicht eindeutig (es gibt mehrere Möglichkeiten)',
 'IBAN_RULE_NOT_IMPLEMENTED'              => 'Die IBAN-Regel ist noch nicht implementiert',
@@ -705,7 +719,7 @@ sub lut_iban_regel1
 'NO_OWN_IBAN_CALCULATION'                => 'das Institut erlaubt keine eigene IBAN-Berechnung',
 'KTO_CHECK_UNSUPPORTED_COMPRESSION'      => 'die notwendige Kompressions-Bibliothek wurden beim Kompilieren nicht eingebunden',
 'KTO_CHECK_INVALID_COMPRESSION_LIB'      => 'der angegebene Wert für die Default-Kompression ist ungültig',
-'OK_UNTERKONTO_ATTACHED'                 => 'wahrscheinlich OK; es wurde allerdings ein (weggelassenes) Unterkonto angefügt',
+'OK_UNTERKONTO_ATTACHED_OLD'             => '(nicht mehr als Fehler, sondern positive Ausgabe - Dummy für den alten Wert)',
 'KTO_CHECK_DEFAULT_BLOCK_INVALID'        => 'Ungültige Signatur im Default-Block',
 'KTO_CHECK_DEFAULT_BLOCK_FULL'           => 'Die maximale Anzahl Einträge für den Default-Block wurde erreicht',
 'KTO_CHECK_NO_DEFAULT_BLOCK'             => 'Es wurde noch kein Default-Block angelegt',
@@ -839,9 +853,17 @@ sub lut_iban_regel1
 'OK_IBAN_WITHOUT_KC_TEST'                => 'ok; die Bankverbindung ist (ohne Test) als richtig anzusehen',
 'OK_INVALID_FOR_IBAN'                    => 'ok; für IBAN ist (durch eine Regel) allerdings ein anderer BIC definiert',
 'OK_HYPO_REQUIRES_KTO'                   => 'ok; für die BIC-Bestimmung der ehemaligen Hypo-Bank für IBAN wird i.A. zusätzlich die Kontonummer benötigt',
+'OK_KTO_REPLACED_NO_PZ'                  => 'ok; die Kontonummer wurde ersetzt, die neue Kontonummer hat keine Prüfziffer',
+'OK_UNTERKONTO_ATTACHED'                 => 'ok; es wurde ein (weggelassenes) Unterkonto angefügt',
 );
 
 %Business::KontoCheck::kto_retval_kurz = (
+-134 => 'BLZ_BLACKLISTED',
+-133 => 'BLZ_MARKED_AS_DELETED',
+-132 => 'IBAN_CHKSUM_OK_SOMETHING_WRONG',
+-131 => 'IBAN_CHKSUM_OK_NO_IBAN_CALCULATION',
+-130 => 'IBAN_CHKSUM_OK_RULE_IGNORED',
+-129 => 'IBAN_CHKSUM_OK_UNTERKTO_MISSING',
 -128 => 'IBAN_INVALID_RULE',
 -127 => 'IBAN_AMBIGUOUS_KTO',
 -126 => 'IBAN_RULE_NOT_IMPLEMENTED',
@@ -860,7 +882,7 @@ sub lut_iban_regel1
 -113 => 'NO_OWN_IBAN_CALCULATION',
 -112 => 'KTO_CHECK_UNSUPPORTED_COMPRESSION',
 -111 => 'KTO_CHECK_INVALID_COMPRESSION_LIB',
--110 => 'OK_UNTERKONTO_ATTACHED',
+-110 => 'OK_UNTERKONTO_ATTACHED_OLD',
 -109 => 'KTO_CHECK_DEFAULT_BLOCK_INVALID',
 -108 => 'KTO_CHECK_DEFAULT_BLOCK_FULL',
 -107 => 'KTO_CHECK_NO_DEFAULT_BLOCK',
@@ -994,6 +1016,8 @@ sub lut_iban_regel1
   21 => 'OK_IBAN_WITHOUT_KC_TEST',
   22 => 'OK_INVALID_FOR_IBAN',
   23 => 'OK_HYPO_REQUIRES_KTO',
+  24 => 'OK_KTO_REPLACED_NO_PZ',
+  25 => 'OK_UNTERKONTO_ATTACHED',
 );
 
 END{ lut_cleanup(); }

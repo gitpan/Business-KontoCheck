@@ -19,6 +19,7 @@ t/encoding.t
 t/generate_lut.t
 blz.txt
 CONFIG.INI
+iban.blacklist
 t/iban.t
 t/iban_gen.t
 t/ipi.t

@@ -1,5 +1,6 @@
 /* vim: ft=c:set si:set fileencoding=iso-8859-1
  */
+#line 9 "konto_check_h.lx"
 
 /*
  * ##########################################################################
@@ -84,6 +85,10 @@
 /* IBAN-Regeln benutzen (gültig ab 3.6.2013) */
 #define USE_IBAN_RULES 1
 
+   /* Änderungen der Prüfziffermethoden zum 9. September 2013 erzwingen
+    * (bei 0 werden sie abhängig vom Datum aktiviert).
+   */ 
+#define FORCE_AENDERUNGEN_2013_09 0
 
 /* Debug-Version für iban_gen in Perl aktivieren (zur Ausgabe der benutzten
  * Prüfziffermethode in iban_gen()). Dies ist nur möglich, falls das Makro
@@ -117,7 +122,14 @@
  * # unterschiedliche Interpretationen der Berechnungsmethoden existieren.  #
  * ##########################################################################
  */
+#define BAV_ENABLE 0
+
+#if BAV_ENABLE==1
 #ifndef BAV_KOMPATIBEL
+#define BAV_KOMPATIBEL 0
+#endif
+#else
+#undef BAV_KOMPATIBEL
 #define BAV_KOMPATIBEL 0
 #endif
 
@@ -344,6 +356,12 @@ extern const char *lut2_feld_namen[256];
  */
 
 #undef FALSE
+#define BLZ_BLACKLISTED                       -134
+#define BLZ_MARKED_AS_DELETED                 -133
+#define IBAN_CHKSUM_OK_SOMETHING_WRONG        -132
+#define IBAN_CHKSUM_OK_NO_IBAN_CALCULATION    -131
+#define IBAN_CHKSUM_OK_RULE_IGNORED           -130
+#define IBAN_CHKSUM_OK_UNTERKTO_MISSING       -129
 #define IBAN_INVALID_RULE                     -128
 #define IBAN_AMBIGUOUS_KTO                    -127
 #define IBAN_RULE_NOT_IMPLEMENTED             -126
@@ -362,7 +380,7 @@ extern const char *lut2_feld_namen[256];
 #define NO_OWN_IBAN_CALCULATION               -113
 #define KTO_CHECK_UNSUPPORTED_COMPRESSION     -112
 #define KTO_CHECK_INVALID_COMPRESSION_LIB     -111
-#define OK_UNTERKONTO_ATTACHED                -110
+#define OK_UNTERKONTO_ATTACHED_OLD            -110
 #define KTO_CHECK_DEFAULT_BLOCK_INVALID       -109
 #define KTO_CHECK_DEFAULT_BLOCK_FULL          -108
 #define KTO_CHECK_NO_DEFAULT_BLOCK            -107
@@ -496,6 +514,9 @@ extern const char *lut2_feld_namen[256];
 #define OK_IBAN_WITHOUT_KC_TEST                 21
 #define OK_INVALID_FOR_IBAN                     22
 #define OK_HYPO_REQUIRES_KTO                    23
+#define OK_KTO_REPLACED_NO_PZ                   24
+#define OK_UNTERKONTO_ATTACHED                  25
+#line 308 "konto_check_h.lx"
 
 #define MAX_BLZ_CNT 30000  /* maximale Anzahl BLZ's in generate_lut() */
 
@@ -942,6 +963,7 @@ DLL_EXPORT int iban_check(char *iban,int *retval);
 DLL_EXPORT const char *iban2bic(char *iban,int *retval,char *blz,char *kto);
 DLL_EXPORT char *iban_gen(char *kto,char *blz,int *retval);
 DLL_EXPORT char *iban_bic_gen(char *blz,char *kto,const char **bicp,char *blz2,char *kto2,int *retval);
+DLL_EXPORT char *iban_bic_gen1(char *blz,char *kto,const char **bicp,int *retval);
 DLL_EXPORT int ipi_gen(char *zweck,char *dst,char *papier);
 DLL_EXPORT int ipi_check(char *zweck);
 
