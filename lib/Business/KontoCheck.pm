@@ -31,7 +31,7 @@ our @EXPORT_OK = qw( kto_check kto_check_str kto_check_blz
 
 our @EXPORT = qw( lut_init kto_check kto_check_blz kto_check_at %kto_retval );
 
-our $VERSION = '5.0';
+our $VERSION = '5.1';
 
 require XSLoader;
 XSLoader::load('Business::KontoCheck', $VERSION);
@@ -534,7 +534,7 @@ sub lut_iban_regel1
 
 
 %Business::KontoCheck::kto_retval = (
--134 => 'Die BLZ findet sich in der Ausschlußliste für IBAN-Berechnungen',
+-134 => 'Die BLZ findet sich in der Ausschlussliste für IBAN-Berechnungen',
 -133 => 'Die BLZ ist in der Bundesbank-Datei als gelöscht markiert und somit ungültig',
 -132 => 'Die IBAN-Prüfsumme stimmt, es gibt allerdings einen Fehler in der eigenen IBAN-Bestimmung (wahrscheinlich falsch)',
 -131 => 'Die IBAN-Prüfsumme stimmt, eine IBAN-Berechnung ist allerdings nicht erlaubt (wahrscheinlich falsch)',
@@ -550,7 +550,7 @@ sub lut_iban_regel1
 -121 => 'Die Länge der IBAN für das angegebene Länderkürzel ist falsch',
 -120 => 'Keine Bankverbindung/IBAN angegeben',
 -119 => 'Ungültiges Zeichen ( ()+-/&.,\' ) für die Volltextsuche gefunden',
--118 => 'Die Volltextsuche sucht jeweils nur ein einzelnes Wort; benutzen SIe lut_suche_multiple() zur Suche nach mehreren Worten',
+-118 => 'Die Volltextsuche sucht jeweils nur ein einzelnes Wort, benutzen Sie lut_suche_multiple() zur Suche nach mehreren Worten',
 -117 => 'die angegebene Suchresource ist ungültig',
 -116 => 'Suche: im Verknüpfungsstring sind nur die Zeichen a-z sowie + und - erlaubt',
 -115 => 'Suche: es müssen zwischen 1 und 26 Suchmuster angegeben werden',
@@ -563,7 +563,7 @@ sub lut_iban_regel1
 -108 => 'Die maximale Anzahl Einträge für den Default-Block wurde erreicht',
 -107 => 'Es wurde noch kein Default-Block angelegt',
 -106 => 'Der angegebene Schlüssel wurde im Default-Block nicht gefunden',
--105 => 'Beide Datensätze sind nicht mehr gültig; dieser ist  aber jünger als der andere',
+-105 => 'Beide Datensätze sind nicht mehr gültig, dieser ist aber jünger als der andere',
 -104 => 'Die Auftraggeber-Kontonummer des C-Datensatzes unterscheidet sich von der des A-Satzes',
 -103 => 'Die Auftraggeber-Bankleitzahl des C-Datensatzes unterscheidet sich von der des A-Satzes',
 -102 => 'Die DTA-Datei enthält (unzulässige) Zeilenvorschübe',
@@ -599,7 +599,7 @@ sub lut_iban_regel1
  -72 => 'Im strukturierten Verwendungszweck dürfen nur alphanumerische Zeichen vorkommen',
  -71 => 'Die Länge des IPI-Verwendungszwecks darf maximal 18 Byte sein',
  -70 => 'Es wurde eine LUT-Datei im Format 1.0/1.1 geladen',
- -69 => 'Bei der Kontoprüfung fehlt ein notwendiger Parameter (BLZ oder Konto)',
+ -69 => 'Für die aufgerufene Funktion fehlt ein notwendiger Parameter',
  -68 => 'Die Funktion iban2bic() arbeitet nur mit deutschen Bankleitzahlen',
  -67 => 'Die Prüfziffer der IBAN stimmt, die der Kontonummer nicht',
  -66 => 'Die Prüfziffer der Kontonummer stimmt, die der IBAN nicht',
@@ -654,7 +654,7 @@ sub lut_iban_regel1
  -17 => 'ok (die BLZ wurde allerdings gelöscht)',
  -16 => 'die Bankleitzahl wurde gelöscht',
  -15 => 'Fehler in der blz.txt Datei (falsche Zeilenlänge)',
- -14 => 'undefinierte Funktion; die library wurde mit THREAD_SAFE=0 kompiliert',
+ -14 => 'undefinierte Funktion, die library wurde mit THREAD_SAFE=0 kompiliert',
  -13 => 'schwerer Fehler im Konto_check-Modul',
  -12 => 'ein Konto muß zwischen 1 und 10 Stellen haben',
  -11 => 'kann Datei nicht schreiben',
@@ -671,31 +671,31 @@ sub lut_iban_regel1
    0 => 'falsch',
    1 => 'ok',
    2 => 'ok, ohne Prüfung',
-   3 => 'ok; für den Test wurde eine Test-BLZ verwendet',
+   3 => 'ok, für den Test wurde eine Test-BLZ verwendet',
    4 => 'Der Datensatz ist aktuell gültig',
    5 => 'Der Datensatz enthält kein Gültigkeitsdatum',
    6 => 'Die Datei ist im alten LUT-Format (1.0/1.1)',
-   7 => 'ok; es wurde allerdings eine LUT-Datei im alten Format (1.0/1.1) generiert',
+   7 => 'ok, es wurde allerdings eine LUT-Datei im alten Format (1.0/1.1) generiert',
    8 => 'In der DTAUS-Datei wurden kleinere Fehler gefunden',
-   9 => 'ok; es wurde allerdings eine LUT-Datei im Format 2.0 generiert (Compilerswitch)',
-  10 => 'ok; der Wert für den Schlüssel wurde überschrieben',
-  11 => 'wahrscheinlich ok; die Kontonummer kann allerdings (nicht angegebene) Unterkonten enthalten',
-  12 => 'wahrscheinlich ok; die Kontonummer enthält eine Unterkontonummer',
-  13 => 'ok; die Anzahl Slots wurde auf SLOT_CNT_MIN (50) hochgesetzt',
-  14 => 'ok; ein(ige) Schlüssel wurden nicht gefunden',
+   9 => 'ok, es wurde allerdings eine LUT-Datei im Format 2.0 generiert (Compilerswitch)',
+  10 => 'ok, der Wert für den Schlüssel wurde überschrieben',
+  11 => 'wahrscheinlich ok, die Kontonummer kann allerdings (nicht angegebene) Unterkonten enthalten',
+  12 => 'wahrscheinlich ok, die Kontonummer enthält eine Unterkontonummer',
+  13 => 'ok, die Anzahl Slots wurde auf SLOT_CNT_MIN (50) hochgesetzt',
+  14 => 'ok, ein(ige) Schlüssel wurden nicht gefunden',
   15 => 'Die Bankverbindung wurde nicht getestet',
   16 => 'Es wurden fast alle BLocks (außer den IBAN-Regeln) geladen',
-  17 => 'ok; für die BLZ wurde allerdings die Nachfolge-BLZ eingesetzt',
-  18 => 'ok; die Kontonummer wurde allerdings ersetzt',
-  19 => 'ok; die Bankleitzahl wurde allerdings ersetzt',
-  20 => 'ok; die Bankleitzahl und Kontonummer wurde allerdings ersetzt',
-  21 => 'ok; die Bankverbindung ist (ohne Test) als richtig anzusehen',
-  22 => 'ok; für IBAN ist (durch eine Regel) allerdings ein anderer BIC definiert',
-  23 => 'ok; für die BIC-Bestimmung der ehemaligen Hypo-Bank für IBAN wird i.A. zusätzlich die Kontonummer benötigt',
-  24 => 'ok; die Kontonummer wurde ersetzt, die neue Kontonummer hat keine Prüfziffer',
-  25 => 'ok; es wurde ein (weggelassenes) Unterkonto angefügt',
+  17 => 'ok, für die BLZ wurde allerdings die Nachfolge-BLZ eingesetzt',
+  18 => 'ok, die Kontonummer wurde allerdings ersetzt',
+  19 => 'ok, die Bankleitzahl wurde allerdings ersetzt',
+  20 => 'ok, die Bankleitzahl und Kontonummer wurde allerdings ersetzt',
+  21 => 'ok, die Bankverbindung ist (ohne Test) als richtig anzusehen',
+  22 => 'ok, für IBAN ist (durch eine Regel) allerdings ein anderer BIC definiert',
+  23 => 'ok, für die BIC-Bestimmung der ehemaligen Hypo-Bank für IBAN wird i.A. zusätzlich die Kontonummer benötigt',
+  24 => 'ok, die Kontonummer wurde ersetzt, die neue Kontonummer hat keine Prüfziffer',
+  25 => 'ok, es wurde ein (weggelassenes) Unterkonto angefügt',
 
-'BLZ_BLACKLISTED'                        => 'Die BLZ findet sich in der Ausschlußliste für IBAN-Berechnungen',
+'BLZ_BLACKLISTED'                        => 'Die BLZ findet sich in der Ausschlussliste für IBAN-Berechnungen',
 'BLZ_MARKED_AS_DELETED'                  => 'Die BLZ ist in der Bundesbank-Datei als gelöscht markiert und somit ungültig',
 'IBAN_CHKSUM_OK_SOMETHING_WRONG'         => 'Die IBAN-Prüfsumme stimmt, es gibt allerdings einen Fehler in der eigenen IBAN-Bestimmung (wahrscheinlich falsch)',
 'IBAN_CHKSUM_OK_NO_IBAN_CALCULATION'     => 'Die IBAN-Prüfsumme stimmt, eine IBAN-Berechnung ist allerdings nicht erlaubt (wahrscheinlich falsch)',
@@ -711,7 +711,7 @@ sub lut_iban_regel1
 'INVALID_IBAN_LENGTH'                    => 'Die Länge der IBAN für das angegebene Länderkürzel ist falsch',
 'LUT2_NO_ACCOUNT_GIVEN'                  => 'Keine Bankverbindung/IBAN angegeben',
 'LUT2_VOLLTEXT_INVALID_CHAR'             => 'Ungültiges Zeichen ( ()+-/&.,\' ) für die Volltextsuche gefunden',
-'LUT2_VOLLTEXT_SINGLE_WORD_ONLY'         => 'Die Volltextsuche sucht jeweils nur ein einzelnes Wort; benutzen SIe lut_suche_multiple() zur Suche nach mehreren Worten',
+'LUT2_VOLLTEXT_SINGLE_WORD_ONLY'         => 'Die Volltextsuche sucht jeweils nur ein einzelnes Wort, benutzen Sie lut_suche_multiple() zur Suche nach mehreren Worten',
 'LUT_SUCHE_INVALID_RSC'                  => 'die angegebene Suchresource ist ungültig',
 'LUT_SUCHE_INVALID_CMD'                  => 'Suche: im Verknüpfungsstring sind nur die Zeichen a-z sowie + und - erlaubt',
 'LUT_SUCHE_INVALID_CNT'                  => 'Suche: es müssen zwischen 1 und 26 Suchmuster angegeben werden',
@@ -724,7 +724,7 @@ sub lut_iban_regel1
 'KTO_CHECK_DEFAULT_BLOCK_FULL'           => 'Die maximale Anzahl Einträge für den Default-Block wurde erreicht',
 'KTO_CHECK_NO_DEFAULT_BLOCK'             => 'Es wurde noch kein Default-Block angelegt',
 'KTO_CHECK_KEY_NOT_FOUND'                => 'Der angegebene Schlüssel wurde im Default-Block nicht gefunden',
-'LUT2_NO_LONGER_VALID_BETTER'            => 'Beide Datensätze sind nicht mehr gültig; dieser ist  aber jünger als der andere',
+'LUT2_NO_LONGER_VALID_BETTER'            => 'Beide Datensätze sind nicht mehr gültig, dieser ist aber jünger als der andere',
 'DTA_SRC_KTO_DIFFERENT'                  => 'Die Auftraggeber-Kontonummer des C-Datensatzes unterscheidet sich von der des A-Satzes',
 'DTA_SRC_BLZ_DIFFERENT'                  => 'Die Auftraggeber-Bankleitzahl des C-Datensatzes unterscheidet sich von der des A-Satzes',
 'DTA_CR_LF_IN_FILE'                      => 'Die DTA-Datei enthält (unzulässige) Zeilenvorschübe',
@@ -760,7 +760,7 @@ sub lut_iban_regel1
 'IPI_INVALID_CHARACTER'                  => 'Im strukturierten Verwendungszweck dürfen nur alphanumerische Zeichen vorkommen',
 'IPI_INVALID_LENGTH'                     => 'Die Länge des IPI-Verwendungszwecks darf maximal 18 Byte sein',
 'LUT1_FILE_USED'                         => 'Es wurde eine LUT-Datei im Format 1.0/1.1 geladen',
-'MISSING_PARAMETER'                      => 'Bei der Kontoprüfung fehlt ein notwendiger Parameter (BLZ oder Konto)',
+'MISSING_PARAMETER'                      => 'Für die aufgerufene Funktion fehlt ein notwendiger Parameter',
 'IBAN2BIC_ONLY_GERMAN'                   => 'Die Funktion iban2bic() arbeitet nur mit deutschen Bankleitzahlen',
 'IBAN_OK_KTO_NOT'                        => 'Die Prüfziffer der IBAN stimmt, die der Kontonummer nicht',
 'KTO_OK_IBAN_NOT'                        => 'Die Prüfziffer der Kontonummer stimmt, die der IBAN nicht',
@@ -815,7 +815,7 @@ sub lut_iban_regel1
 'OK_GELOESCHT'                           => 'ok (die BLZ wurde allerdings gelöscht)',
 'BLZ_GELOESCHT'                          => 'die Bankleitzahl wurde gelöscht',
 'INVALID_BLZ_FILE'                       => 'Fehler in der blz.txt Datei (falsche Zeilenlänge)',
-'LIBRARY_IS_NOT_THREAD_SAFE'             => 'undefinierte Funktion; die library wurde mit THREAD_SAFE=0 kompiliert',
+'LIBRARY_IS_NOT_THREAD_SAFE'             => 'undefinierte Funktion, die library wurde mit THREAD_SAFE=0 kompiliert',
 'FATAL_ERROR'                            => 'schwerer Fehler im Konto_check-Modul',
 'INVALID_KTO_LENGTH'                     => 'ein Konto muß zwischen 1 und 10 Stellen haben',
 'FILE_WRITE_ERROR'                       => 'kann Datei nicht schreiben',
@@ -832,29 +832,29 @@ sub lut_iban_regel1
 'FALSE'                                  => 'falsch',
 'OK'                                     => 'ok',
 'OK_NO_CHK'                              => 'ok, ohne Prüfung',
-'OK_TEST_BLZ_USED'                       => 'ok; für den Test wurde eine Test-BLZ verwendet',
+'OK_TEST_BLZ_USED'                       => 'ok, für den Test wurde eine Test-BLZ verwendet',
 'LUT2_VALID'                             => 'Der Datensatz ist aktuell gültig',
 'LUT2_NO_VALID_DATE'                     => 'Der Datensatz enthält kein Gültigkeitsdatum',
 'LUT1_SET_LOADED'                        => 'Die Datei ist im alten LUT-Format (1.0/1.1)',
-'LUT1_FILE_GENERATED'                    => 'ok; es wurde allerdings eine LUT-Datei im alten Format (1.0/1.1) generiert',
+'LUT1_FILE_GENERATED'                    => 'ok, es wurde allerdings eine LUT-Datei im alten Format (1.0/1.1) generiert',
 'DTA_FILE_WITH_WARNINGS'                 => 'In der DTAUS-Datei wurden kleinere Fehler gefunden',
-'LUT_V2_FILE_GENERATED'                  => 'ok; es wurde allerdings eine LUT-Datei im Format 2.0 generiert (Compilerswitch)',
-'KTO_CHECK_VALUE_REPLACED'               => 'ok; der Wert für den Schlüssel wurde überschrieben',
-'OK_UNTERKONTO_POSSIBLE'                 => 'wahrscheinlich ok; die Kontonummer kann allerdings (nicht angegebene) Unterkonten enthalten',
-'OK_UNTERKONTO_GIVEN'                    => 'wahrscheinlich ok; die Kontonummer enthält eine Unterkontonummer',
-'OK_SLOT_CNT_MIN_USED'                   => 'ok; die Anzahl Slots wurde auf SLOT_CNT_MIN (50) hochgesetzt',
-'SOME_KEYS_NOT_FOUND'                    => 'ok; ein(ige) Schlüssel wurden nicht gefunden',
+'LUT_V2_FILE_GENERATED'                  => 'ok, es wurde allerdings eine LUT-Datei im Format 2.0 generiert (Compilerswitch)',
+'KTO_CHECK_VALUE_REPLACED'               => 'ok, der Wert für den Schlüssel wurde überschrieben',
+'OK_UNTERKONTO_POSSIBLE'                 => 'wahrscheinlich ok, die Kontonummer kann allerdings (nicht angegebene) Unterkonten enthalten',
+'OK_UNTERKONTO_GIVEN'                    => 'wahrscheinlich ok, die Kontonummer enthält eine Unterkontonummer',
+'OK_SLOT_CNT_MIN_USED'                   => 'ok, die Anzahl Slots wurde auf SLOT_CNT_MIN (50) hochgesetzt',
+'SOME_KEYS_NOT_FOUND'                    => 'ok, ein(ige) Schlüssel wurden nicht gefunden',
 'LUT2_KTO_NOT_CHECKED'                   => 'Die Bankverbindung wurde nicht getestet',
 'LUT2_OK_WITHOUT_IBAN_RULES'             => 'Es wurden fast alle BLocks (außer den IBAN-Regeln) geladen',
-'OK_NACHFOLGE_BLZ_USED'                  => 'ok; für die BLZ wurde allerdings die Nachfolge-BLZ eingesetzt',
-'OK_KTO_REPLACED'                        => 'ok; die Kontonummer wurde allerdings ersetzt',
-'OK_BLZ_REPLACED'                        => 'ok; die Bankleitzahl wurde allerdings ersetzt',
-'OK_BLZ_KTO_REPLACED'                    => 'ok; die Bankleitzahl und Kontonummer wurde allerdings ersetzt',
-'OK_IBAN_WITHOUT_KC_TEST'                => 'ok; die Bankverbindung ist (ohne Test) als richtig anzusehen',
-'OK_INVALID_FOR_IBAN'                    => 'ok; für IBAN ist (durch eine Regel) allerdings ein anderer BIC definiert',
-'OK_HYPO_REQUIRES_KTO'                   => 'ok; für die BIC-Bestimmung der ehemaligen Hypo-Bank für IBAN wird i.A. zusätzlich die Kontonummer benötigt',
-'OK_KTO_REPLACED_NO_PZ'                  => 'ok; die Kontonummer wurde ersetzt, die neue Kontonummer hat keine Prüfziffer',
-'OK_UNTERKONTO_ATTACHED'                 => 'ok; es wurde ein (weggelassenes) Unterkonto angefügt',
+'OK_NACHFOLGE_BLZ_USED'                  => 'ok, für die BLZ wurde allerdings die Nachfolge-BLZ eingesetzt',
+'OK_KTO_REPLACED'                        => 'ok, die Kontonummer wurde allerdings ersetzt',
+'OK_BLZ_REPLACED'                        => 'ok, die Bankleitzahl wurde allerdings ersetzt',
+'OK_BLZ_KTO_REPLACED'                    => 'ok, die Bankleitzahl und Kontonummer wurde allerdings ersetzt',
+'OK_IBAN_WITHOUT_KC_TEST'                => 'ok, die Bankverbindung ist (ohne Test) als richtig anzusehen',
+'OK_INVALID_FOR_IBAN'                    => 'ok, für IBAN ist (durch eine Regel) allerdings ein anderer BIC definiert',
+'OK_HYPO_REQUIRES_KTO'                   => 'ok, für die BIC-Bestimmung der ehemaligen Hypo-Bank für IBAN wird i.A. zusätzlich die Kontonummer benötigt',
+'OK_KTO_REPLACED_NO_PZ'                  => 'ok, die Kontonummer wurde ersetzt, die neue Kontonummer hat keine Prüfziffer',
+'OK_UNTERKONTO_ATTACHED'                 => 'ok, es wurde ein (weggelassenes) Unterkonto angefügt',
 );
 
 %Business::KontoCheck::kto_retval_kurz = (
@@ -1083,9 +1083,10 @@ language is german too.
    $retval=dump_lutfile($outputname,$felder)
    $retval=lut_cleanup()
 
-   $retval=iban_check(iban)
-   $retval=iban2bic(iban)
-   [$@]retval=iban_gen(blz,kto)
+   $retval=ci_check($ci)
+   $retval=iban_check($iban)
+   $retval=iban2bic($iban)
+   [$@]retval=iban_gen($blz,$kto)
 
    $enc=kto_check_encoding($encoding)
    $enc_str=kto_check_encoding_str($encoding)

@@ -927,6 +927,15 @@ copy_lutfile(old_name,new_name,new_slots)
    int new_slots
 
 int
+ci_check(ci)
+   char *ci;
+CODE:
+   if(items!=1)Perl_croak(aTHX_ "Usage: Business::KontoCheck::ci_check(ci)");
+   RETVAL=ci_check(ci);
+OUTPUT:
+   RETVAL
+
+int
 iban_check(iban...)
    char *iban;
 PREINIT:
@@ -1029,7 +1038,7 @@ lut_suche_volltext_i(want_array,search...)
    int want_array;
    char *search;
 PREINIT:
-#line 704 "KontoCheck.lx"
+#line 713 "KontoCheck.lx"
    char **base_name;
    int i,ret,anzahl,anzahl_name,start_name_idx,*start_idx,*zw,*bb;
    int sort,uniq,anzahl2,*idx_o,*cnt_o;
@@ -1111,7 +1120,7 @@ lut_suche_multiple_i(want_array,search...)
    int want_array;
    char *search;
 PREINIT:
-#line 785 "KontoCheck.lx"
+#line 794 "KontoCheck.lx"
    char *such_cmd;
    int i,uniq,ret;
    UINT4 anzahl,*blz,*zweigstellen;
@@ -1180,7 +1189,7 @@ lut_suche_c(want_array,art...)
    int want_array;
    int art;
 PREINIT:
-#line 853 "KontoCheck.lx"
+#line 862 "KontoCheck.lx"
    char *search,**base_name,warn_buffer[128],*fkt;
    int i,ret,anzahl,*start_idx,*zw,*bb;
    int sort,uniq,anzahl2,*idx_o,*cnt_o;
@@ -1302,7 +1311,7 @@ lut_suche_i(want_array,art...)
    int want_array;
    int art;
 PREINIT:
-#line 974 "KontoCheck.lx"
+#line 983 "KontoCheck.lx"
    int search1;
    int search2;
    int i,ret,anzahl,*start_idx,*base_name,*zw,*bb;
@@ -1438,11 +1447,11 @@ generate_lut_at(inputname,outputname...)
    char *inputname;
    char *outputname;
 PREINIT:
-#line 1109 "KontoCheck.lx"
+#line 1118 "KontoCheck.lx"
    char *plain_name;
    char *plain_format;
 CODE:
-#line 1112 "KontoCheck.lx"
+#line 1121 "KontoCheck.lx"
    if(items==2){
       plain_name=NULL;
       plain_format=NULL;

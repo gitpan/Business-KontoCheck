@@ -4,9 +4,57 @@
 ##################################################################################
 #                                                                                #
 # Autor             : Michael Plugge <m.plugge@hs-mannheim.de>                   #
-# Version           : 5.0 (final)                                                #
-# Datum             : 02.08.2013                                                 #
+# Version           : 5.1 (final)                                                #
+# Datum             : 09.09.2013                                                 #
 ##################################################################################
+
+##################################################################################
+###                       09.09.13 Version 5.1 (final)                         ###
+##################################################################################
+
+ - konto_check ist jetzt auch in das Heise Softwareverzeichnis aufgenommen:
+   http://www.heise.de/download/konto-check-1191953.html
+
+ - es ist jetzt die Datei iban_gen.c enthalten, mit der eine einfache Batch-
+   Konvertierung von BLZ/Konto nach IBAN und BIC möglich ist. Die Ausgabe kann
+   sehr flexibel über einen Formatstring oder vordefinierte Formate erfolgen. In
+   der Windows-Distribution ist auch eine entsprechende Programmdatei enthalten.
+
+   In der neuen Version wird in iban_gen auch die Suche nach Banken unterstützt.
+
+ - Die IBAN-Regel 20 (Deutsche Bank) wurde aktualisiert auf die Version 1.6
+   (Bundesbank-Email vom 30.8.2013). Die neue Version dieser Regel wird zum
+   9. Dezember in den offiziellen IBAN-Regeln veröffentlicht; die Bundesbank
+   hat den Text jedoch schon am 28. August veröffentlicht, mit der Bitte, sie
+   möglichst schon zum 9. September einzusetzen. Der Best Guess Ansatz mit dem
+   Fehlercode 51 (bzw. IBAN_AMBIGUOUS_KTO in konto_check) wird entfernt und
+   durch Verfahren zur Ermittlung eindeutiger IBANs ersetzt.
+
+ - neue Funktion ci_check() für Test von Gläubiger-Identifikationsnummern
+   (Creditor Identifier, CI). Die Funktion wurde weitgehend von iban_check()
+   kopiert, hat aber einige Besonderheiten.
+
+ - bei IBAN-Berechnungen wird getestet, ob alle notwendigen LUT-Blocks geladen
+   sind; falls nicht, werden fehlende Daten per inkrementeller Initialisierung
+   nachgeladen (mittels der Funktion iban_init())
+
+ - Berücksichtigung der IBAN-Regeln bei iban2bic() (wichtig z.B. bei Regel 5 oder
+   falsch erzeugten IBANs). Falls in einer IBAN-Regel vorgegeben wird, daß kein
+   Test der Bankverbindung erfolgen soll, wird das in iban_check() und iban2bic()
+   jetzt auch berücksichtigt
+
+ - in bestimmten Fehlerfällen (Konto ungültig) lieferte iban_bic_gen() keinen BIC;
+   das ist jetzt behoben
+
+ - Unterkonten können nur hinzugefügt werden, falls die beiden ersten Stellen
+   der Kontonummer '00' sind (das wurde nicht immer geprüft)
+
+ - Korrekturen in den Prüfziffermethoden 13b, 63, C7
+
+ - kleine Korrektur in IBAN-Regel 5
+
+ - einige kleinere bug fixes und etwas Kosmetik im C-Code
+
 
 ##################################################################################
 ###                       02.08.13 Version 5.0 (final)                         ###

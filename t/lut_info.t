@@ -19,7 +19,7 @@ if($retval>0){
    ($lut_name,$set,$level,$ret)=Business::KontoCheck::current_lutfile_name();
    printf("current_lutfile_name: %s, Set: %d, Level: %d, ret: %d\n",$lut_name,$set,$level,$ret);
    if($lut_name eq "blz.lut" && $set==1 && $level==3){$ok_cnt++;}else{$nok_cnt++;}
-   ok($lut_name eq "blz.lut" && $set==1 && $level==3,"current_lutfile_name: ".$lut_name
-           .", set: ".$set.", level: ".$level." (ok: $ok_cnt, nok: $nok_cnt)");
+   ok($lut_name eq "blz.lut" && $set==1 && $level==3,
+           "current_lutfile_name: $lut_name, set: $set, level: $level (ok: $ok_cnt, nok: $nok_cnt)");
 }
 
