@@ -11,27 +11,28 @@ require Exporter;
 
 our @ISA = qw(Exporter);
 
-our @EXPORT_OK = qw( kto_check kto_check_str kto_check_blz
-   kto_check_pz generate_lut generate_lut2 lut_cleanup lut_valid
+our @EXPORT_OK = qw(kto_check kto_check_str kto_check_blz
+   kto_check_pz kto_check_regel kto_check_regel_dbg
+   generate_lut generate_lut2 lut_cleanup lut_valid
    lut_init kto_check_init copy_lutfile lut_multiple lut_filialen
    lut_blz lut_name lut_name_kurz lut_plz lut_ort lut_pan lut_bic
    lut_pz lut_aenderung lut_loeschung lut_nachfolge_blz lut_iban_regel
    lut_blz1 lut_name1 lut_name_kurz1 lut_plz1 lut_ort1 lut_pan1 lut_bic1
    lut_pz1 lut_aenderung1 lut_loeschung1 lut_nachfolge_blz1 iban_gen
-   check_iban ipi_check ipi_gen set_verbose_debug lut_info
+   check_iban ipi_check ipi_gen set_verbose_debug lut_info lut_blocks
    set_default_compression iban2bic pz2str kto_check_encoding
    kto_check_encoding_str keep_raw_data retval2txt retval2txt_short
    retval2iso retval2utf8 retval2html retval2dos kto_check_retval2txt
    kto_check_retval2txt_short kto_check_retval2utf8
    kto_check_retval2html dump_lutfile kto_check_retval2dos
-   lut_suche_blz lut_suche_pz lut_suche_plz lut_suche_bic
+   lut_suche_blz lut_suche_pz lut_suche_plz lut_suche_regel lut_suche_bic
    lut_suche_volltext lut_suche_namen lut_suche_namen_kurz
    lut_suche_ort lut_suche_multiple konto_check_at kto_check_at_str
    generate_lut_at %kto_retval %kto_retval_kurz lut_keine_iban_berechnung);
 
 our @EXPORT = qw( lut_init kto_check kto_check_blz kto_check_at %kto_retval );
 
-our $VERSION = '5.1';
+our $VERSION = '5.2';
 
 require XSLoader;
 XSLoader::load('Business::KontoCheck', $VERSION);
@@ -67,10 +68,36 @@ sub lut_info
    }
 }
 
+sub kto_check_regel_dbg
+{
+   my $ret;
+   my $blz;
+   my $kto;
+   my $blz2;
+   my $kto2;
+   my $bic;
+   my $regel;
+   my $methode;
+   my $pz_methode;
+   my $pz;
+   my $pz_pos;
+
+   $blz=$_[0];
+   $kto=$_[1];
+   $ret=kto_check_regel_dbg_i($blz,$kto,$blz2,$kto2,$bic,$regel,$methode,$pz_methode,$pz,$pz_pos);
+
+   if(wantarray()){
+      return ($ret,$blz2,$kto2,$bic,$regel,$methode,$pz_methode,$pz,$pz_pos);
+   }
+   else{
+      return $ret;
+   }
+}
+
 sub iban_gen
 {
-   my $kto;
    my $blz;
+   my $kto;
    my $kto2;
    my $blz2;
    my $ret;
@@ -81,15 +108,34 @@ sub iban_gen
    my $pz_methode;
    my $argc;
 
-   $kto=$_[0];
-   $blz=$_[1];
+   $blz=$_[0];
+   $kto=$_[1];
+   $ret=iban_gen_i($blz,$kto,$iban,$papier,$bic,$regel,$pz_methode,$blz2,$kto2);
    if(wantarray()){
-      $ret=iban_gen_i($kto,$blz,$iban,$papier,$bic,$regel,$pz_methode,$blz2,$kto2);
       return ($ret,$iban,$papier,$bic,$regel,$pz_methode,$blz2,$kto2);
    }
    else{
-      $ret=iban_gen_i($kto,$blz,$iban,$papier,$bic,$regel,$pz_methode,$blz2,$kto2);
       return $iban;
+   }
+}
+
+sub iban2bic
+{
+   my $bic;
+   my $iban;
+   my $kto;
+   my $blz;
+   my $ret;
+   my $argc;
+
+   $iban=$_[0];
+   if(wantarray()){
+      $bic=iban2bic_i($iban,$ret,$blz,$kto);
+      return ($bic,$ret,$blz,$kto);
+   }
+   else{
+      $bic=iban2bic_i($iban,$ret,$blz,$kto);
+      return $bic;
    }
 }
 
@@ -195,7 +241,6 @@ sub lut_suche_bic
    }
 }
 
-
 sub lut_suche_namen
 {
    if(wantarray()){
@@ -205,7 +250,6 @@ sub lut_suche_namen
       return lut_suche_c(0,2,@_);
    }
 }
-
 
 sub lut_suche_namen_kurz
 {
@@ -217,7 +261,6 @@ sub lut_suche_namen_kurz
    }
 }
 
-
 sub lut_suche_ort
 {
    if(wantarray()){
@@ -227,7 +270,6 @@ sub lut_suche_ort
       return lut_suche_c(0,4,@_);
    }
 }
-
 
 sub lut_suche_blz
 {
@@ -239,7 +281,6 @@ sub lut_suche_blz
    }
 }
 
-
 sub lut_suche_pz
 {
    if(wantarray()){
@@ -249,7 +290,6 @@ sub lut_suche_pz
       return lut_suche_i(0,2,@_);
    }
 }
-
 
 sub lut_suche_plz
 {
@@ -261,6 +301,15 @@ sub lut_suche_plz
    }
 }
 
+sub lut_suche_regel
+{
+   if(wantarray()){
+      return lut_suche_i(1,4,@_);
+   }
+   else{
+      return lut_suche_i(0,4,@_);
+   }
+}
 
 
 sub lut_suche_volltext
@@ -534,6 +583,11 @@ sub lut_iban_regel1
 
 
 %Business::KontoCheck::kto_retval = (
+-139 => 'es konnten nicht alle Datenblocks die für die IBAN-Berechnung notwendig sind geladen werden',
+-138 => 'Der Datensatz ist noch nicht gültig, außerdem konnten nicht alle Blocks geladen werden',
+-137 => 'Der Datensatz ist nicht mehr gültig, außerdem konnten nicht alle Blocks geladen werdeng',
+-136 => 'ok, bei der Initialisierung konnten allerdings ein oder mehrere Blocks nicht geladen werden',
+-135 => 'falsch, es wurde ein Unterkonto hinzugefügt (IBAN-Regel)',
 -134 => 'Die BLZ findet sich in der Ausschlussliste für IBAN-Berechnungen',
 -133 => 'Die BLZ ist in der Bundesbank-Datei als gelöscht markiert und somit ungültig',
 -132 => 'Die IBAN-Prüfsumme stimmt, es gibt allerdings einen Fehler in der eigenen IBAN-Bestimmung (wahrscheinlich falsch)',
@@ -681,10 +735,10 @@ sub lut_iban_regel1
   10 => 'ok, der Wert für den Schlüssel wurde überschrieben',
   11 => 'wahrscheinlich ok, die Kontonummer kann allerdings (nicht angegebene) Unterkonten enthalten',
   12 => 'wahrscheinlich ok, die Kontonummer enthält eine Unterkontonummer',
-  13 => 'ok, die Anzahl Slots wurde auf SLOT_CNT_MIN (50) hochgesetzt',
+  13 => 'ok, die Anzahl Slots wurde auf SLOT_CNT_MIN (60) hochgesetzt',
   14 => 'ok, ein(ige) Schlüssel wurden nicht gefunden',
   15 => 'Die Bankverbindung wurde nicht getestet',
-  16 => 'Es wurden fast alle BLocks (außer den IBAN-Regeln) geladen',
+  16 => 'Es wurden fast alle Blocks (außer den IBAN-Regeln) geladen',
   17 => 'ok, für die BLZ wurde allerdings die Nachfolge-BLZ eingesetzt',
   18 => 'ok, die Kontonummer wurde allerdings ersetzt',
   19 => 'ok, die Bankleitzahl wurde allerdings ersetzt',
@@ -695,6 +749,11 @@ sub lut_iban_regel1
   24 => 'ok, die Kontonummer wurde ersetzt, die neue Kontonummer hat keine Prüfziffer',
   25 => 'ok, es wurde ein (weggelassenes) Unterkonto angefügt',
 
+'LUT2_NOT_ALL_IBAN_BLOCKS_LOADED'        => 'es konnten nicht alle Datenblocks die für die IBAN-Berechnung notwendig sind geladen werden',
+'LUT2_NOT_YET_VALID_PARTIAL_OK'          => 'Der Datensatz ist noch nicht gültig, außerdem konnten nicht alle Blocks geladen werden',
+'LUT2_NO_LONGER_VALID_PARTIAL_OK'        => 'Der Datensatz ist nicht mehr gültig, außerdem konnten nicht alle Blocks geladen werdeng',
+'LUT2_BLOCKS_MISSING'                    => 'ok, bei der Initialisierung konnten allerdings ein oder mehrere Blocks nicht geladen werden',
+'FALSE_UNTERKONTO_ATTACHED'              => 'falsch, es wurde ein Unterkonto hinzugefügt (IBAN-Regel)',
 'BLZ_BLACKLISTED'                        => 'Die BLZ findet sich in der Ausschlussliste für IBAN-Berechnungen',
 'BLZ_MARKED_AS_DELETED'                  => 'Die BLZ ist in der Bundesbank-Datei als gelöscht markiert und somit ungültig',
 'IBAN_CHKSUM_OK_SOMETHING_WRONG'         => 'Die IBAN-Prüfsumme stimmt, es gibt allerdings einen Fehler in der eigenen IBAN-Bestimmung (wahrscheinlich falsch)',
@@ -842,10 +901,10 @@ sub lut_iban_regel1
 'KTO_CHECK_VALUE_REPLACED'               => 'ok, der Wert für den Schlüssel wurde überschrieben',
 'OK_UNTERKONTO_POSSIBLE'                 => 'wahrscheinlich ok, die Kontonummer kann allerdings (nicht angegebene) Unterkonten enthalten',
 'OK_UNTERKONTO_GIVEN'                    => 'wahrscheinlich ok, die Kontonummer enthält eine Unterkontonummer',
-'OK_SLOT_CNT_MIN_USED'                   => 'ok, die Anzahl Slots wurde auf SLOT_CNT_MIN (50) hochgesetzt',
+'OK_SLOT_CNT_MIN_USED'                   => 'ok, die Anzahl Slots wurde auf SLOT_CNT_MIN (60) hochgesetzt',
 'SOME_KEYS_NOT_FOUND'                    => 'ok, ein(ige) Schlüssel wurden nicht gefunden',
 'LUT2_KTO_NOT_CHECKED'                   => 'Die Bankverbindung wurde nicht getestet',
-'LUT2_OK_WITHOUT_IBAN_RULES'             => 'Es wurden fast alle BLocks (außer den IBAN-Regeln) geladen',
+'LUT2_OK_WITHOUT_IBAN_RULES'             => 'Es wurden fast alle Blocks (außer den IBAN-Regeln) geladen',
 'OK_NACHFOLGE_BLZ_USED'                  => 'ok, für die BLZ wurde allerdings die Nachfolge-BLZ eingesetzt',
 'OK_KTO_REPLACED'                        => 'ok, die Kontonummer wurde allerdings ersetzt',
 'OK_BLZ_REPLACED'                        => 'ok, die Bankleitzahl wurde allerdings ersetzt',
@@ -858,6 +917,11 @@ sub lut_iban_regel1
 );
 
 %Business::KontoCheck::kto_retval_kurz = (
+-139 => 'LUT2_NOT_ALL_IBAN_BLOCKS_LOADED',
+-138 => 'LUT2_NOT_YET_VALID_PARTIAL_OK',
+-137 => 'LUT2_NO_LONGER_VALID_PARTIAL_OK',
+-136 => 'LUT2_BLOCKS_MISSING',
+-135 => 'FALSE_UNTERKONTO_ATTACHED',
 -134 => 'BLZ_BLACKLISTED',
 -133 => 'BLZ_MARKED_AS_DELETED',
 -132 => 'IBAN_CHKSUM_OK_SOMETHING_WRONG',
@@ -1043,10 +1107,12 @@ language is german too.
 
    $retval=lut_init([$lut_name[,$required[,$set]]]);
    $retval=kto_check_init($lut_name[,$required[,$set[,$incremental]]]);
+   $retval=lut_blocks([$mode[,$filename[,$blocks_ok[,$blocks_fehler]]])
    $retval=kto_check($blz,$kto,$lut_name);
    $retval=kto_check_str($blz,$kto,$lut_name);
    $retval=kto_check_blz($blz,$kto)
-   $retval=kto_check_pz($pz,$blz,$kto)
+   $retval=kto_check_pz($pz,$kto,$blz)
+   $retval=kto_check_regel($blz,$kto)
 
    $retval=generate_lut($inputname,$outputname,$user_info,$lut_version);
    $retval=generate_lut2($inputname,$outputname[,$user_info[,$gueltigkeit[,$felder[,$filialen[,$slots[,$lut_version[,$set]]]]]]]);
@@ -1076,6 +1142,7 @@ language is german too.
    [$@]ret=lut_suche_blz($blz1[,$blz2[,$retval]])
    [$@]ret=lut_suche_pz($pz1[,$pz2[,$retval]])
    [$@]ret=lut_suche_plz($plz1[,$plz2[,$retval]])
+   [$@]ret=lut_suche_regel($regel1[,$regel2[,$retval]])
    [$@]ret=lut_suche_volltext($suchworte[,$retval])
    [$@]ret=lut_suche_multiple($suchworte[,$uniq[,$such_cmd[,$retval]]])
 
@@ -1085,7 +1152,7 @@ language is german too.
 
    $retval=ci_check($ci)
    $retval=iban_check($iban)
-   $retval=iban2bic($iban)
+   [$@]retval=iban2bic($iban)
    [$@]retval=iban_gen($blz,$kto)
 
    $enc=kto_check_encoding($encoding)
@@ -1455,6 +1522,7 @@ diese müssen dann in der use Klausel anzugeben werden.
              lut_suche_ort()
              lut_suche_pz()
              lut_suche_plz()
+             lut_suche_regel()
              lut_suche_volltext()
              lut_suche_multiple()
 
@@ -1468,6 +1536,7 @@ diese müssen dann in der use Klausel anzugeben werden.
              [$@]ret=lut_suche_blz($blz1[,$blz2[,$retval[,$uniq[,$sort]]]])
              [$@]ret=lut_suche_pz($pz1[,$pz2[,$retval[,$uniq[,$sort]]]])
              [$@]ret=lut_suche_plz($plz1[,$plz2[,$retval[,$uniq[,$sort]]]])
+             [$@]ret=lut_suche_regel($plz1[,$plz2[,$retval[,$uniq[,$sort]]]])
 
              [$@]ret=lut_suche_volltext($suchworte[,$retval[,$uniq[,$sort]]])
              [$@]ret=lut_suche_multiple($suchworte[,$uniq[,$such_cmd[,$retval]]])

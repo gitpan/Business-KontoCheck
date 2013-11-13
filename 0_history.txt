@@ -4,12 +4,54 @@
 ##################################################################################
 #                                                                                #
 # Autor             : Michael Plugge <m.plugge@hs-mannheim.de>                   #
-# Version           : 5.1 (final)                                                #
-# Datum             : 09.09.2013                                                 #
+# Version           : 5.2 (final)                                                #
+# Datum             : 11.11.2013                                                 #
 ##################################################################################
 
 ##################################################################################
-###                       09.09.13 Version 5.1 (final)                         ###
+###                       11.11.13 Version 5.2 (final)                         ###
+##################################################################################
+
+ - neues Prüfzifferverfahren E1, gültig ab Dezember 2013
+
+ - IBAN-Regeln 55 und 56 (gültig ab Dezember 2013) implementiert
+
+ - einige Änderungen bei IBAN-Regeln eingebaut (meist gültig ab Dezember 2013)
+
+ - neuer Rückgabewert FALSE_UNTERKONTO_ATTACHED falls bei einer IBAN-Regel ein
+   Unterkonto angehängt wurde und die Kontoprüfung dadurch "falsch" zurückgibt
+
+ - neue Funktion lut_blocks(), die geladene und Blocks mit Fehlerstatus (bei der
+   Initialisierung) ausgibt
+
+ - neue Funktion lut_suche_regel(), die Banken mit einer bestimmten IBAN-Regel sucht
+
+ - neue Funktion kto_check_regel() und kto_check_regel_dbg() für Kontentest
+   unter Berücksichtigung der IBAN-Regeln
+
+ - Perl: vergessene Funktion iban2bic() nachgeliefert
+
+ - Ruby: es gibt die Funktionen bank_suche_* auch in der Bibliothek
+   KontoCheck::, nicht mehr nur in KontoCheckRaw::
+
+ - bei der Initialisierung wird die Fehlermeldung LUT2_OK_WITHOUT_IBAN_RULES
+   nicht mehr ausgegeben; stattdessen wird ein Fehlen des Blocks mit den IBAN-Regeln
+   als Fehler klassifiziert und LUT2_PARTIAL_OK zurückgegeben.
+
+ - blz.lut2f aus dem Repository gelöscht, da im Makefile Abhängigkeiten von
+   konto_check.c stehen und es sonst regelmäßig aktualisiert würde - eine aktuelle
+   Version findet sich bei der stabilen Version.
+
+ - zum Rückgabewert -38 (nicht alle Blocks geladen) gibt es noch zwei
+   Zusatzvarianten: LUT2_NOT_YET_VALID_PARTIAL_OK und LUT2_NO_LONGER_VALID_PARTIAL_OK
+
+ - Die Flessa Korrektur kann jetzt entfallen (die entsprechenden Banken haben
+   jetzt das Löschkennzeichen)
+
+ - verschiedene kleinere Bugs behoben
+
+##################################################################################
+###                       13.09.13 Version 5.1 (final)                         ###
 ##################################################################################
 
  - konto_check ist jetzt auch in das Heise Softwareverzeichnis aufgenommen:

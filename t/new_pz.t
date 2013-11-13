@@ -4,7 +4,7 @@
 
 # Methoden 57 und 95 werden zeitabhängig getestet (ab 9.9.2013 gibt es einen anderen Rückgabewert)
 
-use Test::More tests => 8035;
+use Test::More tests => 8043;
 
 BEGIN { use_ok('Business::KontoCheck') };
 
@@ -8055,3 +8055,11 @@ __DATA__
 0 E0 1234769013
 0 E0 2710014
 0 E0 9741015011
+1 E1 0100041104
+1 E1 0100054106
+1 E1 0200025107
+0 E1 0150013107
+0 E1 0081313890
+0 E1 0987402008
+0 E1 0200035101
+0 E1 4268550840

@@ -77,10 +77,15 @@
  * # der Bankleitzahl 793 301 11 erstellt. Wir teilen Ihnen diese zusammen  #
  * # mit unserem BIC (Bank Identifier Code = Bankkennung) auf jedem         #
  * # Kontoauszug mit.                                                       #
+ * #                                                                        #
+ * # Update zur Flessa-Bank (abgerufen 28.10.13): Die obigen Bankleitzahlen #
+ * # haben in der aktuellen BLZ-Datei das Löschflag gesetzt und als         #
+ * # Nachfolge-BLZ die 79330111 eingetragen. Damit erübrigt sich die        #
+ * # Korrektur für die Flessa-Bank.                                         #
  * ##########################################################################
  */
 
-#define FLESSA_KORREKTUR 1
+#define FLESSA_KORREKTUR 0
 
 /* IBAN-Regeln benutzen (gültig ab 3.6.2013) */
 #define USE_IBAN_RULES 1
@@ -272,7 +277,7 @@
 #define DEFAULT_LUT_FIELDS_NUM   9
 #define DEFAULT_LUT_FIELDS       lut_set_9
 #define DEFAULT_LUT_VERSION      3
-#define DEFAULT_SLOTS            40
+#define DEFAULT_SLOTS            60
 #define DEFAULT_INIT_LEVEL       5
 #define LAST_LUT_BLOCK           100
 
@@ -322,6 +327,7 @@
 #define LUT2_VOLLTEXT_TXT            23
 #define LUT2_VOLLTEXT_IDX            24
 #define LUT2_IBAN_REGEL              25
+#define LUT2_IBAN_REGEL_SORT         26
 
 #define LUT2_2_BLZ                  101
 #define LUT2_2_FILIALEN             102
@@ -348,6 +354,7 @@
 #define LUT2_2_VOLLTEXT_TXT         123
 #define LUT2_2_VOLLTEXT_IDX         124
 #define LUT2_2_IBAN_REGEL           125
+#define LUT2_2_IBAN_REGEL_SORT      126
 
 #define LUT2_DEFAULT                501
 
@@ -364,6 +371,12 @@ extern const char *lut2_feld_namen[256];
  */
 
 #undef FALSE
+#define IBAN_CHKSUM_OK_NACHFOLGE_BLZ_DEFINED  -140
+#define LUT2_NOT_ALL_IBAN_BLOCKS_LOADED       -139
+#define LUT2_NOT_YET_VALID_PARTIAL_OK         -138
+#define LUT2_NO_LONGER_VALID_PARTIAL_OK       -137
+#define LUT2_BLOCKS_MISSING                   -136
+#define FALSE_UNTERKONTO_ATTACHED             -135
 #define BLZ_BLACKLISTED                       -134
 #define BLZ_MARKED_AS_DELETED                 -133
 #define IBAN_CHKSUM_OK_SOMETHING_WRONG        -132
@@ -524,7 +537,7 @@ extern const char *lut2_feld_namen[256];
 #define OK_HYPO_REQUIRES_KTO                    23
 #define OK_KTO_REPLACED_NO_PZ                   24
 #define OK_UNTERKONTO_ATTACHED                  25
-#line 316 "konto_check_h.lx"
+#line 321 "konto_check_h.lx"
 
 #define MAX_BLZ_CNT 30000  /* maximale Anzahl BLZ's in generate_lut() */
 
@@ -616,7 +629,7 @@ typedef struct{
  * #                                                                        #
  * ##########################################################################
  */
-#define SLOT_CNT_MIN 50
+#define SLOT_CNT_MIN 60
 
 /*
  * ##########################################################################
@@ -722,6 +735,39 @@ DLL_EXPORT int kto_check_pz(char *pz,char *kto,char *blz);
 #if DEBUG>0
 DLL_EXPORT int kto_check_pz_dbg(char *pz,char *kto,char *blz,RETVAL *retvals);
 #endif
+
+/* ###########################################################################
+ * # Die Funktion kto_check_regel() entspricht der Funktion                  #
+ * # kto_check_blz(). Der einzige Unterschied ist, daß vor dem Test geprüft  #
+ * # wird, ob für die  BLZ/Konto-Kombination eine IBAN-Regel angewendet      #
+ * # werden muß (z.B. bei Spendenkonten etc.). U.U. wird die BLZ und/oder    #
+ * # Kontonummer ersetzt  und die Berechnung mit den modifizierten Werten    #
+ * # gemacht. Die Werte für BLZ und Kontonummer werden nicht zurückgegeben;  #
+ * # das kann mittels der Funktion kto_check_blz2() erfolgen.                #
+ * #                                                                         #
+ * # Die Funktion kto_check_regel_dbg() ist das Gegenstück zu                #
+ * # kto_check_blz_dbg(); bei dieser Funktion werden zusätzlich noch einige  #
+ * # interne Werte zurückgegeben. Die beiden Variablen blz2 und kto2         #
+ * # müssen auf einen Speicherbereich von mindestens 9 bzw. 11 Byte zeigen;  #
+ * # in diese Speicherbereiche werden die neue BLZ bzw. Kontonummer          #
+ * # geschrieben. Praktischerweise sollten dies lokale Variablen der         #
+ * # aufrufenden Funktion sein.                                              #
+ * #                                                                         #
+ * # Parameter:                                                              #
+ * #    blz:        Bankleitzahl (immer 8-stellig)                           #
+ * #    kto:        Kontonummer                                              #
+ * #    blz2:       benutzte BLZ (evl. durch die Regeln modifiziert)         #
+ * #    kto2:       benutzte Kontonummer (evl. modifiziert)                  #
+ * #    bic:        BIC der benutzten Bank                                   #
+ * #    Regel:      benutzte IBAN-Regel                                      #
+ * #    retvals:    Struktur, in der die benutzte Prüfziffermethode und die  #
+ * #                berechnete Prüfziffer zurückgegeben werden               #
+ * #                                                                         #
+ * # Copyright (C) 2013 Michael Plugge <m.plugge@hs-mannheim.de>             #
+ * ###########################################################################
+ */
+DLL_EXPORT int kto_check_regel(char *blz,char *kto);
+DLL_EXPORT int kto_check_regel_dbg(char *blz,char *kto,char *blz2,char *kto2,const char **bic,int *regel,RETVAL *retvals);
 
 /*
  * ######################################################################
@@ -922,6 +968,7 @@ DLL_EXPORT int lut_iban_regel_i(int b,int zweigstelle,int *retval);
 #define LUT_SUCHE_BLZ         6
 #define LUT_SUCHE_PLZ         7
 #define LUT_SUCHE_PZ          8
+#define LUT_SUCHE_REGEL       9
 
    /* Defaultwert für sort/uniq bei Suchfunktionen (=> nur eine Zweigstelle
     * zurückgeben) (betrifft nur PHP, Perl und Ruby, bei denen der Parameter
@@ -944,6 +991,7 @@ DLL_EXPORT int lut_suche_ort(char *such_name,int *anzahl,int **start_idx,int **z
 DLL_EXPORT int lut_suche_blz(int such1,int such2,int *anzahl,int **start_idx,int **zweigstellen_base,int **base_name,int **blz_base);
 DLL_EXPORT int lut_suche_pz(int such1,int such2,int *anzahl,int **start_idx,int **zweigstellen_base,int **base_name,int **blz_base);
 DLL_EXPORT int lut_suche_plz(int such1,int such2,int *anzahl,int **start_idx,int **zweigstellen_base,int **base_name,int **blz_base);
+DLL_EXPORT int lut_suche_regel(int such1,int such2,int *anzahl,int **start_idx,int **zweigstellen_base,int **base_name,int **blz_base);
 DLL_EXPORT int lut_suche_volltext(char *such_wort,int *anzahl,int *base_name_idx,char ***base_name,int *zweigstellen_anzahl,int **start_idx,int **zweigstellen_base,int **blz_base);
 DLL_EXPORT int lut_suche_multiple(char *such_worte,int uniq,char *such_cmd,UINT4 *anzahl,UINT4 **zweigstellen,UINT4 **blz);
 DLL_EXPORT int lut_suche_sort1(int anzahl,int *blz_base,int *zweigstellen_base,int *idx,int *anzahl_o,int **idx_op,int **cnt_o,int uniq);
@@ -952,6 +1000,7 @@ DLL_EXPORT int lut_suche_init(int uniq);
 DLL_EXPORT int lut_suche_free(int id);
 DLL_EXPORT int lut_suche_set(int such_id,int idx,int typ,int i1,int i2,char *txt);
 DLL_EXPORT int lut_suche(int such_id,char *such_cmd,UINT4 *such_cnt,UINT4 **filiale,UINT4 **blz);
+DLL_EXPORT int lut_blocks(int mode,char **lut_filename,char **lut_blocks_ok,char **lut_blocks_fehler);
 
    /* (Benutzerdefinierte) Default-Werte in der LUT-Datei lesen und schreiben */
 #define DEFAULT_CNT 50                 /* Anzahl Einträge (fest) */
@@ -1001,6 +1050,9 @@ const DLL_EXPORT char *pz2str(int pz,int *ret);
    /* "aktuelles" Datum für die Testumgebung (um einen Datumswechsel zu simulieren) */
 DLL_EXPORT_V extern UINT4 current_date;
 #endif
+
+   /* String mit den LUT-Blocks, die nicht geladen werden konnten */
+DLL_EXPORT_V extern char *lut_blocks_missing;
 
 /*
  * ######################################################################

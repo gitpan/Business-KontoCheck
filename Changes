@@ -4,6 +4,14 @@ Revision history for Perl extension Business::KontoCheck.
 The complete history can be found in 0_history.txt (in german). The perl
 version starts with 2.1; all previous versions are C only libraries.
 
+5.2 
+   - new check method E1 implemented
+   - new IBAN rules 55 and 56 implemented
+   - changes for some IBAN rules (5, 10, 15, 20, 43 und 45, valid from 2013-12-09) implemented
+   - new function lut_blocks(), lut_suche_regel(), kto_check_regel(), kto_check_regel_dbg() implemented
+   - function iban2bic() implemented for the perl port
+   - some minor changes (see file 0_history.txt)
+
 5.1 Fri Aug 2, 2013
    - changed IBAN rule 20 (Deutsche Bank) to version 1.6 according to Bundesbank email
    - for IBAN calculation missing LUT blocks are fetched automatically
