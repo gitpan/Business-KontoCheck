@@ -15,11 +15,9 @@ examples/testkonten.blz
 examples/testkonten.txt
 t/austrian.t
 t/base.t
+t/bic_check.t
 t/encoding.t
 t/generate_lut.t
-blz.txt
-CONFIG.INI
-iban.blacklist
 t/iban.t
 t/iban_gen.t
 t/ipi.t
@@ -30,6 +28,9 @@ t/new_blz.t
 t/new_pz.t
 t/old.t
 t/pod.t
+blz.txt
+CONFIG.INI
+iban.blacklist
 lib/Business/KontoCheck.pm
 konto_check.c
 konto_check.h

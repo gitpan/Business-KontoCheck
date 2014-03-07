@@ -20,6 +20,7 @@ our @EXPORT_OK = qw(kto_check kto_check_str kto_check_blz
    lut_blz1 lut_name1 lut_name_kurz1 lut_plz1 lut_ort1 lut_pan1 lut_bic1
    lut_pz1 lut_aenderung1 lut_loeschung1 lut_nachfolge_blz1 iban_gen
    check_iban ipi_check ipi_gen set_verbose_debug lut_info lut_blocks
+   ci_check bic_check iban_check
    set_default_compression iban2bic pz2str kto_check_encoding
    kto_check_encoding_str keep_raw_data retval2txt retval2txt_short
    retval2iso retval2utf8 retval2html retval2dos kto_check_retval2txt
@@ -32,7 +33,7 @@ our @EXPORT_OK = qw(kto_check kto_check_str kto_check_blz
 
 our @EXPORT = qw( lut_init kto_check kto_check_blz kto_check_at %kto_retval );
 
-our $VERSION = '5.2';
+our $VERSION = '5.3';
 
 require XSLoader;
 XSLoader::load('Business::KontoCheck', $VERSION);
@@ -583,6 +584,14 @@ sub lut_iban_regel1
 
 
 %Business::KontoCheck::kto_retval = (
+-147 => 'Es werden nur deutsche IBANs unterstützt',
+-146 => 'Falscher Parametertyp für die Funktion',
+-145 => 'Es werden nur deutsche BICs unterstützt',
+-144 => 'Die Länge des BIC muß genau 8 oder 11 Zeichen sein',
+-143 => 'Die IBAN-Prüfsumme stimmt, die BLZ sollte aber durch eine zentrale BLZ ersetzt werden. Die Richtigkeit der IBAN kann nur mit einer Anfrage bei der Bank ermittelt werden',
+-142 => 'Die IBAN-Prüfsumme stimmt, konto_check wurde jedoch noch nicht initialisiert (Kontoprüfung nicht möglich)',
+-141 => 'Die IBAN-Prüfsumme stimmt, die BLZ ist allerdings ungültig',
+-140 => 'Die IBAN-Prüfsumme stimmt, für die Bank gibt es allerdings eine (andere) Nachfolge-BLZ',
 -139 => 'es konnten nicht alle Datenblocks die für die IBAN-Berechnung notwendig sind geladen werden',
 -138 => 'Der Datensatz ist noch nicht gültig, außerdem konnten nicht alle Blocks geladen werden',
 -137 => 'Der Datensatz ist nicht mehr gültig, außerdem konnten nicht alle Blocks geladen werdeng',
@@ -591,7 +600,7 @@ sub lut_iban_regel1
 -134 => 'Die BLZ findet sich in der Ausschlussliste für IBAN-Berechnungen',
 -133 => 'Die BLZ ist in der Bundesbank-Datei als gelöscht markiert und somit ungültig',
 -132 => 'Die IBAN-Prüfsumme stimmt, es gibt allerdings einen Fehler in der eigenen IBAN-Bestimmung (wahrscheinlich falsch)',
--131 => 'Die IBAN-Prüfsumme stimmt, eine IBAN-Berechnung ist allerdings nicht erlaubt (wahrscheinlich falsch)',
+-131 => 'Die IBAN-Prüfsumme stimmt. Die Bank gibt IBANs nach nicht veröffentlichten Regeln heraus, die Richtigkeit der IBAN kann nur mit einer Anfrage bei der Bank ermittelt werden',
 -130 => 'Die IBAN-Prüfsumme stimmt, es wurde allerdings eine IBAN-Regel nicht beachtet (wahrscheinlich falsch)',
 -129 => 'Die IBAN-Prüfsumme stimmt, es fehlt aber ein Unterkonto (wahrscheinlich falsch)',
 -128 => 'Die BLZ passt nicht zur angegebenen IBAN-Regel',
@@ -606,11 +615,11 @@ sub lut_iban_regel1
 -119 => 'Ungültiges Zeichen ( ()+-/&.,\' ) für die Volltextsuche gefunden',
 -118 => 'Die Volltextsuche sucht jeweils nur ein einzelnes Wort, benutzen Sie lut_suche_multiple() zur Suche nach mehreren Worten',
 -117 => 'die angegebene Suchresource ist ungültig',
--116 => 'Suche: im Verknüpfungsstring sind nur die Zeichen a-z sowie + und - erlaubt',
--115 => 'Suche: es müssen zwischen 1 und 26 Suchmuster angegeben werden',
+-116 => 'bei der Suche sind im Verknüpfungsstring nur die Zeichen a-z sowie + und - erlaubt',
+-115 => 'bei der Suche müssen zwischen 1 und 26 Suchmuster angegeben werden',
 -114 => 'Das Feld Volltext wurde nicht initialisiert',
 -113 => 'das Institut erlaubt keine eigene IBAN-Berechnung',
--112 => 'die notwendige Kompressions-Bibliothek wurden beim Kompilieren nicht eingebunden',
+-112 => 'die notwendige Kompressions-Bibliothek wurde beim Kompilieren nicht eingebunden',
 -111 => 'der angegebene Wert für die Default-Kompression ist ungültig',
 -110 => '(nicht mehr als Fehler, sondern positive Ausgabe - Dummy für den alten Wert)',
 -109 => 'Ungültige Signatur im Default-Block',
@@ -666,7 +675,7 @@ sub lut_iban_regel1
  -59 => 'Der Datensatz ist noch nicht gültig',
  -58 => 'Der Datensatz ist nicht mehr gültig',
  -57 => 'Im Gültigkeitsdatum sind Anfangs- und Enddatum vertauscht',
- -56 => 'Das angegebene Gültigkeitsdatum ist ungültig (Soll: JJJJMMTT-JJJJMMTT)',
+ -56 => 'Das angegebene Gültigkeitsdatum ist ungültig (Sollformat ist JJJJMMTT-JJJJMMTT)',
  -55 => 'Der Index für die Filiale ist ungültig',
  -54 => 'Die Bibliothek wird gerade neu initialisiert',
  -53 => 'Das Feld BLZ wurde nicht initialisiert',
@@ -742,13 +751,22 @@ sub lut_iban_regel1
   17 => 'ok, für die BLZ wurde allerdings die Nachfolge-BLZ eingesetzt',
   18 => 'ok, die Kontonummer wurde allerdings ersetzt',
   19 => 'ok, die Bankleitzahl wurde allerdings ersetzt',
-  20 => 'ok, die Bankleitzahl und Kontonummer wurde allerdings ersetzt',
+  20 => 'ok, die Bankleitzahl und Kontonummer wurden allerdings ersetzt',
   21 => 'ok, die Bankverbindung ist (ohne Test) als richtig anzusehen',
-  22 => 'ok, für IBAN ist (durch eine Regel) allerdings ein anderer BIC definiert',
+  22 => 'ok, für die die IBAN ist (durch eine Regel) allerdings ein anderer BIC definiert',
   23 => 'ok, für die BIC-Bestimmung der ehemaligen Hypo-Bank für IBAN wird i.A. zusätzlich die Kontonummer benötigt',
   24 => 'ok, die Kontonummer wurde ersetzt, die neue Kontonummer hat keine Prüfziffer',
   25 => 'ok, es wurde ein (weggelassenes) Unterkonto angefügt',
+  26 => 'ok, für den BIC wurde die Zweigstellennummer allerdings durch XXX ersetzt',
 
+'IBAN_ONLY_GERMAN'                       => 'Es werden nur deutsche IBANs unterstützt',
+'INVALID_PARAMETER_TYPE'                 => 'Falscher Parametertyp für die Funktion',
+'BIC_ONLY_GERMAN'                        => 'Es werden nur deutsche BICs unterstützt',
+'INVALID_BIC_LENGTH'                     => 'Die Länge des BIC muß genau 8 oder 11 Zeichen sein',
+'IBAN_CHKSUM_OK_RULE_IGNORED_BLZ'        => 'Die IBAN-Prüfsumme stimmt, die BLZ sollte aber durch eine zentrale BLZ ersetzt werden. Die Richtigkeit der IBAN kann nur mit einer Anfrage bei der Bank ermittelt werden',
+'IBAN_CHKSUM_OK_KC_NOT_INITIALIZED'      => 'Die IBAN-Prüfsumme stimmt, konto_check wurde jedoch noch nicht initialisiert (Kontoprüfung nicht möglich)',
+'IBAN_CHKSUM_OK_BLZ_INVALID'             => 'Die IBAN-Prüfsumme stimmt, die BLZ ist allerdings ungültig',
+'IBAN_CHKSUM_OK_NACHFOLGE_BLZ_DEFINED'   => 'Die IBAN-Prüfsumme stimmt, für die Bank gibt es allerdings eine (andere) Nachfolge-BLZ',
 'LUT2_NOT_ALL_IBAN_BLOCKS_LOADED'        => 'es konnten nicht alle Datenblocks die für die IBAN-Berechnung notwendig sind geladen werden',
 'LUT2_NOT_YET_VALID_PARTIAL_OK'          => 'Der Datensatz ist noch nicht gültig, außerdem konnten nicht alle Blocks geladen werden',
 'LUT2_NO_LONGER_VALID_PARTIAL_OK'        => 'Der Datensatz ist nicht mehr gültig, außerdem konnten nicht alle Blocks geladen werdeng',
@@ -757,7 +775,7 @@ sub lut_iban_regel1
 'BLZ_BLACKLISTED'                        => 'Die BLZ findet sich in der Ausschlussliste für IBAN-Berechnungen',
 'BLZ_MARKED_AS_DELETED'                  => 'Die BLZ ist in der Bundesbank-Datei als gelöscht markiert und somit ungültig',
 'IBAN_CHKSUM_OK_SOMETHING_WRONG'         => 'Die IBAN-Prüfsumme stimmt, es gibt allerdings einen Fehler in der eigenen IBAN-Bestimmung (wahrscheinlich falsch)',
-'IBAN_CHKSUM_OK_NO_IBAN_CALCULATION'     => 'Die IBAN-Prüfsumme stimmt, eine IBAN-Berechnung ist allerdings nicht erlaubt (wahrscheinlich falsch)',
+'IBAN_CHKSUM_OK_NO_IBAN_CALCULATION'     => 'Die IBAN-Prüfsumme stimmt. Die Bank gibt IBANs nach nicht veröffentlichten Regeln heraus, die Richtigkeit der IBAN kann nur mit einer Anfrage bei der Bank ermittelt werden',
 'IBAN_CHKSUM_OK_RULE_IGNORED'            => 'Die IBAN-Prüfsumme stimmt, es wurde allerdings eine IBAN-Regel nicht beachtet (wahrscheinlich falsch)',
 'IBAN_CHKSUM_OK_UNTERKTO_MISSING'        => 'Die IBAN-Prüfsumme stimmt, es fehlt aber ein Unterkonto (wahrscheinlich falsch)',
 'IBAN_INVALID_RULE'                      => 'Die BLZ passt nicht zur angegebenen IBAN-Regel',
@@ -772,11 +790,11 @@ sub lut_iban_regel1
 'LUT2_VOLLTEXT_INVALID_CHAR'             => 'Ungültiges Zeichen ( ()+-/&.,\' ) für die Volltextsuche gefunden',
 'LUT2_VOLLTEXT_SINGLE_WORD_ONLY'         => 'Die Volltextsuche sucht jeweils nur ein einzelnes Wort, benutzen Sie lut_suche_multiple() zur Suche nach mehreren Worten',
 'LUT_SUCHE_INVALID_RSC'                  => 'die angegebene Suchresource ist ungültig',
-'LUT_SUCHE_INVALID_CMD'                  => 'Suche: im Verknüpfungsstring sind nur die Zeichen a-z sowie + und - erlaubt',
-'LUT_SUCHE_INVALID_CNT'                  => 'Suche: es müssen zwischen 1 und 26 Suchmuster angegeben werden',
+'LUT_SUCHE_INVALID_CMD'                  => 'bei der Suche sind im Verknüpfungsstring nur die Zeichen a-z sowie + und - erlaubt',
+'LUT_SUCHE_INVALID_CNT'                  => 'bei der Suche müssen zwischen 1 und 26 Suchmuster angegeben werden',
 'LUT2_VOLLTEXT_NOT_INITIALIZED'          => 'Das Feld Volltext wurde nicht initialisiert',
 'NO_OWN_IBAN_CALCULATION'                => 'das Institut erlaubt keine eigene IBAN-Berechnung',
-'KTO_CHECK_UNSUPPORTED_COMPRESSION'      => 'die notwendige Kompressions-Bibliothek wurden beim Kompilieren nicht eingebunden',
+'KTO_CHECK_UNSUPPORTED_COMPRESSION'      => 'die notwendige Kompressions-Bibliothek wurde beim Kompilieren nicht eingebunden',
 'KTO_CHECK_INVALID_COMPRESSION_LIB'      => 'der angegebene Wert für die Default-Kompression ist ungültig',
 'OK_UNTERKONTO_ATTACHED_OLD'             => '(nicht mehr als Fehler, sondern positive Ausgabe - Dummy für den alten Wert)',
 'KTO_CHECK_DEFAULT_BLOCK_INVALID'        => 'Ungültige Signatur im Default-Block',
@@ -832,7 +850,7 @@ sub lut_iban_regel1
 'LUT2_NOT_YET_VALID'                     => 'Der Datensatz ist noch nicht gültig',
 'LUT2_NO_LONGER_VALID'                   => 'Der Datensatz ist nicht mehr gültig',
 'LUT2_GUELTIGKEIT_SWAPPED'               => 'Im Gültigkeitsdatum sind Anfangs- und Enddatum vertauscht',
-'LUT2_INVALID_GUELTIGKEIT'               => 'Das angegebene Gültigkeitsdatum ist ungültig (Soll: JJJJMMTT-JJJJMMTT)',
+'LUT2_INVALID_GUELTIGKEIT'               => 'Das angegebene Gültigkeitsdatum ist ungültig (Sollformat ist JJJJMMTT-JJJJMMTT)',
 'LUT2_INDEX_OUT_OF_RANGE'                => 'Der Index für die Filiale ist ungültig',
 'LUT2_INIT_IN_PROGRESS'                  => 'Die Bibliothek wird gerade neu initialisiert',
 'LUT2_BLZ_NOT_INITIALIZED'               => 'Das Feld BLZ wurde nicht initialisiert',
@@ -908,15 +926,24 @@ sub lut_iban_regel1
 'OK_NACHFOLGE_BLZ_USED'                  => 'ok, für die BLZ wurde allerdings die Nachfolge-BLZ eingesetzt',
 'OK_KTO_REPLACED'                        => 'ok, die Kontonummer wurde allerdings ersetzt',
 'OK_BLZ_REPLACED'                        => 'ok, die Bankleitzahl wurde allerdings ersetzt',
-'OK_BLZ_KTO_REPLACED'                    => 'ok, die Bankleitzahl und Kontonummer wurde allerdings ersetzt',
+'OK_BLZ_KTO_REPLACED'                    => 'ok, die Bankleitzahl und Kontonummer wurden allerdings ersetzt',
 'OK_IBAN_WITHOUT_KC_TEST'                => 'ok, die Bankverbindung ist (ohne Test) als richtig anzusehen',
-'OK_INVALID_FOR_IBAN'                    => 'ok, für IBAN ist (durch eine Regel) allerdings ein anderer BIC definiert',
+'OK_INVALID_FOR_IBAN'                    => 'ok, für die die IBAN ist (durch eine Regel) allerdings ein anderer BIC definiert',
 'OK_HYPO_REQUIRES_KTO'                   => 'ok, für die BIC-Bestimmung der ehemaligen Hypo-Bank für IBAN wird i.A. zusätzlich die Kontonummer benötigt',
 'OK_KTO_REPLACED_NO_PZ'                  => 'ok, die Kontonummer wurde ersetzt, die neue Kontonummer hat keine Prüfziffer',
 'OK_UNTERKONTO_ATTACHED'                 => 'ok, es wurde ein (weggelassenes) Unterkonto angefügt',
+'OK_SHORT_BIC_USED'                      => 'ok, für den BIC wurde die Zweigstellennummer allerdings durch XXX ersetzt',
 );
 
 %Business::KontoCheck::kto_retval_kurz = (
+-147 => 'IBAN_ONLY_GERMAN',
+-146 => 'INVALID_PARAMETER_TYPE',
+-145 => 'BIC_ONLY_GERMAN',
+-144 => 'INVALID_BIC_LENGTH',
+-143 => 'IBAN_CHKSUM_OK_RULE_IGNORED_BLZ',
+-142 => 'IBAN_CHKSUM_OK_KC_NOT_INITIALIZED',
+-141 => 'IBAN_CHKSUM_OK_BLZ_INVALID',
+-140 => 'IBAN_CHKSUM_OK_NACHFOLGE_BLZ_DEFINED',
 -139 => 'LUT2_NOT_ALL_IBAN_BLOCKS_LOADED',
 -138 => 'LUT2_NOT_YET_VALID_PARTIAL_OK',
 -137 => 'LUT2_NO_LONGER_VALID_PARTIAL_OK',
@@ -1082,6 +1109,7 @@ sub lut_iban_regel1
   23 => 'OK_HYPO_REQUIRES_KTO',
   24 => 'OK_KTO_REPLACED_NO_PZ',
   25 => 'OK_UNTERKONTO_ATTACHED',
+  26 => 'OK_SHORT_BIC_USED',
 );
 
 END{ lut_cleanup(); }
@@ -1151,7 +1179,8 @@ language is german too.
    $retval=lut_cleanup()
 
    $retval=ci_check($ci)
-   $retval=iban_check($iban)
+   $retval=bic_check($bic[,$cnt])
+   $retval=iban_check($iban[,$ret_kc])
    [$@]retval=iban2bic($iban)
    [$@]retval=iban_gen($blz,$kto)
 

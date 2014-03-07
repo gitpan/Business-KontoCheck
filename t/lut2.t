@@ -1,7 +1,7 @@
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl lut2.t'
 
-use Test::More tests => 22;
+use Test::More tests => 21;
 
 BEGIN { use_ok('Business::KontoCheck') };
 
@@ -19,7 +19,7 @@ if($retval>0){
       $ergebnis="$name_kurz, $plz $ort";
       $cnt=$name=0; # nur wegen Warnung wegen dummy-Variablen
       if($ergebnis eq $soll){$ok_cnt++;}else{$nok_cnt++;}
-      ok($ergebnis eq $soll,"LUT2: $ergebnis (Soll: $soll) (ok: $ok_cnt, nok: $nok_cnt)");
+      ok($ergebnis eq $soll,"LUT2: $retval (cnt: $cnt) / $ergebnis (Soll: $soll) (ok: $ok_cnt, nok: $nok_cnt)");
    }
 }
 
@@ -37,7 +37,6 @@ __DATA__
 21566356:Volks- u Raiffeisenbank, 24392 Süderbrarup
 25010030:Postbank Hannover, 30139 Hannover
 25020600:Santander Consumer Bank, 30179 Hannover
-25020700:Hanseatic Bank Hannover, 30159 Hannover
 25050180:Sparkasse Hannover, 30001 Hannover
 30050000:Ld Bk Hess-Thür, Gz, Dus, 40019 Düsseldorf
 30070010:Deutsche Bank Düsseldorf, 40189 Düsseldorf
