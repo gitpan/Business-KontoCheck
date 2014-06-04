@@ -18,8 +18,21 @@ our @EXPORT_OK = qw(kto_check kto_check_str kto_check_blz
    lut_blz lut_name lut_name_kurz lut_plz lut_ort lut_pan lut_bic
    lut_pz lut_aenderung lut_loeschung lut_nachfolge_blz lut_iban_regel
    lut_blz1 lut_name1 lut_name_kurz1 lut_plz1 lut_ort1 lut_pan1 lut_bic1
-   lut_pz1 lut_aenderung1 lut_loeschung1 lut_nachfolge_blz1 iban_gen
-   check_iban ipi_check ipi_gen set_verbose_debug lut_info lut_blocks
+   lut_pz1 lut_aenderung1 lut_loeschung1 lut_nachfolge_blz1
+   bic_name bic_name_kurz bic_plz bic_ort bic_pan bic_bic bic_pz
+   bic_aenderung bic_loeschung bic_nachfolge_blz bic_iban_regel
+   biq_name biq_name_kurz biq_plz biq_ort biq_pan biq_bic biq_pz
+   biq_aenderung biq_loeschung biq_nachfolge_blz biq_iban_regel
+   iban_name iban_name_kurz iban_plz iban_ort iban_pan iban_bic
+   iban_pz iban_aenderung iban_loeschung iban_nachfolge_blz
+   iban_iban_regel bic_name1 bic_name_kurz1 bic_plz1 bic_ort1 bic_pan1
+   bic_bic1 bic_pz1 bic_aenderung1 bic_loeschung1 bic_nachfolge_blz1
+   bic_iban_regel1 biq_name1 biq_name_kurz1 biq_plz1 biq_ort1 biq_pan1
+   biq_bic1 biq_pz1 biq_aenderung1 biq_loeschung1 biq_nachfolge_blz1
+   biq_iban_regel1 iban_name1 iban_name_kurz1 iban_plz1 iban_ort1
+   iban_pan1 iban_bic1 iban_pz1 iban_aenderung1 iban_loeschung1
+   iban_nachfolge_blz1 iban_iban_regel1 bic_info
+   iban_gen check_iban ipi_check ipi_gen set_verbose_debug lut_info lut_blocks
    ci_check bic_check iban_check
    set_default_compression iban2bic pz2str kto_check_encoding
    kto_check_encoding_str keep_raw_data retval2txt retval2txt_short
@@ -33,7 +46,7 @@ our @EXPORT_OK = qw(kto_check kto_check_str kto_check_blz
 
 our @EXPORT = qw( lut_init kto_check kto_check_blz kto_check_at %kto_retval );
 
-our $VERSION = '5.3';
+our $VERSION = '5.4';
 
 require XSLoader;
 XSLoader::load('Business::KontoCheck', $VERSION);
@@ -351,6 +364,14 @@ sub lut_blz1
    return lut_blz_i(@_);
 }
 
+sub bic_info
+{
+   my $r;
+
+   $r=bic_info_i(@_);
+   return $r;
+}
+
 sub lut_name
 {
    my $r=1;
@@ -583,7 +604,716 @@ sub lut_iban_regel1
 }
 
 
+sub bic_name
+{
+   my $r;
+   my $v;
+
+   $r=1;
+   $v=bic_name_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub bic_name1
+{
+   my $r=1;
+
+   return bic_name_i($r,@_);
+}
+
+sub bic_name_kurz
+{
+   my $r;
+   my $v;
+
+   $r=1;
+   $v=bic_name_kurz_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub bic_name_kurz1
+{
+   my $r=1;
+
+   return bic_name_kurz_i($r,@_);
+}
+
+sub bic_plz
+{
+   my $r;
+   my $v;
+
+   $r=1;
+   $v=bic_plz_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub bic_plz1
+{
+   my $r=1;
+
+   return bic_plz_i($r,@_);
+}
+
+sub bic_ort
+{
+   my $r;
+   my $v;
+
+   $r=1;
+   $v=bic_ort_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub bic_ort1
+{
+   my $r=1;
+
+   return bic_ort_i($r,@_);
+}
+
+sub bic_pan
+{
+   my $r;
+   my $v;
+
+   $r=1;
+   $v=bic_pan_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub bic_pan1
+{
+   my $r=1;
+
+   return bic_pan_i($r,@_);
+}
+
+sub bic_bic
+{
+   my $r;
+   my $v;
+
+   $r=1;
+   $v=bic_bic_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub bic_bic1
+{
+   my $r=1;
+
+   return bic_bic_i($r,@_);
+}
+
+sub bic_pz
+{
+   my $r;
+   my $v;
+
+   $r=1;
+   $v=bic_pz_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub bic_pz1
+{
+   my $r=1;
+
+   return bic_pz_i($r,@_);
+}
+
+sub bic_aenderung
+{
+   my $r;
+   my $v;
+
+   $r=1;
+   $v=bic_aenderung_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub bic_aenderung1
+{
+   my $r=1;
+
+   return bic_aenderung_i($r,@_);
+}
+
+sub bic_loeschung
+{
+   my $r;
+   my $v;
+
+   $r=1;
+   $v=bic_loeschung_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub bic_loeschung1
+{
+   my $r=1;
+
+   return bic_loeschung_i($r,@_);
+}
+
+sub bic_nachfolge_blz
+{
+   my $r;
+   my $v;
+
+   $r=1;
+   $v=bic_nachfolge_blz_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub bic_nachfolge_blz1
+{
+   my $r=1;
+
+   return bic_nachfolge_blz_i($r,@_);
+}
+
+sub bic_iban_regel
+{
+   my $r;
+   my $v;
+
+   $r=1;
+   $v=bic_iban_regel_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub bic_iban_regel1
+{
+   my $r=1;
+
+   return bic_iban_regel_i($r,@_);
+}
+
+
+sub biq_name
+{
+   my $r=1;
+   my $v;
+
+   $v=biq_name_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub biq_name1
+{
+   my $r=1;
+
+   return biq_name_i($r,@_);
+}
+
+sub biq_name_kurz
+{
+   my $r=1;
+   my $v;
+
+   $v=biq_name_kurz_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub biq_name_kurz1
+{
+   my $r=1;
+
+   return biq_name_kurz_i($r,@_);
+}
+
+sub biq_plz
+{
+   my $r=1;
+   my $v;
+
+   $v=biq_plz_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub biq_plz1
+{
+   my $r=1;
+
+   return biq_plz_i($r,@_);
+}
+
+sub biq_ort
+{
+   my $r=1;
+   my $v;
+
+   $v=biq_ort_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub biq_ort1
+{
+   my $r=1;
+
+   return biq_ort_i($r,@_);
+}
+
+sub biq_pan
+{
+   my $r=1;
+   my $v;
+
+   $v=biq_pan_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub biq_pan1
+{
+   my $r=1;
+
+   return biq_pan_i($r,@_);
+}
+
+sub biq_bic
+{
+   my $r=1;
+   my $v;
+
+   $v=biq_bic_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub biq_bic1
+{
+   my $r=1;
+
+   return biq_bic_i($r,@_);
+}
+
+sub biq_pz
+{
+   my $r=1;
+   my $v;
+
+   $v=biq_pz_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub biq_pz1
+{
+   my $r=1;
+
+   return biq_pz_i($r,@_);
+}
+
+sub biq_aenderung
+{
+   my $r=1;
+   my $v;
+
+   $v=biq_aenderung_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub biq_aenderung1
+{
+   my $r=1;
+
+   return biq_aenderung_i($r,@_);
+}
+
+sub biq_loeschung
+{
+   my $r=1;
+   my $v;
+
+   $v=biq_loeschung_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub biq_loeschung1
+{
+   my $r=1;
+
+   return biq_loeschung_i($r,@_);
+}
+
+sub biq_nachfolge_blz
+{
+   my $r=1;
+   my $v;
+
+   $v=biq_nachfolge_blz_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub biq_nachfolge_blz1
+{
+   my $r=1;
+
+   return biq_nachfolge_blz_i($r,@_);
+}
+
+sub biq_iban_regel
+{
+   my $r=1;
+   my $v;
+
+   $v=biq_iban_regel_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub biq_iban_regel1
+{
+   my $r=1;
+
+   return biq_iban_regel_i($r,@_);
+}
+
+
+sub iban_name
+{
+   my $r=1;
+   my $v;
+
+   $v=iban_name_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub iban_name1
+{
+   my $r=1;
+
+   return iban_name_i($r,@_);
+}
+
+sub iban_name_kurz
+{
+   my $r=1;
+   my $v;
+
+   $v=iban_name_kurz_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub iban_name_kurz1
+{
+   my $r=1;
+
+   return iban_name_kurz_i($r,@_);
+}
+
+sub iban_plz
+{
+   my $r=1;
+   my $v;
+
+   $v=iban_plz_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub iban_plz1
+{
+   my $r=1;
+
+   return iban_plz_i($r,@_);
+}
+
+sub iban_ort
+{
+   my $r=1;
+   my $v;
+
+   $v=iban_ort_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub iban_ort1
+{
+   my $r=1;
+
+   return iban_ort_i($r,@_);
+}
+
+sub iban_pan
+{
+   my $r=1;
+   my $v;
+
+   $v=iban_pan_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub iban_pan1
+{
+   my $r=1;
+
+   return iban_pan_i($r,@_);
+}
+
+sub iban_bic
+{
+   my $r=1;
+   my $v;
+
+   $v=iban_bic_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub iban_bic1
+{
+   my $r=1;
+
+   return iban_bic_i($r,@_);
+}
+
+sub iban_pz
+{
+   my $r=1;
+   my $v;
+
+   $v=iban_pz_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub iban_pz1
+{
+   my $r=1;
+
+   return iban_pz_i($r,@_);
+}
+
+sub iban_aenderung
+{
+   my $r=1;
+   my $v;
+
+   $v=iban_aenderung_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub iban_aenderung1
+{
+   my $r=1;
+
+   return iban_aenderung_i($r,@_);
+}
+
+sub iban_loeschung
+{
+   my $r=1;
+   my $v;
+
+   $v=iban_loeschung_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub iban_loeschung1
+{
+   my $r=1;
+
+   return iban_loeschung_i($r,@_);
+}
+
+sub iban_nachfolge_blz
+{
+   my $r=1;
+   my $v;
+
+   $v=iban_nachfolge_blz_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub iban_nachfolge_blz1
+{
+   my $r=1;
+
+   return iban_nachfolge_blz_i($r,@_);
+}
+
+sub iban_iban_regel
+{
+   my $r=1;
+   my $v;
+
+   $v=iban_iban_regel_i($r,@_);
+   if(wantarray()){
+      return ($v,$r,$Business::KontoCheck::kto_retval{$r},$Business::KontoCheck::kto_retval_kurz{$r});
+   }
+   else{
+      return $v;
+   }
+}
+
+sub iban_iban_regel1
+{
+   my $r=1;
+
+   return iban_iban_regel_i($r,@_);
+}
+
+
 %Business::KontoCheck::kto_retval = (
+-149 => 'Ungültiger Index für die biq_*() Funktionen',
+-148 => 'Der Array-Index liegt außerhalb des gültigen Bereichs',
 -147 => 'Es werden nur deutsche IBANs unterstützt',
 -146 => 'Falscher Parametertyp für die Funktion',
 -145 => 'Es werden nur deutsche BICs unterstützt',
@@ -627,31 +1357,6 @@ sub lut_iban_regel1
 -107 => 'Es wurde noch kein Default-Block angelegt',
 -106 => 'Der angegebene Schlüssel wurde im Default-Block nicht gefunden',
 -105 => 'Beide Datensätze sind nicht mehr gültig, dieser ist aber jünger als der andere',
--104 => 'Die Auftraggeber-Kontonummer des C-Datensatzes unterscheidet sich von der des A-Satzes',
--103 => 'Die Auftraggeber-Bankleitzahl des C-Datensatzes unterscheidet sich von der des A-Satzes',
--102 => 'Die DTA-Datei enthält (unzulässige) Zeilenvorschübe',
--101 => 'ungültiger Typ bei einem Erweiterungsblock eines C-Datensatzes',
--100 => 'Es wurde ein C-Datensatz erwartet, jedoch ein E-Satz gefunden',
- -99 => 'Es wurde ein C-Datensatz erwartet, jedoch ein E-Satz gefunden',
- -98 => 'Es wurde ein C-Datensatzerweiterung erwartet, jedoch ein C-Satz gefunden',
- -97 => 'Es wurde ein C-Datensatzerweiterung erwartet, jedoch ein E-Satz gefunden',
- -96 => 'Die Anzahl Erweiterungen paßt nicht zur Blocklänge',
- -95 => 'Ungültige Zeichen in numerischem Feld',
- -94 => 'Ungültige Zeichen im Textfeld',
- -93 => 'Die Währung des DTA-Datensatzes ist nicht Euro',
- -92 => 'In einem DTA-Datensatz wurde kein Betrag angegeben',
- -91 => 'Ungültiger Textschlüssel in der DTA-Datei',
- -90 => 'Für ein (alphanumerisches) Feld wurde kein Wert angegeben',
- -89 => 'Die Startmarkierung des A-Datensatzes wurde nicht gefunden',
- -88 => 'Die Startmarkierung des C-Datensatzes wurde nicht gefunden',
- -87 => 'Die Startmarkierung des E-Datensatzes wurde nicht gefunden',
- -86 => 'Die Satzlänge eines C-Datensatzes muß zwischen 187 und 622 Byte betragen',
- -85 => 'Die Satzlänge eines A- bzw. E-Satzes muß 128 Byte betragen',
- -84 => 'als Währung in der DTA-Datei ist nicht Euro eingetragen',
- -83 => 'das Ausführungsdatum ist zu früh oder zu spät (max. 15 Tage nach Dateierstellung)',
- -82 => 'das Datum ist ungültig',
- -81 => 'Formatfehler in der DTA-Datei',
- -80 => 'die DTA-Datei enthält Fehler',
  -79 => 'ungültiger Suchbereich angegeben (unten>oben)',
  -78 => 'Die Suche lieferte kein Ergebnis',
  -77 => 'BAV denkt, das Konto ist falsch (konto_check hält es für richtig)',
@@ -759,6 +1464,8 @@ sub lut_iban_regel1
   25 => 'ok, es wurde ein (weggelassenes) Unterkonto angefügt',
   26 => 'ok, für den BIC wurde die Zweigstellennummer allerdings durch XXX ersetzt',
 
+'INVALID_BIQ_INDEX'                      => 'Ungültiger Index für die biq_*() Funktionen',
+'ARRAY_INDEX_OUT_OF_RANGE'               => 'Der Array-Index liegt außerhalb des gültigen Bereichs',
 'IBAN_ONLY_GERMAN'                       => 'Es werden nur deutsche IBANs unterstützt',
 'INVALID_PARAMETER_TYPE'                 => 'Falscher Parametertyp für die Funktion',
 'BIC_ONLY_GERMAN'                        => 'Es werden nur deutsche BICs unterstützt',
@@ -802,31 +1509,6 @@ sub lut_iban_regel1
 'KTO_CHECK_NO_DEFAULT_BLOCK'             => 'Es wurde noch kein Default-Block angelegt',
 'KTO_CHECK_KEY_NOT_FOUND'                => 'Der angegebene Schlüssel wurde im Default-Block nicht gefunden',
 'LUT2_NO_LONGER_VALID_BETTER'            => 'Beide Datensätze sind nicht mehr gültig, dieser ist aber jünger als der andere',
-'DTA_SRC_KTO_DIFFERENT'                  => 'Die Auftraggeber-Kontonummer des C-Datensatzes unterscheidet sich von der des A-Satzes',
-'DTA_SRC_BLZ_DIFFERENT'                  => 'Die Auftraggeber-Bankleitzahl des C-Datensatzes unterscheidet sich von der des A-Satzes',
-'DTA_CR_LF_IN_FILE'                      => 'Die DTA-Datei enthält (unzulässige) Zeilenvorschübe',
-'DTA_INVALID_C_EXTENSION'                => 'ungültiger Typ bei einem Erweiterungsblock eines C-Datensatzes',
-'DTA_FOUND_SET_A_NOT_C'                  => 'Es wurde ein C-Datensatz erwartet, jedoch ein E-Satz gefunden',
-'DTA_FOUND_SET_E_NOT_C'                  => 'Es wurde ein C-Datensatz erwartet, jedoch ein E-Satz gefunden',
-'DTA_FOUND_SET_C_NOT_EXTENSION'          => 'Es wurde ein C-Datensatzerweiterung erwartet, jedoch ein C-Satz gefunden',
-'DTA_FOUND_SET_E_NOT_EXTENSION'          => 'Es wurde ein C-Datensatzerweiterung erwartet, jedoch ein E-Satz gefunden',
-'DTA_INVALID_EXTENSION_COUNT'            => 'Die Anzahl Erweiterungen paßt nicht zur Blocklänge',
-'DTA_INVALID_NUM'                        => 'Ungültige Zeichen in numerischem Feld',
-'DTA_INVALID_CHARS'                      => 'Ungültige Zeichen im Textfeld',
-'DTA_CURRENCY_NOT_EURO'                  => 'Die Währung des DTA-Datensatzes ist nicht Euro',
-'DTA_EMPTY_AMOUNT'                       => 'In einem DTA-Datensatz wurde kein Betrag angegeben',
-'DTA_INVALID_TEXT_KEY'                   => 'Ungültiger Textschlüssel in der DTA-Datei',
-'DTA_EMPTY_STRING'                       => 'Für ein (alphanumerisches) Feld wurde kein Wert angegeben',
-'DTA_MARKER_A_NOT_FOUND'                 => 'Die Startmarkierung des A-Datensatzes wurde nicht gefunden',
-'DTA_MARKER_C_NOT_FOUND'                 => 'Die Startmarkierung des C-Datensatzes wurde nicht gefunden',
-'DTA_MARKER_E_NOT_FOUND'                 => 'Die Startmarkierung des E-Datensatzes wurde nicht gefunden',
-'DTA_INVALID_SET_C_LEN'                  => 'Die Satzlänge eines C-Datensatzes muß zwischen 187 und 622 Byte betragen',
-'DTA_INVALID_SET_LEN'                    => 'Die Satzlänge eines A- bzw. E-Satzes muß 128 Byte betragen',
-'DTA_WAERUNG_NOT_EURO'                   => 'als Währung in der DTA-Datei ist nicht Euro eingetragen',
-'DTA_INVALID_ISSUE_DATE'                 => 'das Ausführungsdatum ist zu früh oder zu spät (max. 15 Tage nach Dateierstellung)',
-'DTA_INVALID_DATE'                       => 'das Datum ist ungültig',
-'DTA_FORMAT_ERROR'                       => 'Formatfehler in der DTA-Datei',
-'DTA_FILE_WITH_ERRORS'                   => 'die DTA-Datei enthält Fehler',
 'INVALID_SEARCH_RANGE'                   => 'ungültiger Suchbereich angegeben (unten>oben)',
 'KEY_NOT_FOUND'                          => 'Die Suche lieferte kein Ergebnis',
 'BAV_FALSE'                              => 'BAV denkt, das Konto ist falsch (konto_check hält es für richtig)',
@@ -936,6 +1618,8 @@ sub lut_iban_regel1
 );
 
 %Business::KontoCheck::kto_retval_kurz = (
+-149 => 'INVALID_BIQ_INDEX',
+-148 => 'ARRAY_INDEX_OUT_OF_RANGE',
 -147 => 'IBAN_ONLY_GERMAN',
 -146 => 'INVALID_PARAMETER_TYPE',
 -145 => 'BIC_ONLY_GERMAN',
@@ -979,31 +1663,6 @@ sub lut_iban_regel1
 -107 => 'KTO_CHECK_NO_DEFAULT_BLOCK',
 -106 => 'KTO_CHECK_KEY_NOT_FOUND',
 -105 => 'LUT2_NO_LONGER_VALID_BETTER',
--104 => 'DTA_SRC_KTO_DIFFERENT',
--103 => 'DTA_SRC_BLZ_DIFFERENT',
--102 => 'DTA_CR_LF_IN_FILE',
--101 => 'DTA_INVALID_C_EXTENSION',
--100 => 'DTA_FOUND_SET_A_NOT_C',
- -99 => 'DTA_FOUND_SET_E_NOT_C',
- -98 => 'DTA_FOUND_SET_C_NOT_EXTENSION',
- -97 => 'DTA_FOUND_SET_E_NOT_EXTENSION',
- -96 => 'DTA_INVALID_EXTENSION_COUNT',
- -95 => 'DTA_INVALID_NUM',
- -94 => 'DTA_INVALID_CHARS',
- -93 => 'DTA_CURRENCY_NOT_EURO',
- -92 => 'DTA_EMPTY_AMOUNT',
- -91 => 'DTA_INVALID_TEXT_KEY',
- -90 => 'DTA_EMPTY_STRING',
- -89 => 'DTA_MARKER_A_NOT_FOUND',
- -88 => 'DTA_MARKER_C_NOT_FOUND',
- -87 => 'DTA_MARKER_E_NOT_FOUND',
- -86 => 'DTA_INVALID_SET_C_LEN',
- -85 => 'DTA_INVALID_SET_LEN',
- -84 => 'DTA_WAERUNG_NOT_EURO',
- -83 => 'DTA_INVALID_ISSUE_DATE',
- -82 => 'DTA_INVALID_DATE',
- -81 => 'DTA_FORMAT_ERROR',
- -80 => 'DTA_FILE_WITH_ERRORS',
  -79 => 'INVALID_SEARCH_RANGE',
  -78 => 'KEY_NOT_FOUND',
  -77 => 'BAV_FALSE',

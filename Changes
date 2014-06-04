@@ -4,6 +4,21 @@ Revision history for Perl extension Business::KontoCheck.
 The complete history can be found in 0_history.txt (in german). The perl
 version starts with 2.1; all previous versions are C only libraries.
 
+5.4
+   - changes in check method 90 implemented
+   - removed some obsolete return values (-80 ... -104)
+   - some bug fixes, mainly in the new functions bic_(), biq_*() and iban_*()
+   - changes in testfiles t/* due to changes in the blz file of Deutsche Bundesbank
+   - some minor changes, see the german 0_history.txt
+
+5.3
+   - new IBAN rule 57 implemented
+   - changes in IBAN rules 54 and 56 implemented
+   - changes in check method 66 implemented
+   - search for main branches of banks
+   - many new functions concerning BIC and IBAN (see 0_history.txt and source code)
+   - some minor changes and bug fixes (see file 0_history.txt)
+
 5.2 
    - new check method E1 implemented
    - new IBAN rules 55 and 56 implemented

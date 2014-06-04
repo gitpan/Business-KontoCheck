@@ -34,6 +34,7 @@ iban.blacklist
 lib/Business/KontoCheck.pm
 konto_check.c
 konto_check.h
+retvals.h
 konto_check-at.c
 konto_check-at.h
 inpar.dat.gz

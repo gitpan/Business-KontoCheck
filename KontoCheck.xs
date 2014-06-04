@@ -1,3 +1,4 @@
+#line 171 "KontoCheck.lx"
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
@@ -45,6 +46,7 @@ dump_lutfile(outputname,felder)
    char *outputname;
    int felder;
 CODE:
+#line 249 "KontoCheck.lx"
    RETVAL=dump_lutfile_p(outputname,felder);
 OUTPUT:
    RETVAL
@@ -54,8 +56,10 @@ kto_check_pz(pz,kto...)
    char *pz;
    char *kto;
 PREINIT:
+#line 258 "KontoCheck.lx"
    char *blz;
 CODE:
+#line 260 "KontoCheck.lx"
    switch(items){
       case 2:
          blz=NULL;
@@ -84,9 +88,11 @@ kto_check_regel_dbg_i(blz,kto,blz2,kto2,bic,regel,methode,pz_methode,pz,pz_pos)
    int pz;
    int pz_pos;
 PREINIT:
+#line 288 "KontoCheck.lx"
    char blz2a[10],kto2a[12];
    RETVAL retvals;
 CODE:
+#line 291 "KontoCheck.lx"
    if(items<10)Perl_croak(aTHX_ "Usage: Business::KontoCheck::kto_check_regel_dbg_i(blz,kto,blz2,kto2,bic,regel,methode,pz_methode,pz,pz_pos)");
    RETVAL=kto_check_regel_dbg(blz,kto,blz2a,kto2a,&bic,&regel,&retvals);
  	sv_setpv((SV*)ST(2),blz2a);
@@ -117,10 +123,12 @@ lut_cleanup()
 int
 lut_init(...)
 PREINIT:
+#line 321 "KontoCheck.lx"
    char *lut_name;
    unsigned int required;
    unsigned int set;
 CODE:
+#line 325 "KontoCheck.lx"
    switch(items){
       case 0:
          lut_name=NULL;
@@ -155,10 +163,12 @@ int
 kto_check_init(lut_name...)
    char *lut_name
 PREINIT:
+#line 359 "KontoCheck.lx"
    unsigned int required;
    unsigned int set;
    unsigned int incremental;
 CODE:
+#line 363 "KontoCheck.lx"
    switch(items){
       case 1:
          required=DEFAULT_INIT_LEVEL;
@@ -194,8 +204,10 @@ lut_keine_iban_berechnung(inputname,outputname...)
    char *inputname;
    char *outputname;
 PREINIT:
+#line 398 "KontoCheck.lx"
    unsigned int set;
 CODE:
+#line 400 "KontoCheck.lx"
    switch(items){
       case 2:
          set=0;
@@ -217,6 +229,7 @@ generate_lut2(inputname,outputname...)
    char *inputname;
    char *outputname;
 PREINIT:
+#line 421 "KontoCheck.lx"
    char *user_info;
    char *gueltigkeit;
    char *keine_iban_berechnung;
@@ -226,6 +239,7 @@ PREINIT:
    unsigned int lut_version;
    unsigned int set;
 CODE:
+#line 430 "KontoCheck.lx"
    keine_iban_berechnung=NULL;
    gueltigkeit=NULL;
    felder=-1;
@@ -301,6 +315,7 @@ lut_filialen_i(r,blz)
    char *blz;
    int r;
 CODE:
+#line 505 "KontoCheck.lx"
    if(items!=2)Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_filialen(blz)");
    RETVAL=lut_filialen(blz,&r);
 OUTPUT:
@@ -311,6 +326,7 @@ int lut_multiple_i(blz,filiale...)
 char *blz;
 int filiale;
 PREINIT:
+#line 515 "KontoCheck.lx"
    int cnt;
    char **p_name;
    char **p_name_kurz;
@@ -324,6 +340,7 @@ PREINIT:
    char *p_loeschung;
    int *p_nachfolge_blz;
  CODE:
+#line 528 "KontoCheck.lx"
    if(items!=14)Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_multiple_i(blz, filiale, cnt, "
          "name, name_kurz, plz, ort, pan, bic, pz, nr, aenderung, loeschung, nachfolge_blz)");
    RETVAL=lut_multiple(blz,&cnt,NULL,&p_name,&p_name_kurz,&p_plz,&p_ort,&p_pan,&p_bic,&p_pz,&p_nr,
@@ -361,11 +378,13 @@ PREINIT:
 OUTPUT:
    RETVAL
 
+#line 566 "KontoCheck.lx"
 const char *
 pz2str(pz...)
    int pz;
 CODE:
    int ret;
+#line 573 "KontoCheck.lx"
    if(items<1 || items>2)Perl_croak(aTHX_ "Usage: Business::KontoCheck::pz2str(pz[,retval])");
 
    RETVAL=pz2str(pz,&ret);
@@ -376,12 +395,15 @@ CODE:
 OUTPUT:
    RETVAL
 
+#line 584 "KontoCheck.lx"
 int
 lut_blz_i(blz...)
    char *blz;
 PREINIT:
+#line 590 "KontoCheck.lx"
    unsigned int offset;
 CODE:
+#line 593 "KontoCheck.lx"
    if(items==1)
       offset=0;
    else if(items==2 || items==3)
@@ -397,22 +419,44 @@ CODE:
 OUTPUT:
    RETVAL
 
+#line 609 "KontoCheck.lx"
+int
+bic_info_i(bic,mode,anzahl,start_idx)
+   char *bic;
+   int mode;
+   int anzahl;
+   int start_idx;
+CODE:
+#line 618 "KontoCheck.lx"
+   if(items!=4)Perl_croak(aTHX_ "Usage: Business::KontoCheck::bic_info(bic,mode,anzahl,start_idx))");
+
+   RETVAL=bic_info(bic,mode,&anzahl,&start_idx);
+   sv_setiv(ST(2),(IV)anzahl);
+   SvSETMAGIC(ST(2));
+   sv_setiv(ST(3),(IV)start_idx);
+   SvSETMAGIC(ST(3));
+OUTPUT:
+   RETVAL
+
+#line 602 "KontoCheck.lx"
 
 const char *
 lut_name_i(r,blz...)
    char *blz;
    int r;
 PREINIT:
-   unsigned int offset;
+#line 609 "KontoCheck.lx"
+   unsigned int zweigstelle;
 CODE:
+#line 612 "KontoCheck.lx"
    if(items==2)
-      offset=0;
+      zweigstelle=0;
    else if(items==3 || items==4)
-      offset=(unsigned int)SvUV(ST(2));
+      zweigstelle=(unsigned int)SvUV(ST(2));
    else
-      Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_name(blz[,offset[,retval]])");
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_name(blz[,zweigstelle[,retval]])");
 
-   RETVAL=lut_name(blz,offset,&r);
+   RETVAL=lut_name(blz,zweigstelle,&r);
    if(items==4){
       sv_setiv(ST(3),(IV)r);
       SvSETMAGIC(ST(3));
@@ -421,22 +465,25 @@ OUTPUT:
    r
    RETVAL
 
+#line 603 "KontoCheck.lx"
 
 const char *
 lut_name_kurz_i(r,blz...)
    char *blz;
    int r;
 PREINIT:
-   unsigned int offset;
+#line 610 "KontoCheck.lx"
+   unsigned int zweigstelle;
 CODE:
+#line 613 "KontoCheck.lx"
    if(items==2)
-      offset=0;
+      zweigstelle=0;
    else if(items==3 || items==4)
-      offset=(unsigned int)SvUV(ST(2));
+      zweigstelle=(unsigned int)SvUV(ST(2));
    else
-      Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_name_kurz(blz[,offset[,retval]])");
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_name_kurz(blz[,zweigstelle[,retval]])");
 
-   RETVAL=lut_name_kurz(blz,offset,&r);
+   RETVAL=lut_name_kurz(blz,zweigstelle,&r);
    if(items==4){
       sv_setiv(ST(3),(IV)r);
       SvSETMAGIC(ST(3));
@@ -445,22 +492,25 @@ OUTPUT:
    r
    RETVAL
 
+#line 604 "KontoCheck.lx"
 
 int
 lut_plz_i(r,blz...)
    char *blz;
    int r;
 PREINIT:
-   unsigned int offset;
+#line 611 "KontoCheck.lx"
+   unsigned int zweigstelle;
 CODE:
+#line 614 "KontoCheck.lx"
    if(items==2)
-      offset=0;
+      zweigstelle=0;
    else if(items==3 || items==4)
-      offset=(unsigned int)SvUV(ST(2));
+      zweigstelle=(unsigned int)SvUV(ST(2));
    else
-      Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_plz(blz[,offset[,retval]])");
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_plz(blz[,zweigstelle[,retval]])");
 
-   RETVAL=lut_plz(blz,offset,&r);
+   RETVAL=lut_plz(blz,zweigstelle,&r);
    if(items==4){
       sv_setiv(ST(3),(IV)r);
       SvSETMAGIC(ST(3));
@@ -469,22 +519,25 @@ OUTPUT:
    r
    RETVAL
 
+#line 605 "KontoCheck.lx"
 
 const char *
 lut_ort_i(r,blz...)
    char *blz;
    int r;
 PREINIT:
-   unsigned int offset;
+#line 612 "KontoCheck.lx"
+   unsigned int zweigstelle;
 CODE:
+#line 615 "KontoCheck.lx"
    if(items==2)
-      offset=0;
+      zweigstelle=0;
    else if(items==3 || items==4)
-      offset=(unsigned int)SvUV(ST(2));
+      zweigstelle=(unsigned int)SvUV(ST(2));
    else
-      Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_ort(blz[,offset[,retval]])");
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_ort(blz[,zweigstelle[,retval]])");
 
-   RETVAL=lut_ort(blz,offset,&r);
+   RETVAL=lut_ort(blz,zweigstelle,&r);
    if(items==4){
       sv_setiv(ST(3),(IV)r);
       SvSETMAGIC(ST(3));
@@ -493,22 +546,25 @@ OUTPUT:
    r
    RETVAL
 
+#line 606 "KontoCheck.lx"
 
 int
 lut_pan_i(r,blz...)
    char *blz;
    int r;
 PREINIT:
-   unsigned int offset;
+#line 613 "KontoCheck.lx"
+   unsigned int zweigstelle;
 CODE:
+#line 616 "KontoCheck.lx"
    if(items==2)
-      offset=0;
+      zweigstelle=0;
    else if(items==3 || items==4)
-      offset=(unsigned int)SvUV(ST(2));
+      zweigstelle=(unsigned int)SvUV(ST(2));
    else
-      Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_pan(blz[,offset[,retval]])");
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_pan(blz[,zweigstelle[,retval]])");
 
-   RETVAL=lut_pan(blz,offset,&r);
+   RETVAL=lut_pan(blz,zweigstelle,&r);
    if(items==4){
       sv_setiv(ST(3),(IV)r);
       SvSETMAGIC(ST(3));
@@ -517,22 +573,25 @@ OUTPUT:
    r
    RETVAL
 
+#line 607 "KontoCheck.lx"
 
 const char *
 lut_bic_i(r,blz...)
    char *blz;
    int r;
 PREINIT:
-   unsigned int offset;
+#line 614 "KontoCheck.lx"
+   unsigned int zweigstelle;
 CODE:
+#line 617 "KontoCheck.lx"
    if(items==2)
-      offset=0;
+      zweigstelle=0;
    else if(items==3 || items==4)
-      offset=(unsigned int)SvUV(ST(2));
+      zweigstelle=(unsigned int)SvUV(ST(2));
    else
-      Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_bic(blz[,offset[,retval]])");
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_bic(blz[,zweigstelle[,retval]])");
 
-   RETVAL=lut_bic(blz,offset,&r);
+   RETVAL=lut_bic(blz,zweigstelle,&r);
    if(items==4){
       sv_setiv(ST(3),(IV)r);
       SvSETMAGIC(ST(3));
@@ -541,22 +600,25 @@ OUTPUT:
    r
    RETVAL
 
+#line 608 "KontoCheck.lx"
 
 int
 lut_pz_i(r,blz...)
    char *blz;
    int r;
 PREINIT:
-   unsigned int offset;
+#line 615 "KontoCheck.lx"
+   unsigned int zweigstelle;
 CODE:
+#line 618 "KontoCheck.lx"
    if(items==2)
-      offset=0;
+      zweigstelle=0;
    else if(items==3 || items==4)
-      offset=(unsigned int)SvUV(ST(2));
+      zweigstelle=(unsigned int)SvUV(ST(2));
    else
-      Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_pz(blz[,offset[,retval]])");
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_pz(blz[,zweigstelle[,retval]])");
 
-   RETVAL=lut_pz(blz,offset,&r);
+   RETVAL=lut_pz(blz,zweigstelle,&r);
    if(items==4){
       sv_setiv(ST(3),(IV)r);
       SvSETMAGIC(ST(3));
@@ -565,22 +627,25 @@ OUTPUT:
    r
    RETVAL
 
+#line 609 "KontoCheck.lx"
 
 int
 lut_aenderung_i(r,blz...)
    char *blz;
    int r;
 PREINIT:
-   unsigned int offset;
+#line 616 "KontoCheck.lx"
+   unsigned int zweigstelle;
 CODE:
+#line 619 "KontoCheck.lx"
    if(items==2)
-      offset=0;
+      zweigstelle=0;
    else if(items==3 || items==4)
-      offset=(unsigned int)SvUV(ST(2));
+      zweigstelle=(unsigned int)SvUV(ST(2));
    else
-      Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_aenderung(blz[,offset[,retval]])");
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_aenderung(blz[,zweigstelle[,retval]])");
 
-   RETVAL=lut_aenderung(blz,offset,&r);
+   RETVAL=lut_aenderung(blz,zweigstelle,&r);
    if(items==4){
       sv_setiv(ST(3),(IV)r);
       SvSETMAGIC(ST(3));
@@ -589,22 +654,25 @@ OUTPUT:
    r
    RETVAL
 
+#line 610 "KontoCheck.lx"
 
 int
 lut_loeschung_i(r,blz...)
    char *blz;
    int r;
 PREINIT:
-   unsigned int offset;
+#line 617 "KontoCheck.lx"
+   unsigned int zweigstelle;
 CODE:
+#line 620 "KontoCheck.lx"
    if(items==2)
-      offset=0;
+      zweigstelle=0;
    else if(items==3 || items==4)
-      offset=(unsigned int)SvUV(ST(2));
+      zweigstelle=(unsigned int)SvUV(ST(2));
    else
-      Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_loeschung(blz[,offset[,retval]])");
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_loeschung(blz[,zweigstelle[,retval]])");
 
-   RETVAL=lut_loeschung(blz,offset,&r);
+   RETVAL=lut_loeschung(blz,zweigstelle,&r);
    if(items==4){
       sv_setiv(ST(3),(IV)r);
       SvSETMAGIC(ST(3));
@@ -613,22 +681,25 @@ OUTPUT:
    r
    RETVAL
 
+#line 611 "KontoCheck.lx"
 
 int
 lut_nachfolge_blz_i(r,blz...)
    char *blz;
    int r;
 PREINIT:
-   unsigned int offset;
+#line 618 "KontoCheck.lx"
+   unsigned int zweigstelle;
 CODE:
+#line 621 "KontoCheck.lx"
    if(items==2)
-      offset=0;
+      zweigstelle=0;
    else if(items==3 || items==4)
-      offset=(unsigned int)SvUV(ST(2));
+      zweigstelle=(unsigned int)SvUV(ST(2));
    else
-      Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_nachfolge_blz(blz[,offset[,retval]])");
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_nachfolge_blz(blz[,zweigstelle[,retval]])");
 
-   RETVAL=lut_nachfolge_blz(blz,offset,&r);
+   RETVAL=lut_nachfolge_blz(blz,zweigstelle,&r);
    if(items==4){
       sv_setiv(ST(3),(IV)r);
       SvSETMAGIC(ST(3));
@@ -637,22 +708,25 @@ OUTPUT:
    r
    RETVAL
 
+#line 612 "KontoCheck.lx"
 
 int
 lut_iban_regel_i(r,blz...)
    char *blz;
    int r;
 PREINIT:
-   unsigned int offset;
+#line 619 "KontoCheck.lx"
+   unsigned int zweigstelle;
 CODE:
+#line 622 "KontoCheck.lx"
    if(items==2)
-      offset=0;
+      zweigstelle=0;
    else if(items==3 || items==4)
-      offset=(unsigned int)SvUV(ST(2));
+      zweigstelle=(unsigned int)SvUV(ST(2));
    else
-      Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_iban_regel(blz[,offset[,retval]])");
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_iban_regel(blz[,zweigstelle[,retval]])");
 
-   RETVAL=lut_iban_regel(blz,offset,&r);
+   RETVAL=lut_iban_regel(blz,zweigstelle,&r);
    if(items==4){
       sv_setiv(ST(3),(IV)r);
       SvSETMAGIC(ST(3));
@@ -661,10 +735,895 @@ OUTPUT:
    r
    RETVAL
 
+
+#line 608 "KontoCheck.lx"
+
+const char *
+bic_name_i(r,bic...)
+   char *bic;
+   int r;
+PREINIT:
+#line 615 "KontoCheck.lx"
+   unsigned int zweigstelle,mode;
+CODE:
+#line 618 "KontoCheck.lx"
+   if(items==2)
+      mode=zweigstelle=0;
+   else if(items==3){
+      mode=(unsigned int)SvUV(ST(2));
+      zweigstelle=0;
+   }
+   else if(items==4 || items==5){
+      mode=(unsigned int)SvUV(ST(2));
+      zweigstelle=(unsigned int)SvUV(ST(3));
+   }
+   else
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::bic_name(bic[,mode[,zweigstelle[,retval]]])");
+
+   RETVAL=bic_name(bic,mode,zweigstelle,&r);
+   if(items==5){
+      sv_setiv(ST(4),(IV)r);
+      SvSETMAGIC(ST(4));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 609 "KontoCheck.lx"
+
+const char *
+bic_name_kurz_i(r,bic...)
+   char *bic;
+   int r;
+PREINIT:
+#line 616 "KontoCheck.lx"
+   unsigned int zweigstelle,mode;
+CODE:
+#line 619 "KontoCheck.lx"
+   if(items==2)
+      mode=zweigstelle=0;
+   else if(items==3){
+      mode=(unsigned int)SvUV(ST(2));
+      zweigstelle=0;
+   }
+   else if(items==4 || items==5){
+      mode=(unsigned int)SvUV(ST(2));
+      zweigstelle=(unsigned int)SvUV(ST(3));
+   }
+   else
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::bic_name_kurz(bic[,mode[,zweigstelle[,retval]]])");
+
+   RETVAL=bic_name_kurz(bic,mode,zweigstelle,&r);
+   if(items==5){
+      sv_setiv(ST(4),(IV)r);
+      SvSETMAGIC(ST(4));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 610 "KontoCheck.lx"
+
+int
+bic_plz_i(r,bic...)
+   char *bic;
+   int r;
+PREINIT:
+#line 617 "KontoCheck.lx"
+   unsigned int zweigstelle,mode;
+CODE:
+#line 620 "KontoCheck.lx"
+   if(items==2)
+      mode=zweigstelle=0;
+   else if(items==3){
+      mode=(unsigned int)SvUV(ST(2));
+      zweigstelle=0;
+   }
+   else if(items==4 || items==5){
+      mode=(unsigned int)SvUV(ST(2));
+      zweigstelle=(unsigned int)SvUV(ST(3));
+   }
+   else
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::bic_plz(bic[,mode[,zweigstelle[,retval]]])");
+
+   RETVAL=bic_plz(bic,mode,zweigstelle,&r);
+   if(items==5){
+      sv_setiv(ST(4),(IV)r);
+      SvSETMAGIC(ST(4));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 611 "KontoCheck.lx"
+
+const char *
+bic_ort_i(r,bic...)
+   char *bic;
+   int r;
+PREINIT:
+#line 618 "KontoCheck.lx"
+   unsigned int zweigstelle,mode;
+CODE:
+#line 621 "KontoCheck.lx"
+   if(items==2)
+      mode=zweigstelle=0;
+   else if(items==3){
+      mode=(unsigned int)SvUV(ST(2));
+      zweigstelle=0;
+   }
+   else if(items==4 || items==5){
+      mode=(unsigned int)SvUV(ST(2));
+      zweigstelle=(unsigned int)SvUV(ST(3));
+   }
+   else
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::bic_ort(bic[,mode[,zweigstelle[,retval]]])");
+
+   RETVAL=bic_ort(bic,mode,zweigstelle,&r);
+   if(items==5){
+      sv_setiv(ST(4),(IV)r);
+      SvSETMAGIC(ST(4));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 612 "KontoCheck.lx"
+
+int
+bic_pan_i(r,bic...)
+   char *bic;
+   int r;
+PREINIT:
+#line 619 "KontoCheck.lx"
+   unsigned int zweigstelle,mode;
+CODE:
+#line 622 "KontoCheck.lx"
+   if(items==2)
+      mode=zweigstelle=0;
+   else if(items==3){
+      mode=(unsigned int)SvUV(ST(2));
+      zweigstelle=0;
+   }
+   else if(items==4 || items==5){
+      mode=(unsigned int)SvUV(ST(2));
+      zweigstelle=(unsigned int)SvUV(ST(3));
+   }
+   else
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::bic_pan(bic[,mode[,zweigstelle[,retval]]])");
+
+   RETVAL=bic_pan(bic,mode,zweigstelle,&r);
+   if(items==5){
+      sv_setiv(ST(4),(IV)r);
+      SvSETMAGIC(ST(4));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 613 "KontoCheck.lx"
+
+const char *
+bic_bic_i(r,bic...)
+   char *bic;
+   int r;
+PREINIT:
+#line 620 "KontoCheck.lx"
+   unsigned int zweigstelle,mode;
+CODE:
+#line 623 "KontoCheck.lx"
+   if(items==2)
+      mode=zweigstelle=0;
+   else if(items==3){
+      mode=(unsigned int)SvUV(ST(2));
+      zweigstelle=0;
+   }
+   else if(items==4 || items==5){
+      mode=(unsigned int)SvUV(ST(2));
+      zweigstelle=(unsigned int)SvUV(ST(3));
+   }
+   else
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::bic_bic(bic[,mode[,zweigstelle[,retval]]])");
+
+   RETVAL=bic_bic(bic,mode,zweigstelle,&r);
+   if(items==5){
+      sv_setiv(ST(4),(IV)r);
+      SvSETMAGIC(ST(4));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 614 "KontoCheck.lx"
+
+int
+bic_pz_i(r,bic...)
+   char *bic;
+   int r;
+PREINIT:
+#line 621 "KontoCheck.lx"
+   unsigned int zweigstelle,mode;
+CODE:
+#line 624 "KontoCheck.lx"
+   if(items==2)
+      mode=zweigstelle=0;
+   else if(items==3){
+      mode=(unsigned int)SvUV(ST(2));
+      zweigstelle=0;
+   }
+   else if(items==4 || items==5){
+      mode=(unsigned int)SvUV(ST(2));
+      zweigstelle=(unsigned int)SvUV(ST(3));
+   }
+   else
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::bic_pz(bic[,mode[,zweigstelle[,retval]]])");
+
+   RETVAL=bic_pz(bic,mode,zweigstelle,&r);
+   if(items==5){
+      sv_setiv(ST(4),(IV)r);
+      SvSETMAGIC(ST(4));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 615 "KontoCheck.lx"
+
+int
+bic_aenderung_i(r,bic...)
+   char *bic;
+   int r;
+PREINIT:
+#line 622 "KontoCheck.lx"
+   unsigned int zweigstelle,mode;
+CODE:
+#line 625 "KontoCheck.lx"
+   if(items==2)
+      mode=zweigstelle=0;
+   else if(items==3){
+      mode=(unsigned int)SvUV(ST(2));
+      zweigstelle=0;
+   }
+   else if(items==4 || items==5){
+      mode=(unsigned int)SvUV(ST(2));
+      zweigstelle=(unsigned int)SvUV(ST(3));
+   }
+   else
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::bic_aenderung(bic[,mode[,zweigstelle[,retval]]])");
+
+   RETVAL=bic_aenderung(bic,mode,zweigstelle,&r);
+   if(items==5){
+      sv_setiv(ST(4),(IV)r);
+      SvSETMAGIC(ST(4));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 616 "KontoCheck.lx"
+
+int
+bic_loeschung_i(r,bic...)
+   char *bic;
+   int r;
+PREINIT:
+#line 623 "KontoCheck.lx"
+   unsigned int zweigstelle,mode;
+CODE:
+#line 626 "KontoCheck.lx"
+   if(items==2)
+      mode=zweigstelle=0;
+   else if(items==3){
+      mode=(unsigned int)SvUV(ST(2));
+      zweigstelle=0;
+   }
+   else if(items==4 || items==5){
+      mode=(unsigned int)SvUV(ST(2));
+      zweigstelle=(unsigned int)SvUV(ST(3));
+   }
+   else
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::bic_loeschung(bic[,mode[,zweigstelle[,retval]]])");
+
+   RETVAL=bic_loeschung(bic,mode,zweigstelle,&r);
+   if(items==5){
+      sv_setiv(ST(4),(IV)r);
+      SvSETMAGIC(ST(4));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 617 "KontoCheck.lx"
+
+int
+bic_nachfolge_blz_i(r,bic...)
+   char *bic;
+   int r;
+PREINIT:
+#line 624 "KontoCheck.lx"
+   unsigned int zweigstelle,mode;
+CODE:
+#line 627 "KontoCheck.lx"
+   if(items==2)
+      mode=zweigstelle=0;
+   else if(items==3){
+      mode=(unsigned int)SvUV(ST(2));
+      zweigstelle=0;
+   }
+   else if(items==4 || items==5){
+      mode=(unsigned int)SvUV(ST(2));
+      zweigstelle=(unsigned int)SvUV(ST(3));
+   }
+   else
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::bic_nachfolge_blz(bic[,mode[,zweigstelle[,retval]]])");
+
+   RETVAL=bic_nachfolge_blz(bic,mode,zweigstelle,&r);
+   if(items==5){
+      sv_setiv(ST(4),(IV)r);
+      SvSETMAGIC(ST(4));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 618 "KontoCheck.lx"
+
+int
+bic_iban_regel_i(r,bic...)
+   char *bic;
+   int r;
+PREINIT:
+#line 625 "KontoCheck.lx"
+   unsigned int zweigstelle,mode;
+CODE:
+#line 628 "KontoCheck.lx"
+   if(items==2)
+      mode=zweigstelle=0;
+   else if(items==3){
+      mode=(unsigned int)SvUV(ST(2));
+      zweigstelle=0;
+   }
+   else if(items==4 || items==5){
+      mode=(unsigned int)SvUV(ST(2));
+      zweigstelle=(unsigned int)SvUV(ST(3));
+   }
+   else
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::bic_iban_regel(bic[,mode[,zweigstelle[,retval]]])");
+
+   RETVAL=bic_iban_regel(bic,mode,zweigstelle,&r);
+   if(items==5){
+      sv_setiv(ST(4),(IV)r);
+      SvSETMAGIC(ST(4));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+
+#line 633 "KontoCheck.lx"
+
+const char *
+biq_name_i(r,idx...)
+   int r;
+   int idx;
+CODE:
+#line 640 "KontoCheck.lx"
+   if(items<2 || items>3)
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::biq_name(idx[,retval]])");
+
+   RETVAL=biq_name(idx,&r);
+   if(items==3){
+      sv_setiv(ST(2),(IV)r);
+      SvSETMAGIC(ST(2));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 634 "KontoCheck.lx"
+
+const char *
+biq_name_kurz_i(r,idx...)
+   int r;
+   int idx;
+CODE:
+#line 641 "KontoCheck.lx"
+   if(items<2 || items>3)
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::biq_name_kurz(idx[,retval]])");
+
+   RETVAL=biq_name_kurz(idx,&r);
+   if(items==3){
+      sv_setiv(ST(2),(IV)r);
+      SvSETMAGIC(ST(2));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 635 "KontoCheck.lx"
+
+int
+biq_plz_i(r,idx...)
+   int r;
+   int idx;
+CODE:
+#line 642 "KontoCheck.lx"
+   if(items<2 || items>3)
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::biq_plz(idx[,retval]])");
+
+   RETVAL=biq_plz(idx,&r);
+   if(items==3){
+      sv_setiv(ST(2),(IV)r);
+      SvSETMAGIC(ST(2));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 636 "KontoCheck.lx"
+
+const char *
+biq_ort_i(r,idx...)
+   int r;
+   int idx;
+CODE:
+#line 643 "KontoCheck.lx"
+   if(items<2 || items>3)
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::biq_ort(idx[,retval]])");
+
+   RETVAL=biq_ort(idx,&r);
+   if(items==3){
+      sv_setiv(ST(2),(IV)r);
+      SvSETMAGIC(ST(2));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 637 "KontoCheck.lx"
+
+int
+biq_pan_i(r,idx...)
+   int r;
+   int idx;
+CODE:
+#line 644 "KontoCheck.lx"
+   if(items<2 || items>3)
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::biq_pan(idx[,retval]])");
+
+   RETVAL=biq_pan(idx,&r);
+   if(items==3){
+      sv_setiv(ST(2),(IV)r);
+      SvSETMAGIC(ST(2));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 638 "KontoCheck.lx"
+
+const char *
+biq_bic_i(r,idx...)
+   int r;
+   int idx;
+CODE:
+#line 645 "KontoCheck.lx"
+   if(items<2 || items>3)
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::biq_bic(idx[,retval]])");
+
+   RETVAL=biq_bic(idx,&r);
+   if(items==3){
+      sv_setiv(ST(2),(IV)r);
+      SvSETMAGIC(ST(2));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 639 "KontoCheck.lx"
+
+int
+biq_pz_i(r,idx...)
+   int r;
+   int idx;
+CODE:
+#line 646 "KontoCheck.lx"
+   if(items<2 || items>3)
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::biq_pz(idx[,retval]])");
+
+   RETVAL=biq_pz(idx,&r);
+   if(items==3){
+      sv_setiv(ST(2),(IV)r);
+      SvSETMAGIC(ST(2));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 640 "KontoCheck.lx"
+
+int
+biq_aenderung_i(r,idx...)
+   int r;
+   int idx;
+CODE:
+#line 647 "KontoCheck.lx"
+   if(items<2 || items>3)
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::biq_aenderung(idx[,retval]])");
+
+   RETVAL=biq_aenderung(idx,&r);
+   if(items==3){
+      sv_setiv(ST(2),(IV)r);
+      SvSETMAGIC(ST(2));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 641 "KontoCheck.lx"
+
+int
+biq_loeschung_i(r,idx...)
+   int r;
+   int idx;
+CODE:
+#line 648 "KontoCheck.lx"
+   if(items<2 || items>3)
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::biq_loeschung(idx[,retval]])");
+
+   RETVAL=biq_loeschung(idx,&r);
+   if(items==3){
+      sv_setiv(ST(2),(IV)r);
+      SvSETMAGIC(ST(2));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 642 "KontoCheck.lx"
+
+int
+biq_nachfolge_blz_i(r,idx...)
+   int r;
+   int idx;
+CODE:
+#line 649 "KontoCheck.lx"
+   if(items<2 || items>3)
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::biq_nachfolge_blz(idx[,retval]])");
+
+   RETVAL=biq_nachfolge_blz(idx,&r);
+   if(items==3){
+      sv_setiv(ST(2),(IV)r);
+      SvSETMAGIC(ST(2));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 643 "KontoCheck.lx"
+
+int
+biq_iban_regel_i(r,idx...)
+   int r;
+   int idx;
+CODE:
+#line 650 "KontoCheck.lx"
+   if(items<2 || items>3)
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::biq_iban_regel(idx[,retval]])");
+
+   RETVAL=biq_iban_regel(idx,&r);
+   if(items==3){
+      sv_setiv(ST(2),(IV)r);
+      SvSETMAGIC(ST(2));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+
+#line 638 "KontoCheck.lx"
+
+const char *
+iban_name_i(r,iban...)
+   char *iban;
+   int r;
+PREINIT:
+#line 645 "KontoCheck.lx"
+   unsigned int zweigstelle;
+CODE:
+#line 648 "KontoCheck.lx"
+   if(items==2)
+      zweigstelle=0;
+   else if(items==3 || items==4)
+      zweigstelle=(unsigned int)SvUV(ST(2));
+   else
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::iban_name(iban[,zweigstelle[,retval]])");
+
+   RETVAL=iban_name(iban,zweigstelle,&r);
+   if(items==4){
+      sv_setiv(ST(3),(IV)r);
+      SvSETMAGIC(ST(3));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 639 "KontoCheck.lx"
+
+const char *
+iban_name_kurz_i(r,iban...)
+   char *iban;
+   int r;
+PREINIT:
+#line 646 "KontoCheck.lx"
+   unsigned int zweigstelle;
+CODE:
+#line 649 "KontoCheck.lx"
+   if(items==2)
+      zweigstelle=0;
+   else if(items==3 || items==4)
+      zweigstelle=(unsigned int)SvUV(ST(2));
+   else
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::iban_name_kurz(iban[,zweigstelle[,retval]])");
+
+   RETVAL=iban_name_kurz(iban,zweigstelle,&r);
+   if(items==4){
+      sv_setiv(ST(3),(IV)r);
+      SvSETMAGIC(ST(3));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 640 "KontoCheck.lx"
+
+int
+iban_plz_i(r,iban...)
+   char *iban;
+   int r;
+PREINIT:
+#line 647 "KontoCheck.lx"
+   unsigned int zweigstelle;
+CODE:
+#line 650 "KontoCheck.lx"
+   if(items==2)
+      zweigstelle=0;
+   else if(items==3 || items==4)
+      zweigstelle=(unsigned int)SvUV(ST(2));
+   else
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::iban_plz(iban[,zweigstelle[,retval]])");
+
+   RETVAL=iban_plz(iban,zweigstelle,&r);
+   if(items==4){
+      sv_setiv(ST(3),(IV)r);
+      SvSETMAGIC(ST(3));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 641 "KontoCheck.lx"
+
+const char *
+iban_ort_i(r,iban...)
+   char *iban;
+   int r;
+PREINIT:
+#line 648 "KontoCheck.lx"
+   unsigned int zweigstelle;
+CODE:
+#line 651 "KontoCheck.lx"
+   if(items==2)
+      zweigstelle=0;
+   else if(items==3 || items==4)
+      zweigstelle=(unsigned int)SvUV(ST(2));
+   else
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::iban_ort(iban[,zweigstelle[,retval]])");
+
+   RETVAL=iban_ort(iban,zweigstelle,&r);
+   if(items==4){
+      sv_setiv(ST(3),(IV)r);
+      SvSETMAGIC(ST(3));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 642 "KontoCheck.lx"
+
+int
+iban_pan_i(r,iban...)
+   char *iban;
+   int r;
+PREINIT:
+#line 649 "KontoCheck.lx"
+   unsigned int zweigstelle;
+CODE:
+#line 652 "KontoCheck.lx"
+   if(items==2)
+      zweigstelle=0;
+   else if(items==3 || items==4)
+      zweigstelle=(unsigned int)SvUV(ST(2));
+   else
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::iban_pan(iban[,zweigstelle[,retval]])");
+
+   RETVAL=iban_pan(iban,zweigstelle,&r);
+   if(items==4){
+      sv_setiv(ST(3),(IV)r);
+      SvSETMAGIC(ST(3));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 643 "KontoCheck.lx"
+
+const char *
+iban_bic_i(r,iban...)
+   char *iban;
+   int r;
+PREINIT:
+#line 650 "KontoCheck.lx"
+   unsigned int zweigstelle;
+CODE:
+#line 653 "KontoCheck.lx"
+   if(items==2)
+      zweigstelle=0;
+   else if(items==3 || items==4)
+      zweigstelle=(unsigned int)SvUV(ST(2));
+   else
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::iban_bic(iban[,zweigstelle[,retval]])");
+
+   RETVAL=iban_bic(iban,zweigstelle,&r);
+   if(items==4){
+      sv_setiv(ST(3),(IV)r);
+      SvSETMAGIC(ST(3));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 644 "KontoCheck.lx"
+
+int
+iban_pz_i(r,iban...)
+   char *iban;
+   int r;
+PREINIT:
+#line 651 "KontoCheck.lx"
+   unsigned int zweigstelle;
+CODE:
+#line 654 "KontoCheck.lx"
+   if(items==2)
+      zweigstelle=0;
+   else if(items==3 || items==4)
+      zweigstelle=(unsigned int)SvUV(ST(2));
+   else
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::iban_pz(iban[,zweigstelle[,retval]])");
+
+   RETVAL=iban_pz(iban,zweigstelle,&r);
+   if(items==4){
+      sv_setiv(ST(3),(IV)r);
+      SvSETMAGIC(ST(3));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 645 "KontoCheck.lx"
+
+int
+iban_aenderung_i(r,iban...)
+   char *iban;
+   int r;
+PREINIT:
+#line 652 "KontoCheck.lx"
+   unsigned int zweigstelle;
+CODE:
+#line 655 "KontoCheck.lx"
+   if(items==2)
+      zweigstelle=0;
+   else if(items==3 || items==4)
+      zweigstelle=(unsigned int)SvUV(ST(2));
+   else
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::iban_aenderung(iban[,zweigstelle[,retval]])");
+
+   RETVAL=iban_aenderung(iban,zweigstelle,&r);
+   if(items==4){
+      sv_setiv(ST(3),(IV)r);
+      SvSETMAGIC(ST(3));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 646 "KontoCheck.lx"
+
+int
+iban_loeschung_i(r,iban...)
+   char *iban;
+   int r;
+PREINIT:
+#line 653 "KontoCheck.lx"
+   unsigned int zweigstelle;
+CODE:
+#line 656 "KontoCheck.lx"
+   if(items==2)
+      zweigstelle=0;
+   else if(items==3 || items==4)
+      zweigstelle=(unsigned int)SvUV(ST(2));
+   else
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::iban_loeschung(iban[,zweigstelle[,retval]])");
+
+   RETVAL=iban_loeschung(iban,zweigstelle,&r);
+   if(items==4){
+      sv_setiv(ST(3),(IV)r);
+      SvSETMAGIC(ST(3));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 647 "KontoCheck.lx"
+
+int
+iban_nachfolge_blz_i(r,iban...)
+   char *iban;
+   int r;
+PREINIT:
+#line 654 "KontoCheck.lx"
+   unsigned int zweigstelle;
+CODE:
+#line 657 "KontoCheck.lx"
+   if(items==2)
+      zweigstelle=0;
+   else if(items==3 || items==4)
+      zweigstelle=(unsigned int)SvUV(ST(2));
+   else
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::iban_nachfolge_blz(iban[,zweigstelle[,retval]])");
+
+   RETVAL=iban_nachfolge_blz(iban,zweigstelle,&r);
+   if(items==4){
+      sv_setiv(ST(3),(IV)r);
+      SvSETMAGIC(ST(3));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+#line 648 "KontoCheck.lx"
+
+int
+iban_iban_regel_i(r,iban...)
+   char *iban;
+   int r;
+PREINIT:
+#line 655 "KontoCheck.lx"
+   unsigned int zweigstelle;
+CODE:
+#line 658 "KontoCheck.lx"
+   if(items==2)
+      zweigstelle=0;
+   else if(items==3 || items==4)
+      zweigstelle=(unsigned int)SvUV(ST(2));
+   else
+      Perl_croak(aTHX_ "Usage: Business::KontoCheck::iban_iban_regel(iban[,zweigstelle[,retval]])");
+
+   RETVAL=iban_iban_regel(iban,zweigstelle,&r);
+   if(items==4){
+      sv_setiv(ST(3),(IV)r);
+      SvSETMAGIC(ST(3));
+   }
+OUTPUT:
+   r
+   RETVAL
+
+
 const char *
 kto_check_retval2txt(ret)
    int ret;
 CODE:
+#line 656 "KontoCheck.lx"
    if(items!=1)Perl_croak(aTHX_ "Usage: Business::KontoCheck::retval2txt(ret)");
 
    RETVAL=kto_check_retval2txt(ret);
@@ -672,11 +1631,13 @@ OUTPUT:
    RETVAL
 
 
+#line 664 "KontoCheck.lx"
 
 const char *
 retval2txt(ret)
    int ret;
 CODE:
+#line 670 "KontoCheck.lx"
    if(items!=1)Perl_croak(aTHX_ "Usage: Business::KontoCheck::retval2txt(ret)");
 
    RETVAL=kto_check_retval2txt(ret);
@@ -687,6 +1648,7 @@ const char *
 kto_check_retval2iso(ret)
    int ret;
 CODE:
+#line 657 "KontoCheck.lx"
    if(items!=1)Perl_croak(aTHX_ "Usage: Business::KontoCheck::retval2iso(ret)");
 
    RETVAL=kto_check_retval2iso(ret);
@@ -694,11 +1656,13 @@ OUTPUT:
    RETVAL
 
 
+#line 665 "KontoCheck.lx"
 
 const char *
 retval2iso(ret)
    int ret;
 CODE:
+#line 671 "KontoCheck.lx"
    if(items!=1)Perl_croak(aTHX_ "Usage: Business::KontoCheck::retval2iso(ret)");
 
    RETVAL=kto_check_retval2iso(ret);
@@ -709,6 +1673,7 @@ const char *
 kto_check_retval2txt_short(ret)
    int ret;
 CODE:
+#line 658 "KontoCheck.lx"
    if(items!=1)Perl_croak(aTHX_ "Usage: Business::KontoCheck::retval2txt_short(ret)");
 
    RETVAL=kto_check_retval2txt_short(ret);
@@ -716,11 +1681,13 @@ OUTPUT:
    RETVAL
 
 
+#line 666 "KontoCheck.lx"
 
 const char *
 retval2txt_short(ret)
    int ret;
 CODE:
+#line 672 "KontoCheck.lx"
    if(items!=1)Perl_croak(aTHX_ "Usage: Business::KontoCheck::retval2txt_short(ret)");
 
    RETVAL=kto_check_retval2txt_short(ret);
@@ -731,6 +1698,7 @@ const char *
 kto_check_retval2html(ret)
    int ret;
 CODE:
+#line 659 "KontoCheck.lx"
    if(items!=1)Perl_croak(aTHX_ "Usage: Business::KontoCheck::retval2html(ret)");
 
    RETVAL=kto_check_retval2html(ret);
@@ -738,11 +1706,13 @@ OUTPUT:
    RETVAL
 
 
+#line 667 "KontoCheck.lx"
 
 const char *
 retval2html(ret)
    int ret;
 CODE:
+#line 673 "KontoCheck.lx"
    if(items!=1)Perl_croak(aTHX_ "Usage: Business::KontoCheck::retval2html(ret)");
 
    RETVAL=kto_check_retval2html(ret);
@@ -753,6 +1723,7 @@ const char *
 kto_check_retval2utf8(ret)
    int ret;
 CODE:
+#line 660 "KontoCheck.lx"
    if(items!=1)Perl_croak(aTHX_ "Usage: Business::KontoCheck::retval2utf8(ret)");
 
    RETVAL=kto_check_retval2utf8(ret);
@@ -760,11 +1731,13 @@ OUTPUT:
    RETVAL
 
 
+#line 668 "KontoCheck.lx"
 
 const char *
 retval2utf8(ret)
    int ret;
 CODE:
+#line 674 "KontoCheck.lx"
    if(items!=1)Perl_croak(aTHX_ "Usage: Business::KontoCheck::retval2utf8(ret)");
 
    RETVAL=kto_check_retval2utf8(ret);
@@ -775,6 +1748,7 @@ const char *
 kto_check_retval2dos(ret)
    int ret;
 CODE:
+#line 661 "KontoCheck.lx"
    if(items!=1)Perl_croak(aTHX_ "Usage: Business::KontoCheck::retval2dos(ret)");
 
    RETVAL=kto_check_retval2dos(ret);
@@ -782,11 +1756,13 @@ OUTPUT:
    RETVAL
 
 
+#line 669 "KontoCheck.lx"
 
 const char *
 retval2dos(ret)
    int ret;
 CODE:
+#line 675 "KontoCheck.lx"
    if(items!=1)Perl_croak(aTHX_ "Usage: Business::KontoCheck::retval2dos(ret)");
 
    RETVAL=kto_check_retval2dos(ret);
@@ -810,8 +1786,10 @@ const char *
 current_lutfile_name_i(want_array...)
    int want_array;
 PREINIT:
+#line 699 "KontoCheck.lx"
    int set,level,ret;
 CODE:
+#line 701 "KontoCheck.lx"
    if(items!=4)Perl_croak(aTHX_ "Usage: Business::KontoCheck::current_lutfile_name_i(want_array,set,level,retval)");
    if(want_array)
       RETVAL=current_lutfile_name(&set,&level,&ret);
@@ -834,9 +1812,11 @@ int
 lut_info_i(lut_name...)
    char *lut_name;
 PREINIT:
+#line 723 "KontoCheck.lx"
    char *info1,*info2,*dptr;
    int valid1,valid2,want_array,ret;
 CODE:
+#line 726 "KontoCheck.lx"
    want_array=(int)SvIV(ST(1));
    if(items!=7)Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_info_i(lut_name,want_array,info1,valid1,info2,valid2,lut_dir)");
    if(want_array<0)Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_info(lut_name)");
@@ -958,11 +1938,13 @@ OUTPUT:
 int
 lut_blocks(...)
 PREINIT:
+#line 847 "KontoCheck.lx"
    int mode;
    char *lut_filename;
    char *lut_blocks_ok;
    char *lut_blocks_fehler;
 CODE:
+#line 852 "KontoCheck.lx"
    if(items>1)
       mode=(int)SvIV(ST(0));
    else
@@ -1109,6 +2091,7 @@ lut_suche_volltext_i(want_array,search...)
    int want_array;
    char *search;
 PREINIT:
+#line 998 "KontoCheck.lx"
    char **base_name;
    int i,ret,anzahl,anzahl_name,start_name_idx,*start_idx,*zw,*bb;
    int sort,uniq,anzahl2,*idx_o,*cnt_o;
@@ -1190,6 +2173,7 @@ lut_suche_multiple_i(want_array,search...)
    int want_array;
    char *search;
 PREINIT:
+#line 1079 "KontoCheck.lx"
    char *such_cmd;
    int i,uniq,ret;
    UINT4 anzahl,*blz,*zweigstellen;
@@ -1258,6 +2242,7 @@ lut_suche_c(want_array,art...)
    int want_array;
    int art;
 PREINIT:
+#line 1147 "KontoCheck.lx"
    char *search,**base_name,warn_buffer[128],*fkt;
    int i,ret,anzahl,*start_idx,*zw,*bb;
    int sort,uniq,anzahl2,*idx_o,*cnt_o;
@@ -1379,6 +2364,7 @@ lut_suche_i(want_array,art...)
    int want_array;
    int art;
 PREINIT:
+#line 1268 "KontoCheck.lx"
    int search1;
    int search2;
    int i,ret,anzahl,*start_idx,*base_name,*zw,*bb;
@@ -1520,9 +2506,11 @@ generate_lut_at(inputname,outputname...)
    char *inputname;
    char *outputname;
 PREINIT:
+#line 1409 "KontoCheck.lx"
    char *plain_name;
    char *plain_format;
 CODE:
+#line 1412 "KontoCheck.lx"
    if(items==2){
       plain_name=NULL;
       plain_format=NULL;
