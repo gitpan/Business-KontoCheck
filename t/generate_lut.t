@@ -13,6 +13,12 @@ $retval=Business::KontoCheck::generate_lut2("blz.txt","blz_pl.lut","User-Info Ze
 $ret_txt=$kto_retval{$retval};
 if($retval gt 0){$ok_cnt++;} else{$nok_cnt++;}
 ok($retval gt 0,"generate_lut(): $retval => $ret_txt (ok: $ok_cnt, nok: $nok_cnt)");
+
+# rebuild_blzfile() nur für privaten Test, müllt sonst die Platte der Tester zu :-)
+# $retval=Business::KontoCheck::rebuild_blzfile("blz.lut","blz_pl.txt",1);
+# $ret_txt=$kto_retval{$retval};
+# ok($retval gt 0,"=== >>  rebuild_blzfile(): $retval => $ret_txt (ok: $ok_cnt, nok: $nok_cnt)");
+
 ($ret,$info1,$valid1)=Business::KontoCheck::lut_info('blz_pl.lut');
 ($i1,$i2,$i3,$i4,$i5,$i6,$i7)=split /\n/,$info1;
 print "ret: $ret, valid1: $valid1\ni1: >>$i1<<\ni2: >>$i2<<\ni3: >>$i3<<\ni4: >>$i4<<\ni5: >>$i5<<\ni6: >>$i6<<\ni7: >>$i7<<\n";

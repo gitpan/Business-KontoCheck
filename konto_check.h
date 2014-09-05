@@ -336,6 +336,7 @@ extern const char *lut2_feld_namen[256];
  */
 
 #undef FALSE
+#define INVALID_HANDLE                        -150
 #define INVALID_BIQ_INDEX                     -149
 #define ARRAY_INDEX_OUT_OF_RANGE              -148
 #define IBAN_ONLY_GERMAN                      -147
@@ -468,7 +469,6 @@ extern const char *lut2_feld_namen[256];
 #define LUT2_NO_VALID_DATE                       5
 #define LUT1_SET_LOADED                          6
 #define LUT1_FILE_GENERATED                      7
-#define DTA_FILE_WITH_WARNINGS                   8
 #define LUT_V2_FILE_GENERATED                    9
 #define KTO_CHECK_VALUE_REPLACED                10
 #define OK_UNTERKONTO_POSSIBLE                  11
@@ -844,6 +844,7 @@ DLL_EXPORT int read_lut_block(char *lutname, UINT4 typ,UINT4 *blocklen,char **da
 DLL_EXPORT int read_lut_slot(char *lutname,int slot,UINT4 *blocklen,char **data);
 DLL_EXPORT int lut_dir_dump(char *lutname,char *outputname);
 DLL_EXPORT int lut_dir_dump_str(char *lutname,char **dptr);
+DLL_EXPORT int lut_dir_dump_id(char *lutname,int *rv);
 DLL_EXPORT int generate_lut2_p(char *inputname,char *outputname,char *user_info,char *gueltigkeit,
       UINT4 felder,UINT4 filialen,int slots,int lut_version,int set);
 DLL_EXPORT int generate_lut2(char *inputname,char *outputname,const char *user_info,
@@ -855,7 +856,10 @@ DLL_EXPORT int kto_check_init2(char *lut_name);
 DLL_EXPORT int *lut2_status(void);
 DLL_EXPORT int kto_check_init_p(char *lut_name,int required,int set,int incremental);
 DLL_EXPORT int lut_info(char *lut_name,char **info1,char **info2,int *valid1,int *valid2);
+DLL_EXPORT int lut_info_b(char *lut_name,char **info1,char **info2,int *valid1,int *valid2);
+DLL_EXPORT int lut_info_id(char *lut_name,int *info1,int *info2,int *valid1,int *valid2);
 DLL_EXPORT const char *current_lutfile_name(int *set,int *level,int *retval);
+DLL_EXPORT int current_lutfile_name_id(int *set,int *level,int *retval);
 DLL_EXPORT int lut_valid(void);
 DLL_EXPORT int get_lut_info2(char *lut_name,int *version_p,char **prolog_p,char **info_p,char **user_info_p);
 DLL_EXPORT int get_lut_info_b(char **info,char *lutname);
@@ -998,6 +1002,7 @@ DLL_EXPORT int lut_suche_free(int id);
 DLL_EXPORT int lut_suche_set(int such_id,int idx,int typ,int i1,int i2,char *txt);
 DLL_EXPORT int lut_suche(int such_id,char *such_cmd,UINT4 *such_cnt,UINT4 **filiale,UINT4 **blz);
 DLL_EXPORT int lut_blocks(int mode,char **lut_filename,char **lut_blocks_ok,char **lut_blocks_fehler);
+DLL_EXPORT int lut_blocks_id(int mode,int *lut_filename,int *lut_blocks_ok,int *lut_blocks_fehler);
 
    /* (Benutzerdefinierte) Default-Werte in der LUT-Datei lesen und schreiben */
 #define DEFAULT_CNT 50                 /* Anzahl Einträge (fest) */
@@ -1017,10 +1022,14 @@ DLL_EXPORT int ci_check(char *ci);
 DLL_EXPORT int bic_check(char *search_bic,int *cnt);
 DLL_EXPORT int iban_check(char *iban,int *retval);
 DLL_EXPORT const char *iban2bic(char *iban,int *retval,char *blz,char *kto);
+DLL_EXPORT const char *iban2bic_id(char *iban,int *retval,int *blz,int *kto);
 DLL_EXPORT char *iban_gen(char *kto,char *blz,int *retval);
 DLL_EXPORT char *iban_bic_gen(char *blz,char *kto,const char **bicp,char *blz2,char *kto2,int *retval);
 DLL_EXPORT char *iban_bic_gen1(char *blz,char *kto,const char **bicp,int *retval);
 DLL_EXPORT int ipi_gen(char *zweck,char *dst,char *papier);
+DLL_EXPORT int iban_gen_id(char *blz,char *kto,int *retval);
+DLL_EXPORT int ipi_gen_id(char *zweck,int *dst,int *papier);
+DLL_EXPORT int iban_bic_gen_id(char *blz,char *kto,int *bic2,int *blz2,int *kto2,int *retval);
 DLL_EXPORT int ipi_check(char *zweck);
 
    /* BIC-Funktionen */
@@ -1042,6 +1051,49 @@ const DLL_EXPORT char *pz2str(int pz,int *ret);
 
    /* Flag für neue Prüfziffermethoden setzen bzw. abfragen */
 DLL_EXPORT int pz_aenderungen_enable(int set);
+
+
+   /* Funktionen für Strings mit Rückgabe per handle */
+DLL_EXPORT char *kc_id2ptr(int handle,int *retval);
+DLL_EXPORT int kc_id_free(int handle);
+
+   /* Handle-Varianten für Funktionen mit Stringkonstanten als Rückgabewert */
+DLL_EXPORT int kto_check_encoding_str_id(int mode);
+DLL_EXPORT int kto_check_retval2txt_id(int retval);
+DLL_EXPORT int kto_check_retval2txt_short_id(int retval);
+DLL_EXPORT int kto_check_retval2html_id(int retval);
+DLL_EXPORT int kto_check_retval2dos_id(int retval);
+DLL_EXPORT int kto_check_retval2utf8_id(int retval);
+DLL_EXPORT int get_kto_check_version_id(int mode);
+
+DLL_EXPORT int lut_name_id(char *b,int zweigstelle,int *retval);
+DLL_EXPORT int lut_name_i_id(int b,int zweigstelle,int *retval);
+DLL_EXPORT int lut_name_kurz_id(char *b,int zweigstelle,int *retval);
+DLL_EXPORT int lut_name_kurz_i_id(int b,int zweigstelle,int *retval);
+DLL_EXPORT int lut_ort_id(char *b,int zweigstelle,int *retval);
+DLL_EXPORT int lut_ort_i_id(int b,int zweigstelle,int *retval);
+DLL_EXPORT int lut_bic_id(char *b,int zweigstelle,int *retval);
+DLL_EXPORT int lut_bic_i_id(int b,int zweigstelle,int *retval);
+DLL_EXPORT int lut_bic_h_id(char *b,int zweigstelle,int *retval);
+DLL_EXPORT int lut_bic_hi_id(int b,int zweigstelle,int *retval);
+
+DLL_EXPORT int bic_bic_id(char *bic_name,int mode,int filiale,int*retval);
+DLL_EXPORT int bic_bic_h_id(char *bic_name,int mode,int filiale,int*retval);
+DLL_EXPORT int bic_name_id(char *bic_name,int mode,int filiale,int*retval);
+DLL_EXPORT int bic_name_kurz_id(char *bic_name,int mode,int filiale,int*retval);
+DLL_EXPORT int bic_ort_id(char *bic_name,int mode,int filiale,int*retval);
+
+DLL_EXPORT int biq_bic_id(int idx,int*retval);
+DLL_EXPORT int biq_bic_h_id(int idx,int*retval);
+DLL_EXPORT int biq_name_id(int idx,int*retval);
+DLL_EXPORT int biq_name_kurz_id(int idx,int*retval);
+DLL_EXPORT int biq_ort_id(int idx,int*retval);
+
+DLL_EXPORT int iban_bic_id(char *iban,int filiale,int*retval);
+DLL_EXPORT int iban_bic_h_id(char *iban,int filiale,int*retval);
+DLL_EXPORT int iban_name_id(char *iban,int filiale,int*retval);
+DLL_EXPORT int iban_name_kurz_id(char *iban,int filiale,int*retval);
+DLL_EXPORT int iban_ort_id(char *iban,int filiale,int*retval);
 
 /*
  * ######################################################################

@@ -1,7 +1,7 @@
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl lut2.t'
 
-use Test::More tests => 35;
+use Test::More tests => 34;
 
 BEGIN { use_ok('Business::KontoCheck') };
 
@@ -79,8 +79,8 @@ ok($retval gt 0,"init: $retval => $ret_txt (ok: $ok_cnt, nok: $nok_cnt)");
 
 $cnt=$start_idx=0;
 $ret_info=Business::KontoCheck::bic_info("genodef1s01",0,$cnt,$start_idx);
-if($cnt==38 && $start_idx==11257){$ok_cnt++;}else{$nok_cnt++;}
-ok($cnt==38 && $start_idx==11257,"bic_info von genodef1s01: cnt=$cnt, start_idx=$start_idx (ok: $ok_cnt, nok: $nok_cnt)");
+if($cnt==38 && $start_idx==11208){$ok_cnt++;}else{$nok_cnt++;}
+ok($cnt==38 && $start_idx==11208,"bic_info von genodef1s01: cnt=$cnt, start_idx=$start_idx (ok: $ok_cnt, nok: $nok_cnt)");
 
 # Test mit der Sparda-Bank (Prüfziffermethode 90)
 #for($i=0;$i<$cnt;$i++){print chk_biq($start_idx,$i);}
@@ -135,8 +135,8 @@ ok($r eq $r3,"iban_*() von genodef1s01[37] (ok: $ok_cnt, nok: $nok_cnt)");
 
 # Test mit der Dresdner Bank (nur eine Filiale, IBAN-Regel 50)
 $ret_info=Business::KontoCheck::bic_info("dresdeffj21",0,$cnt,$start_idx);
-if($cnt==1 && $start_idx==5130){$ok_cnt++;}else{$nok_cnt++;}
-ok($cnt==1 && $start_idx==5130,"bic_info von dresdeffj21: cnt=$cnt, start_idx=$start_idx (ok: $ok_cnt, nok: $nok_cnt)");
+if($cnt==1 && $start_idx==5107){$ok_cnt++;}else{$nok_cnt++;}
+ok($cnt==1 && $start_idx==5107,"bic_info von dresdeffj21: cnt=$cnt, start_idx=$start_idx (ok: $ok_cnt, nok: $nok_cnt)");
 $r=chk_biq($start_idx,0);
 #print "Anzahl: $cnt, start_idx: $start_idx\n$r";
 
@@ -173,7 +173,6 @@ __DATA__
 20050550:Haspa Hamburg, 20454 Hamburg
 20080000:Commerzbank Hamburg, 20349 Hamburg
 21050170:Förde Sparkasse, 24103 Kiel
-21566356:Volks- u Raiffeisenbank, 24392 Süderbrarup
 25010030:Postbank Hannover, 30139 Hannover
 25020600:Santander Consumer Bank, 30179 Hannover
 25050180:Sparkasse Hannover, 30001 Hannover

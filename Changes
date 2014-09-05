@@ -4,6 +4,10 @@ Revision history for Perl extension Business::KontoCheck.
 The complete history can be found in 0_history.txt (in german). The perl
 version starts with 2.1; all previous versions are C only libraries.
 
+5.5
+   - bug fix in functions bic_check() and ci_check()
+   - the functions rebuild_blzfile() and pz_aenderungen_enable() are available for perl
+
 5.4
    - changes in check method 90 implemented
    - removed some obsolete return values (-80 ... -104)

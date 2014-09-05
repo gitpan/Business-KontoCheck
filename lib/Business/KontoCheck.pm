@@ -33,7 +33,7 @@ our @EXPORT_OK = qw(kto_check kto_check_str kto_check_blz
    iban_pan1 iban_bic1 iban_pz1 iban_aenderung1 iban_loeschung1
    iban_nachfolge_blz1 iban_iban_regel1 bic_info
    iban_gen check_iban ipi_check ipi_gen set_verbose_debug lut_info lut_blocks
-   ci_check bic_check iban_check
+   ci_check bic_check iban_check pz_aenderungen_enable rebuild_blzfile
    set_default_compression iban2bic pz2str kto_check_encoding
    kto_check_encoding_str keep_raw_data retval2txt retval2txt_short
    retval2iso retval2utf8 retval2html retval2dos kto_check_retval2txt
@@ -46,7 +46,7 @@ our @EXPORT_OK = qw(kto_check kto_check_str kto_check_blz
 
 our @EXPORT = qw( lut_init kto_check kto_check_blz kto_check_at %kto_retval );
 
-our $VERSION = '5.4';
+our $VERSION = '5.5';
 
 require XSLoader;
 XSLoader::load('Business::KontoCheck', $VERSION);
@@ -1312,6 +1312,7 @@ sub iban_iban_regel1
 
 
 %Business::KontoCheck::kto_retval = (
+-150 => 'Ungültiges Handle angegeben',
 -149 => 'Ungültiger Index für die biq_*() Funktionen',
 -148 => 'Der Array-Index liegt außerhalb des gültigen Bereichs',
 -147 => 'Es werden nur deutsche IBANs unterstützt',
@@ -1444,7 +1445,6 @@ sub iban_iban_regel1
    5 => 'Der Datensatz enthält kein Gültigkeitsdatum',
    6 => 'Die Datei ist im alten LUT-Format (1.0/1.1)',
    7 => 'ok, es wurde allerdings eine LUT-Datei im alten Format (1.0/1.1) generiert',
-   8 => 'In der DTAUS-Datei wurden kleinere Fehler gefunden',
    9 => 'ok, es wurde allerdings eine LUT-Datei im Format 2.0 generiert (Compilerswitch)',
   10 => 'ok, der Wert für den Schlüssel wurde überschrieben',
   11 => 'wahrscheinlich ok, die Kontonummer kann allerdings (nicht angegebene) Unterkonten enthalten',
@@ -1464,6 +1464,7 @@ sub iban_iban_regel1
   25 => 'ok, es wurde ein (weggelassenes) Unterkonto angefügt',
   26 => 'ok, für den BIC wurde die Zweigstellennummer allerdings durch XXX ersetzt',
 
+'INVALID_HANDLE'                         => 'Ungültiges Handle angegeben',
 'INVALID_BIQ_INDEX'                      => 'Ungültiger Index für die biq_*() Funktionen',
 'ARRAY_INDEX_OUT_OF_RANGE'               => 'Der Array-Index liegt außerhalb des gültigen Bereichs',
 'IBAN_ONLY_GERMAN'                       => 'Es werden nur deutsche IBANs unterstützt',
@@ -1596,7 +1597,6 @@ sub iban_iban_regel1
 'LUT2_NO_VALID_DATE'                     => 'Der Datensatz enthält kein Gültigkeitsdatum',
 'LUT1_SET_LOADED'                        => 'Die Datei ist im alten LUT-Format (1.0/1.1)',
 'LUT1_FILE_GENERATED'                    => 'ok, es wurde allerdings eine LUT-Datei im alten Format (1.0/1.1) generiert',
-'DTA_FILE_WITH_WARNINGS'                 => 'In der DTAUS-Datei wurden kleinere Fehler gefunden',
 'LUT_V2_FILE_GENERATED'                  => 'ok, es wurde allerdings eine LUT-Datei im Format 2.0 generiert (Compilerswitch)',
 'KTO_CHECK_VALUE_REPLACED'               => 'ok, der Wert für den Schlüssel wurde überschrieben',
 'OK_UNTERKONTO_POSSIBLE'                 => 'wahrscheinlich ok, die Kontonummer kann allerdings (nicht angegebene) Unterkonten enthalten',
@@ -1618,6 +1618,7 @@ sub iban_iban_regel1
 );
 
 %Business::KontoCheck::kto_retval_kurz = (
+-150 => 'INVALID_HANDLE',
 -149 => 'INVALID_BIQ_INDEX',
 -148 => 'ARRAY_INDEX_OUT_OF_RANGE',
 -147 => 'IBAN_ONLY_GERMAN',
@@ -1750,7 +1751,6 @@ sub iban_iban_regel1
    5 => 'LUT2_NO_VALID_DATE',
    6 => 'LUT1_SET_LOADED',
    7 => 'LUT1_FILE_GENERATED',
-   8 => 'DTA_FILE_WITH_WARNINGS',
    9 => 'LUT_V2_FILE_GENERATED',
   10 => 'KTO_CHECK_VALUE_REPLACED',
   11 => 'OK_UNTERKONTO_POSSIBLE',
@@ -1794,69 +1794,71 @@ language is german too.
 
    $retval=lut_init([$lut_name[,$required[,$set]]]);
    $retval=kto_check_init($lut_name[,$required[,$set[,$incremental]]]);
-   $retval=lut_blocks([$mode[,$filename[,$blocks_ok[,$blocks_fehler]]])
+   $retval=lut_blocks([$mode[,$filename[,$blocks_ok[,$blocks_fehler]]]);
    $retval=kto_check($blz,$kto,$lut_name);
    $retval=kto_check_str($blz,$kto,$lut_name);
-   $retval=kto_check_blz($blz,$kto)
-   $retval=kto_check_pz($pz,$kto,$blz)
-   $retval=kto_check_regel($blz,$kto)
+   $retval=kto_check_blz($blz,$kto);
+   $retval=kto_check_pz($pz,$kto,$blz);
+   $retval=kto_check_regel($blz,$kto);
+   $retval=pz_aenderungen_enable($set);
 
    $retval=generate_lut($inputname,$outputname,$user_info,$lut_version);
    $retval=generate_lut2($inputname,$outputname[,$user_info[,$gueltigkeit[,$felder[,$filialen[,$slots[,$lut_version[,$set]]]]]]]);
+   $retval=rebuild_blzfile($inputname,$outputname,$set);
 
-   [$@]retval=lut_blz($blz[,$offset[,$ret]])
-   [$@]retval=lut_info($lut_name)
-   [$@]retval=lut_filialen($blz[,$offset[,$ret]])
-   [$@]retval=lut_name($blz[,$offset[,$ret]])
-   [$@]retval=lut_name_kurz($blz[,$offset[,$ret]])
-   [$@]retval=lut_plz($blz[,$offset[,$ret]])
-   [$@]retval=lut_ort($blz[,$offset[,$ret]])
-   [$@]retval=lut_pan($blz[,$offset[,$ret]])
-   [$@]retval=lut_bic($blz[,$offset[,$ret]])
-   [$@]retval=lut_pz($blz[,$offset[,$ret]])
-   [$@]retval=lut_aenderung($blz[,$offset[,$ret]])
-   [$@]retval=lut_loeschung($blz[,$offset[,$ret]])
-   [$@]retval=lut_nachfolge_blz($blz[,$offset[,$ret]])
-   [$@]retval=lut_iban_regel($blz[,$offset[,$ret]])
+   [$@]retval=lut_blz($blz[,$offset[,$ret]]);
+   [$@]retval=lut_info($lut_name);
+   [$@]retval=lut_filialen($blz[,$offset[,$ret]]);
+   [$@]retval=lut_name($blz[,$offset[,$ret]]);
+   [$@]retval=lut_name_kurz($blz[,$offset[,$ret]]);
+   [$@]retval=lut_plz($blz[,$offset[,$ret]]);
+   [$@]retval=lut_ort($blz[,$offset[,$ret]]);
+   [$@]retval=lut_pan($blz[,$offset[,$ret]]);
+   [$@]retval=lut_bic($blz[,$offset[,$ret]]);
+   [$@]retval=lut_pz($blz[,$offset[,$ret]]);
+   [$@]retval=lut_aenderung($blz[,$offset[,$ret]]);
+   [$@]retval=lut_loeschung($blz[,$offset[,$ret]]);
+   [$@]retval=lut_nachfolge_blz($blz[,$offset[,$ret]]);
+   [$@]retval=lut_iban_regel($blz[,$offset[,$ret]]);
 
-   $retval=lut_valid()
-   $ret=pz2str($pz[,$ret])
+   $retval=lut_valid();
+   $ret=pz2str($pz[,$ret]);
 
-   [$@]ret=lut_suche_bic($bic[,$retval])
-   [$@]ret=lut_suche_namen($namen[,$retval])
-   [$@]ret=lut_suche_namen_kurz($namen_kurz])
-   [$@]ret=lut_suche_ort($ort[,$retval])
-   [$@]ret=lut_suche_blz($blz1[,$blz2[,$retval]])
-   [$@]ret=lut_suche_pz($pz1[,$pz2[,$retval]])
-   [$@]ret=lut_suche_plz($plz1[,$plz2[,$retval]])
-   [$@]ret=lut_suche_regel($regel1[,$regel2[,$retval]])
-   [$@]ret=lut_suche_volltext($suchworte[,$retval])
-   [$@]ret=lut_suche_multiple($suchworte[,$uniq[,$such_cmd[,$retval]]])
+   [$@]ret=lut_suche_bic($bic[,$retval]);
+   [$@]ret=lut_suche_namen($namen[,$retval]);
+   [$@]ret=lut_suche_namen_kurz($namen_kurz]);
+   [$@]ret=lut_suche_ort($ort[,$retval]);
+   [$@]ret=lut_suche_blz($blz1[,$blz2[,$retval]]);
+   [$@]ret=lut_suche_pz($pz1[,$pz2[,$retval]]);
+   [$@]ret=lut_suche_plz($plz1[,$plz2[,$retval]]);
+   [$@]ret=lut_suche_regel($regel1[,$regel2[,$retval]]);
+   [$@]ret=lut_suche_volltext($suchworte[,$retval]);
+   [$@]ret=lut_suche_multiple($suchworte[,$uniq[,$such_cmd[,$retval]]]);
 
-   $retval=copy_lutfile($old_name,$new_name,$new_slots)
-   $retval=dump_lutfile($outputname,$felder)
-   $retval=lut_cleanup()
+   $retval=copy_lutfile($old_name,$new_name,$new_slots);
+   $retval=dump_lutfile($outputname,$felder);
+   $retval=lut_cleanup();
 
-   $retval=ci_check($ci)
-   $retval=bic_check($bic[,$cnt])
-   $retval=iban_check($iban[,$ret_kc])
-   [$@]retval=iban2bic($iban)
-   [$@]retval=iban_gen($blz,$kto)
+   $retval=ci_check($ci);
+   $retval=bic_check($bic[,$cnt]);
+   $retval=iban_check($iban[,$ret_kc]);
+   [$@]retval=iban2bic($iban);
+   [$@]retval=iban_gen($blz,$kto);
 
-   $enc=kto_check_encoding($encoding)
-   $enc_str=kto_check_encoding_str($encoding)
-   $keep=keep_raw_data($flag)
-   $retval=retval2txt($retval)
-   $retval=retval2txt_short($retval)
-   $retval=retval2iso($retval)
-   $retval=retval2html($retval)
-   $retval=retval2utf8($retval)
-   $retval=retval2dos($retval)
-   $retval=kto_check_retval2txt($retval)
-   $retval=kto_check_retval2txt_short($retval)
-   $retval=kto_check_retval2html($retval)
-   $retval=kto_check_retval2utf8($retval)
-   $retval=kto_check_retval2dos($retval)
+   $enc=kto_check_encoding($encoding);
+   $enc_str=kto_check_encoding_str($encoding);
+   $keep=keep_raw_data($flag);
+   $retval=retval2txt($retval);
+   $retval=retval2txt_short($retval);
+   $retval=retval2iso($retval);
+   $retval=retval2html($retval);
+   $retval=retval2utf8($retval);
+   $retval=retval2dos($retval);
+   $retval=kto_check_retval2txt($retval);
+   $retval=kto_check_retval2txt_short($retval);
+   $retval=kto_check_retval2html($retval);
+   $retval=kto_check_retval2utf8($retval);
+   $retval=kto_check_retval2dos($retval);
    $retval_txt=$kto_retval{$retval};
 
    $retval=kto_check_at($blz,$kto,$lut_name);
@@ -2007,6 +2009,57 @@ diese müssen dann in der use Klausel anzugeben werden.
                   schreiben zu können. Bei Bedarf kann mittels
                   copy_lutfile() die Anzahl der Verzeichnisslots auch
                   erhöht werden.
+
+-------------------------------------------------------------------------
+
+  Funktion:       rebuild_blzfile()
+
+  Aufgabe:        aus einer LUT-Datei die entsprechende Bank-Datei generieren
+
+  Aufruf:         $retval=rebuild_blzfile($inputname,$outputname,$set);
+
+  Parameter:
+     inputname:   Name der LUT-Datei (oder evl. einer BLZ-Datei der
+                  Deutschen Bundesbank)
+
+     outputname:  Name der Zieldatei (Klartext-Datei)
+
+     set:         Set (0, 1 oder 2)
+                  Falls der Parameter 1 oder 2 ist, wird das entsprechende
+                  set der LUT-Datei im Klartext ausgegeben. Die Ausgabedatei
+                  sollte (bis auf die vier Testbanken und evl. die Reihenfolge)
+                  mit der ursprünglichen Bundesbank-Datei übereinstimmen.
+
+                  Falls der Parameter set 0 ist, wird als Eingabedatei eine
+                  BLZ-Datei der Deutschen Bundesbank erwartet; diese wird
+                  zunächst in eine temporäre LUT-Datei umgewandelt, und die
+                  LUT-Datei wieder zurück in die Klartextform. Dieser Aufruf
+                  wurde ursprünglich für den Test der LUT-Routinen benutzt.
+
+  Rückgabewerte:
+      Die Funktion gibt einen numerischen Wert zurück, der Aufschluss über
+      den Erfolg gibt. Die Rückgabe kann die folgenden Werte annehmen:
+
+ -112  (KTO_CHECK_UNSUPPORTED_COMPRESSION) "die notwendige Kompressions-Bibliothek wurde beim Kompilieren nicht eingebunden"
+  -64  (INIT_FATAL_ERROR)           "Initialisierung fehlgeschlagen (init_wait geblockt)"
+  -57  (LUT2_GUELTIGKEIT_SWAPPED)   "Im Gültigkeitsdatum sind Anfangs- und Enddatum vertauscht"
+  -56  (LUT2_INVALID_GUELTIGKEIT)   "Das angegebene Gültigkeitsdatum ist ungültig (Soll: JJJJMMTT-JJJJMMTT)"
+  -38  (LUT2_PARTIAL_OK)            "es wurden nicht alle Blocks geladen"
+  -36  (LUT2_Z_MEM_ERROR)           "Memory error in den ZLIB-Routinen"
+  -35  (LUT2_Z_DATA_ERROR)          "Datenfehler im komprimierten LUT-Block"
+  -34  (LUT2_BLOCK_NOT_IN_FILE)     "Der Block ist nicht in der LUT-Datei enthalten"
+  -33  (LUT2_DECOMPRESS_ERROR)      "Fehler beim Dekomprimieren eines LUT-Blocks"
+  -32  (LUT2_COMPRESS_ERROR)        "Fehler beim Komprimieren eines LUT-Blocks"
+  -31  (LUT2_FILE_CORRUPTED)        "Die LUT-Datei ist korrumpiert"
+  -20  (LUT_CRC_ERROR)              "Prüfsummenfehler in der blz.lut Datei"
+  -15  (INVALID_BLZ_FILE)           "Fehler in der blz.txt Datei (falsche Zeilenlänge)"
+  -13  (FATAL_ERROR)                "schwerer Fehler im Konto_check-Modul"
+  -11  (FILE_WRITE_ERROR)           "kann Datei nicht schreiben"
+  -10  (FILE_READ_ERROR)            "kann Datei nicht lesen"
+   -9  (ERROR_MALLOC)               "kann keinen Speicher allokieren"
+   -7  (INVALID_LUT_FILE)           "die blz.lut Datei ist inkosistent/ungültig"
+   -6  (NO_LUT_FILE)                "die blz.lut Datei wurde nicht gefunden"
+    1  (OK)                         "ok"
 
 -------------------------------------------------------------------------
 

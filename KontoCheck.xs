@@ -1775,6 +1775,16 @@ kto_check_encoding_str(mode)
    int mode
 
 int
+rebuild_blzfile(inputname,outputname,set)
+   char *inputname
+   char *outputname
+   int set
+
+int
+pz_aenderungen_enable(set)
+   int set
+
+int
 kto_check_encoding(mode)
    int mode
 
@@ -1786,10 +1796,10 @@ const char *
 current_lutfile_name_i(want_array...)
    int want_array;
 PREINIT:
-#line 699 "KontoCheck.lx"
+#line 709 "KontoCheck.lx"
    int set,level,ret;
 CODE:
-#line 701 "KontoCheck.lx"
+#line 711 "KontoCheck.lx"
    if(items!=4)Perl_croak(aTHX_ "Usage: Business::KontoCheck::current_lutfile_name_i(want_array,set,level,retval)");
    if(want_array)
       RETVAL=current_lutfile_name(&set,&level,&ret);
@@ -1812,11 +1822,11 @@ int
 lut_info_i(lut_name...)
    char *lut_name;
 PREINIT:
-#line 723 "KontoCheck.lx"
+#line 733 "KontoCheck.lx"
    char *info1,*info2,*dptr;
    int valid1,valid2,want_array,ret;
 CODE:
-#line 726 "KontoCheck.lx"
+#line 736 "KontoCheck.lx"
    want_array=(int)SvIV(ST(1));
    if(items!=7)Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_info_i(lut_name,want_array,info1,valid1,info2,valid2,lut_dir)");
    if(want_array<0)Perl_croak(aTHX_ "Usage: Business::KontoCheck::lut_info(lut_name)");
@@ -1938,13 +1948,13 @@ OUTPUT:
 int
 lut_blocks(...)
 PREINIT:
-#line 847 "KontoCheck.lx"
+#line 857 "KontoCheck.lx"
    int mode;
    char *lut_filename;
    char *lut_blocks_ok;
    char *lut_blocks_fehler;
 CODE:
-#line 852 "KontoCheck.lx"
+#line 862 "KontoCheck.lx"
    if(items>1)
       mode=(int)SvIV(ST(0));
    else
@@ -2091,7 +2101,7 @@ lut_suche_volltext_i(want_array,search...)
    int want_array;
    char *search;
 PREINIT:
-#line 998 "KontoCheck.lx"
+#line 1008 "KontoCheck.lx"
    char **base_name;
    int i,ret,anzahl,anzahl_name,start_name_idx,*start_idx,*zw,*bb;
    int sort,uniq,anzahl2,*idx_o,*cnt_o;
@@ -2173,7 +2183,7 @@ lut_suche_multiple_i(want_array,search...)
    int want_array;
    char *search;
 PREINIT:
-#line 1079 "KontoCheck.lx"
+#line 1089 "KontoCheck.lx"
    char *such_cmd;
    int i,uniq,ret;
    UINT4 anzahl,*blz,*zweigstellen;
@@ -2242,7 +2252,7 @@ lut_suche_c(want_array,art...)
    int want_array;
    int art;
 PREINIT:
-#line 1147 "KontoCheck.lx"
+#line 1157 "KontoCheck.lx"
    char *search,**base_name,warn_buffer[128],*fkt;
    int i,ret,anzahl,*start_idx,*zw,*bb;
    int sort,uniq,anzahl2,*idx_o,*cnt_o;
@@ -2364,7 +2374,7 @@ lut_suche_i(want_array,art...)
    int want_array;
    int art;
 PREINIT:
-#line 1268 "KontoCheck.lx"
+#line 1278 "KontoCheck.lx"
    int search1;
    int search2;
    int i,ret,anzahl,*start_idx,*base_name,*zw,*bb;
@@ -2506,11 +2516,11 @@ generate_lut_at(inputname,outputname...)
    char *inputname;
    char *outputname;
 PREINIT:
-#line 1409 "KontoCheck.lx"
+#line 1419 "KontoCheck.lx"
    char *plain_name;
    char *plain_format;
 CODE:
-#line 1412 "KontoCheck.lx"
+#line 1422 "KontoCheck.lx"
    if(items==2){
       plain_name=NULL;
       plain_format=NULL;
